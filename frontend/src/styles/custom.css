@@ -1,0 +1,12 @@
+.nav-link.hover-warning:hover {
+  color: #d97706 !important; /* amber shade */
+}
+.card-hover {
+  border: 1px solid #fdeba1; /* border color */
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
