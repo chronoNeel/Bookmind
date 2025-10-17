@@ -1,16 +1,19 @@
 import React, { useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
-import { useDispatch } from "react-redux";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./utils/firebase";
-import { setUser, setLoading } from "./store/slices/authSlice"; // Adjust path as needed
+import {
+  setUser,
+  setLoading,
+  fetchUserProfile,
+} from "./store/slices/authSlice";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
 import Home from "./pages/Home/Home";
 import MyBooks from "./pages/MyBooks/MyBooks";
-import SearchResults from "./pages/searchResults/SearchResults";
+import SearchResults from "./pages/SearchResults/SearchResults";
 import Signup from "./pages/Signup/Signup";
 import Login from "./pages/Login/Login";
 import Profile from "./pages/Profile/Profile";
@@ -26,37 +29,36 @@ import GenreBooks from "./pages/GenreBooks/GenreBooks";
 import EditProfile from "./pages/EditProfile/EditProfile";
 
 import ProtectedRoute from "./components/ProtectedRoute";
+import { useAppDispatch } from "./hooks/redux";
 
 function App() {
   const location = useLocation();
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const hideNavbarPaths = ["/login", "/signup"];
   const shouldHideNavbar = hideNavbarPaths.includes(location.pathname);
 
-  // Critical: Listen to Firebase auth state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    if (["/login", "/signup"].includes(location.pathname)) {
+      dispatch(setLoading(false));
+      return;
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // User is signed in - sync to Redux
-        dispatch(
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-            photoURL: firebaseUser.photoURL,
-          })
-        );
+        try {
+          await dispatch(fetchUserProfile(firebaseUser.uid)).unwrap();
+        } catch (error) {
+          console.error("Failed to fetch user profile:", error);
+          dispatch(setUser(null));
+        }
       } else {
-        // User is signed out - clear Redux state
         dispatch(setUser(null));
       }
-      // Auth state is now loaded
       dispatch(setLoading(false));
     });
 
-    // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, [dispatch]);
+  }, [dispatch, location.pathname]);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -64,7 +66,6 @@ function App() {
 
       <main className="flex-grow">
         <Routes>
-          {/* Public routes */}
           <Route
             path="/login"
             element={

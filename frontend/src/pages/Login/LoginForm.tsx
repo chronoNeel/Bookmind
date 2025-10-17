@@ -50,7 +50,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
                 </div>
                 <input
                   type="email"
-                  placeholder="your@email.com"
+                  placeholder="Enter your email"
                   value={email}
                   onChange={(e) => onEmailChange(e.target.value)}
                   className="form-control-custom"

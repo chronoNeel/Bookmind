@@ -1,37 +1,36 @@
 import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { assets } from "../assets/asstes";
 import { useAppDispatch, useAppSelector } from "../hooks/redux";
 import { logoutUser } from "../store/slices/authSlice";
+import bookmind_nav from "../assets/Bookmind_nav.svg";
+import profile_pic from "../assets/profile_pic.png";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const [token, setToken] = useState(true);
+
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Redux state
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
 
   const handleLogout = async () => {
-    setToken(false);
+    setDropdownOpen(false);
     setMobileMenuOpen(false);
     await dispatch(logoutUser());
     navigate("/login");
   };
 
-  const handleNavClick = () => {
-    setMobileMenuOpen(false);
-  };
+  const handleNavClick = () => setMobileMenuOpen(false);
 
-  // Close dropdowns when clicking outside
+  // Handle clicking outside dropdowns
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-
       if (dropdownOpen && !target.closest(".dropdown")) {
         setDropdownOpen(false);
       }
-
       if (mobileMenuOpen && !target.closest(".mobile-menu-container")) {
         setMobileMenuOpen(false);
       }
@@ -40,6 +39,16 @@ const Navbar = () => {
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
   }, [dropdownOpen, mobileMenuOpen]);
+
+  // Navigate to correct profile page
+  const goToProfile = () => {
+    if (user?.userName) {
+      navigate(`/profile/${user.userName}`);
+    } else {
+      navigate("/login");
+    }
+  };
+
   return (
     <>
       <style>
@@ -47,35 +56,24 @@ const Navbar = () => {
           .hover-custom:hover {
             color: #4F200D !important;
           }
-          
-          .text-custom-primary {
-            color: #4F200D !important;
-          }
-          
-          .text-custom-secondary {
-            color: #FF9F1C !important;
-          }
-          
+          .text-custom-primary { color: #4F200D !important; }
+          .text-custom-secondary { color: #FF9F1C !important; }
           .btn-custom {
             background-color: #FF9F1C;
             border-color: #FF9F1C;
             color: #4F200D;
           }
-          
           .btn-custom:hover {
             background-color: #4F200D;
             border-color: #4F200D;
             color: #FF9F1C;
           }
-          
           .dropdown-item-custom {
             transition: all 0.2s ease;
           }
-          
           .dropdown-item-custom:hover {
             color: #4F200D !important;
           }
-          
           .dropdown-item-custom.active {
             color: #FF9F1C !important;
           }
@@ -85,11 +83,11 @@ const Navbar = () => {
       <nav className="navbar bg-white border-bottom shadow-sm py-2 px-3 px-md-4">
         <div className="container-fluid">
           <div className="d-flex justify-content-between align-items-center w-100 position-relative">
-            {/* Logo - Fixed width */}
+            {/* Logo */}
             <div className="flex-shrink-0" style={{ width: "180px" }}>
               <img
-                src={assets.bookmind_nav}
-                alt="Navbar BookMind Logo"
+                src={bookmind_nav}
+                alt="BookMind Logo"
                 className="me-2"
                 style={{
                   height: "auto",
@@ -102,7 +100,7 @@ const Navbar = () => {
               />
             </div>
 
-            {/* Desktop Navigation Links - Perfectly Centered */}
+            {/* Desktop Navigation */}
             <div className="position-absolute start-50 translate-middle-x">
               <ul className="navbar-nav gap-3 fw-medium text-secondary d-none d-md-flex flex-row">
                 <li className="nav-item">
@@ -144,12 +142,12 @@ const Navbar = () => {
               </ul>
             </div>
 
-            {/* Desktop Profile/Login - Fixed width */}
+            {/* Desktop Profile/Login */}
             <div
               className="d-none d-md-flex align-items-center flex-shrink-0 justify-content-end"
               style={{ width: "180px" }}
             >
-              {token ? (
+              {isAuthenticated && user ? (
                 <div className="dropdown position-relative">
                   <div
                     className="d-flex align-items-center"
@@ -157,7 +155,7 @@ const Navbar = () => {
                     style={{ cursor: "pointer" }}
                   >
                     <img
-                      src={assets.profile_pic}
+                      src={user.profilePic || profile_pic}
                       alt="Profile"
                       className="rounded-circle border border-secondary"
                       style={{
@@ -168,11 +166,7 @@ const Navbar = () => {
                     />
                     <i
                       className="bi bi-caret-down-fill ms-2"
-                      style={{
-                        fontSize: "0.9rem",
-                        position: "relative",
-                        bottom: "-2px",
-                      }}
+                      style={{ fontSize: "0.9rem" }}
                     ></i>
                   </div>
 
@@ -183,30 +177,21 @@ const Navbar = () => {
                     >
                       <button
                         className="dropdown-item dropdown-item-custom"
-                        onClick={() => {
-                          setDropdownOpen(false);
-                          navigate("/profile/noobmaster_69");
-                        }}
+                        onClick={goToProfile}
                       >
                         Profile
                       </button>
                       <hr className="dropdown-divider my-1 opacity-25" />
                       <button
                         className="dropdown-item dropdown-item-custom"
-                        onClick={() => {
-                          setDropdownOpen(false);
-                          navigate("/my-books");
-                        }}
+                        onClick={() => navigate("/my-books")}
                       >
                         My Books
                       </button>
                       <hr className="dropdown-divider my-1 opacity-25" />
                       <button
-                        className="dropdown-item dropdown-item-custom "
-                        onClick={() => {
-                          setDropdownOpen(false);
-                          navigate("/journals");
-                        }}
+                        className="dropdown-item dropdown-item-custom"
+                        onClick={() => navigate("/journals")}
                       >
                         Journals
                       </button>
@@ -222,7 +207,8 @@ const Navbar = () => {
                 </div>
               ) : (
                 <button
-                  className="btn btn-custom rounded-pill px-4 py-2 fw-semibold"
+                  className="btn rounded-pill px-4 py-2 fw-semibold text-white"
+                  style={{ backgroundColor: "#9B7E6B" }}
                   onClick={() => navigate("/login")}
                 >
                   Login
@@ -230,7 +216,7 @@ const Navbar = () => {
               )}
             </div>
 
-            {/* Mobile Hamburger Menu */}
+            {/* Mobile Hamburger */}
             <div className="d-md-none mobile-menu-container flex-shrink-0">
               <button
                 className="btn p-0"
@@ -239,14 +225,10 @@ const Navbar = () => {
               >
                 <i
                   className="bi bi-list"
-                  style={{
-                    fontSize: "2rem",
-                    color: "#4F200D",
-                  }}
+                  style={{ fontSize: "2rem", color: "#4F200D" }}
                 ></i>
               </button>
 
-              {/* Mobile Menu Dropdown */}
               {mobileMenuOpen && (
                 <div
                   className="position-absolute end-0 mt-2 pl-3 bg-white shadow-lg border rounded-3"
@@ -267,8 +249,7 @@ const Navbar = () => {
                       }
                       onClick={handleNavClick}
                     >
-                      <i className="bi bi-house-door me-2"></i>
-                      Home
+                      <i className="bi bi-house-door me-2"></i> Home
                     </NavLink>
                     <hr className="dropdown-divider my-1" />
                     <NavLink
@@ -280,8 +261,7 @@ const Navbar = () => {
                       }
                       onClick={handleNavClick}
                     >
-                      <i className="bi bi-book me-2"></i>
-                      My Books
+                      <i className="bi bi-book me-2"></i> My Books
                     </NavLink>
                     <hr className="dropdown-divider my-1" />
                     <NavLink
@@ -293,41 +273,32 @@ const Navbar = () => {
                       }
                       onClick={handleNavClick}
                     >
-                      <i className="bi bi-journal-text me-2"></i>
-                      Journals
+                      <i className="bi bi-journal-text me-2"></i> Journals
                     </NavLink>
 
-                    {token ? (
+                    {isAuthenticated && user ? (
                       <>
-                        <hr
-                          className="dropdown-divider my-2"
-                          style={{ borderWidth: "2px" }}
-                        />
+                        <hr className="dropdown-divider my-2" />
                         <button
                           className="dropdown-item dropdown-item-custom py-2"
                           onClick={() => {
                             handleNavClick();
-                            navigate("/profile/noobmaster_69");
+                            goToProfile();
                           }}
                         >
-                          <i className="bi bi-person-circle me-2"></i>
-                          Profile
+                          <i className="bi bi-person-circle me-2"></i> Profile
                         </button>
                         <hr className="dropdown-divider my-1" />
                         <button
                           className="dropdown-item dropdown-item-custom text-danger py-2"
                           onClick={handleLogout}
                         >
-                          <i className="bi bi-box-arrow-right me-2"></i>
-                          Logout
+                          <i className="bi bi-box-arrow-right me-2"></i> Logout
                         </button>
                       </>
                     ) : (
                       <>
-                        <hr
-                          className="dropdown-divider my-2"
-                          style={{ borderWidth: "2px" }}
-                        />
+                        <hr className="dropdown-divider my-2" />
                         <button
                           className="dropdown-item dropdown-item-custom fw-semibold py-2"
                           onClick={() => {
@@ -335,7 +306,7 @@ const Navbar = () => {
                             navigate("/login");
                           }}
                         >
-                          <i className="bi bi-box-arrow-in-right me-2"></i>
+                          <i className="bi bi-box-arrow-in-right me-2"></i>{" "}
                           Login
                         </button>
                       </>

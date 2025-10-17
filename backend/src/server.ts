@@ -1,32 +1,24 @@
-import express, { Application } from "express";
+import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import authRoutes from "./routes/authRoutes";
+import userRoutes from "./routes/userRoutes";
+// import shelfRoutes from "./routes/shelfRoutes";
+import journalRoutes from "./routes/journalRoutes";
 import { errorHandler } from "./middleware/errorHandler";
 
-dotenv.config();
+const app = express();
 
-const app: Application = express();
-const PORT = process.env.PORT || 5000;
-
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
-    credentials: true,
-  })
-);
-
+app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-app.use("/auth", authRoutes);
+// Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+// app.use("/api/shelves", shelfRoutes);
+app.use("/api/journals", journalRoutes);
 
-app.get("/", (req, res) => {
-  res.json({ message: "Auth API running successfully" });
-});
-
+// Error handler
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`Auth Server running on http://localhost:${PORT}`);
-});
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

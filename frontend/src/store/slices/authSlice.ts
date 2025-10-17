@@ -6,26 +6,12 @@ import {
 } from "firebase/auth";
 import { auth } from "../../utils/firebase";
 import api from "../../utils/api";
-
-// Define TypeScript types
-interface AuthState {
-  user: UserData | null;
-  loading: boolean;
-  error: string | null;
-  isAuthenticated: boolean;
-}
-
-interface UserData {
-  uid: string;
-  email: string | null;
-  displayName: string | null;
-  photoURL?: string | null;
-}
+import { AuthState, UserData } from "../../models/user";
 
 interface RegisterPayload {
   email: string;
   password: string;
-  displayName: string;
+  fullName: string;
 }
 
 interface LoginPayload {
@@ -40,7 +26,7 @@ export const registerUser = createAsyncThunk<
   { rejectValue: string }
 >(
   "auth/register",
-  async ({ email, password, displayName }, { rejectWithValue }) => {
+  async ({ email, password, fullName }, { rejectWithValue }) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
@@ -48,15 +34,14 @@ export const registerUser = createAsyncThunk<
         password
       );
       const user = userCredential.user;
+      const token = await user.getIdToken(true);
 
-      const token = await user.getIdToken();
-      await api.post("/auth/register", { displayName, token });
+      const response = await api.post("/api/auth/register", {
+        fullName,
+        token,
+      });
 
-      return {
-        uid: user.uid,
-        email: user.email,
-        displayName,
-      };
+      return response.data.user;
     } catch (error: any) {
       return rejectWithValue(error.message);
     }
@@ -77,26 +62,32 @@ export const loginUser = createAsyncThunk<
     );
     const user = userCredential.user;
 
-    const token = await user.getIdToken();
+    // Fetch complete user profile from backend
+    const userProfile = await api.get(`/api/users/${user.uid}`);
 
-    // Option A: If backend returns user data including displayName
-    const response = await api.post("/auth/verify", { token });
-    const backendDisplayName = response.data?.displayName;
-
-    // Option B: Fetch from a dedicated endpoint
-    // const userDataResponse = await api.get(`/users/${user.uid}`);
-    // const backendDisplayName = userDataResponse.data?.displayName;
-
-    // Use Firebase displayName first, fall back to backend if needed
-    const displayName = user.displayName || backendDisplayName || null;
-
-    return {
-      uid: user.uid,
-      email: user.email,
-      displayName,
-    };
+    return userProfile.data;
   } catch (error: any) {
     return rejectWithValue(error.message);
+  }
+});
+
+// Fetch user profile (for app initialization)
+export const fetchUserProfile = createAsyncThunk<
+  UserData,
+  string,
+  { rejectValue: string }
+>("auth/fetchProfile", async (uid, { rejectWithValue }) => {
+  try {
+    const response = await api.get(`/api/users/${uid}`);
+    return response.data;
+  } catch (error: any) {
+    // if Axios error with response
+    if (error.response) {
+      return rejectWithValue(
+        error.response.data.error || "Failed to fetch user profile"
+      );
+    }
+    return rejectWithValue(error.message || "Failed to fetch user profile");
   }
 });
 
@@ -107,7 +98,7 @@ export const logoutUser = createAsyncThunk<void>("auth/logout", async () => {
 
 const initialState: AuthState = {
   user: null,
-  loading: true, // CRITICAL: Start as true to prevent premature redirects
+  loading: true,
   error: null,
   isAuthenticated: false,
 };
@@ -119,13 +110,19 @@ const authSlice = createSlice({
     setUser: (state, action: PayloadAction<UserData | null>) => {
       state.user = action.payload;
       state.isAuthenticated = !!action.payload;
-      state.loading = false; // Auth state confirmed
+      state.loading = false;
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
     },
     clearError: (state) => {
       state.error = null;
+    },
+    // Update user profile locally (after API updates)
+    updateUserProfile: (state, action: PayloadAction<Partial<UserData>>) => {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+      }
     },
   },
   extraReducers: (builder) => {
@@ -158,6 +155,20 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload ?? "Something went wrong";
       })
+      // Fetch Profile
+      .addCase(fetchUserProfile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchUserProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+        state.isAuthenticated = true;
+      })
+      .addCase(fetchUserProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? "Failed to fetch user profile";
+      })
       // Logout
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
@@ -167,5 +178,6 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser, setLoading, clearError } = authSlice.actions;
+export const { setUser, setLoading, clearError, updateUserProfile } =
+  authSlice.actions;
 export default authSlice.reducer;

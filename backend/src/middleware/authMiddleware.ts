@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { verifyToken } from "../config/firebaseAdmin";
 
-export const authenticateUser = async (
+export const authenticate = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -15,6 +15,12 @@ export const authenticateUser = async (
     }
 
     const token = authHeader.split(" ")[1];
+
+    if (!token) {
+      res.status(401).json({ error: "Token is missing" });
+      return;
+    }
+
     const decodedToken = await verifyToken(token);
 
     if (!decodedToken) {
@@ -22,37 +28,74 @@ export const authenticateUser = async (
       return;
     }
 
+    // Assign typed user to req.user
     req.user = decodedToken;
     next();
   } catch (error) {
     console.error("Authentication error:", error);
     res.status(401).json({ error: "Authentication failed" });
+    return; // Important: prevent further execution
   }
 };
 
-export const isAdmin = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    if (!req.user) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
-    }
+// Export as authenticateUser as well for backward compatibility
+export const authenticateUser = authenticate;
 
-    const { db } = await import("../config/firebaseAdmin");
-    const userDoc = await db.collection("users").doc(req.user.uid).get();
-    const userData = userDoc.data();
+// import { Request, Response, NextFunction } from "express";
+// import { verifyToken } from "../config/firebaseAdmin";
 
-    if (userData?.role !== "admin") {
-      res.status(403).json({ error: "Forbidden: Admin access required" });
-      return;
-    }
+// export const authenticateUser = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     const authHeader = req.headers.authorization;
 
-    next();
-  } catch (error) {
-    console.error("Admin check error:", error);
-    res.status(500).json({ error: "Authorization check failed" });
-  }
-};
+//     if (!authHeader || !authHeader.startsWith("Bearer ")) {
+//       res.status(401).json({ error: "No token provided" });
+//       return;
+//     }
+
+//     const token = authHeader.split(" ")[1];
+//     const decodedToken = await verifyToken(token);
+
+//     if (!decodedToken) {
+//       res.status(401).json({ error: "Invalid or expired token" });
+//       return;
+//     }
+
+//     req.user = decodedToken;
+//     next();
+//   } catch (error) {
+//     console.error("Authentication error:", error);
+//     res.status(401).json({ error: "Authentication failed" });
+//   }
+// };
+
+// export const isAdmin = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     if (!req.user) {
+//       res.status(401).json({ error: "Unauthorized" });
+//       return;
+//     }
+
+//     const { db } = await import("../config/firebaseAdmin");
+//     const userDoc = await db.collection("users").doc(req.user.uid).get();
+//     const userData = userDoc.data();
+
+//     if (userData?.role !== "admin") {
+//       res.status(403).json({ error: "Forbidden: Admin access required" });
+//       return;
+//     }
+
+//     next();
+//   } catch (error) {
+//     console.error("Admin check error:", error);
+//     res.status(500).json({ error: "Authorization check failed" });
+//   }
+// };

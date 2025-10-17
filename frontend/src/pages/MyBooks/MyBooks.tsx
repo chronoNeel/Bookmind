@@ -18,6 +18,7 @@ export default function MyBooks() {
     }),
     [completed, ongoing, wantToRead]
   );
+  console.log(shelves);
 
   const [expandedShelf, setExpandedShelf] = useState<ExpandedShelfState>({
     read: false,

@@ -12,7 +12,6 @@ export const errorHandler = (
   next: NextFunction
 ): void => {
   console.error("Error:", err);
-
   const status = err.status || err.statusCode || 500;
   const message = err.message || "Internal Server Error";
 

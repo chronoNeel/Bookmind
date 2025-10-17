@@ -22,3 +22,36 @@ export interface Book {
   lending_edition_s?: string;
   lending_identifier_s?: string;
 }
+
+export interface BookDetails {
+  key: string;
+  title: string;
+  description?: string | { value: string };
+  covers?: number[];
+  subjects?: string[];
+  first_publish_date?: string;
+  authors?: { author: { key: string } }[];
+}
+
+export interface SimilarBook {
+  title: string;
+  author: string;
+  workKey: string;
+  coverUrl: string | null;
+  subject: string;
+}
+
+export interface JournalEntry {
+  id: number;
+  user: {
+    name: string;
+    avatar: string;
+  };
+  rating: number;
+  date: string;
+  text: string;
+  upvotes: number;
+  downvotes: number;
+}
+
+export type ReadingStatus = "wantToRead" | "ongoing" | "completed" | null;

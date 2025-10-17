@@ -26,7 +26,7 @@ export const Shelf: React.FC<ShelfProps> = ({
             <div>
               <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
               <p className="text-sm text-gray-500">
-                {bookKeys.length} {bookKeys.length === 1 ? "book" : "bookKeys"}
+                {bookKeys.length} {bookKeys.length === 1 ? "book" : "books"}
               </p>
             </div>
           </div>

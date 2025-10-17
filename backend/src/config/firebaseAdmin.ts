@@ -23,10 +23,40 @@
 //   }
 // };
 
+// import admin from "firebase-admin";
+// import * as dotenv from "dotenv";
+
+// dotenv.config();
+// const serviceAccount = require("../../serviceAccountKey.json");
+
+// if (!admin.apps.length) {
+//   admin.initializeApp({
+//     credential: admin.credential.cert(serviceAccount),
+//   });
+// }
+
+// export const db = admin.firestore();
+// export const auth = admin.auth();
+
+// export const verifyToken = async (
+//   token: string
+// ): Promise<admin.auth.DecodedIdToken | null> => {
+//   try {
+//     const decodedToken = await admin.auth().verifyIdToken(token);
+//     return decodedToken;
+//   } catch (error) {
+//     console.error("Token verification error:", error);
+//     return null;
+//   }
+// };
+
+// export default admin;
+
 import admin from "firebase-admin";
 import * as dotenv from "dotenv";
 
 dotenv.config();
+
 const serviceAccount = require("../../serviceAccountKey.json");
 
 if (!admin.apps.length) {
@@ -35,17 +65,29 @@ if (!admin.apps.length) {
   });
 }
 
+// Firestore instance
 export const db = admin.firestore();
+
+// Auth instance
 export const auth = admin.auth();
 
+// Firestore FieldValue helper
+export const FieldValue = admin.firestore.FieldValue;
+
+/**
+ * Verify Firebase ID token
+ */
 export const verifyToken = async (
   token: string
 ): Promise<admin.auth.DecodedIdToken | null> => {
   try {
-    const decodedToken = await admin.auth().verifyIdToken(token);
-    return decodedToken;
+    if (!token) throw new Error("Missing token");
+    return await auth.verifyIdToken(token);
   } catch (error) {
-    console.error("Token verification error:", error);
+    console.error(
+      "[Firebase] Token verification failed:",
+      (error as Error).message
+    );
     return null;
   }
 };

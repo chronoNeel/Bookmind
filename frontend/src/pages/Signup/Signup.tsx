@@ -54,7 +54,7 @@ const Signup: React.FC = () => {
     }
 
     const result = await dispatch(
-      registerUser({ email, password, displayName: fullName })
+      registerUser({ email, password, fullName: fullName })
     );
 
     if (registerUser.fulfilled.match(result)) {

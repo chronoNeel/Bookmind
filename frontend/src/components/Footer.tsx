@@ -1,6 +1,6 @@
 import React from "react";
-import { assets } from "../assets/asstes";
 import { useNavigate } from "react-router-dom";
+import bookmind from "../assets/Bookmind.svg";
 
 const Footer = () => {
   const navigate = useNavigate();
@@ -86,7 +86,7 @@ const Footer = () => {
           {/* Left: Logo */}
           <div className="col-md-6 mb-4 mb-md-0">
             <img
-              src={assets.bookmind}
+              src={bookmind}
               alt="BookMind Logo"
               className="img-fluid"
               style={{
