@@ -6,14 +6,16 @@ import { EmptyShelf } from "./EmptyShelft";
 
 export const Shelf: React.FC<ShelfProps> = ({
   title,
-  bookKeys,
+  shelfBooks,
   icon: Icon,
   color,
   isExpanded,
   onToggle,
 }) => {
-  const displayBooks = isExpanded ? bookKeys : bookKeys.slice(0, 4);
-  const hasMore = bookKeys.length > 4;
+  const displayBooks = isExpanded
+    ? shelfBooks.map((book) => book.bookKey)
+    : shelfBooks.slice(0, 4).map((book) => book.bookKey);
+  const hasMore = shelfBooks.length > 4;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6">
@@ -26,7 +28,7 @@ export const Shelf: React.FC<ShelfProps> = ({
             <div>
               <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
               <p className="text-sm text-gray-500">
-                {bookKeys.length} {bookKeys.length === 1 ? "book" : "books"}
+                {shelfBooks.length} {shelfBooks.length === 1 ? "book" : "books"}
               </p>
             </div>
           </div>
@@ -36,7 +38,7 @@ export const Shelf: React.FC<ShelfProps> = ({
               className="flex items-center space-x-1 text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors"
             >
               <span>
-                {isExpanded ? "Show less" : `Show all (${bookKeys.length})`}
+                {isExpanded ? "Show less" : `Show all (${shelfBooks.length})`}
               </span>
               <TrendingUp
                 size={16}
@@ -49,12 +51,12 @@ export const Shelf: React.FC<ShelfProps> = ({
         </div>
       </div>
       <div className="p-6">
-        {bookKeys.length === 0 ? (
-          <EmptyShelf message={`No bookKeys in ${title.toLowerCase()}`} />
+        {shelfBooks.length === 0 ? (
+          <EmptyShelf message={`No books in ${title.toLowerCase()} shelf`} />
         ) : (
           <div className="flex space-x-6 overflow-x-auto pb-4">
-            {displayBooks.map((bookKey, index) => (
-              <BookCard key={index} bookKey={bookKey} />
+            {displayBooks.map((book, index) => (
+              <BookCard key={index} bookKey={book} />
             ))}
           </div>
         )}

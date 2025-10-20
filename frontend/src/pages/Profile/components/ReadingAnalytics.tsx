@@ -4,10 +4,10 @@ import { FileText, Target } from "lucide-react";
 
 interface ReadingAnalyticsProps {
   stats: {
-    wantToRead: number;
-    currentlyReading: number;
-    read: number;
-    journalEntries: number;
+    wantToReadCount: number;
+    ongoingCount: number;
+    completedCount: number;
+    journalCount: number;
   };
   yearlyGoal: number;
   booksReadThisYear: number;
@@ -22,10 +22,11 @@ const ReadingAnalytics: React.FC<ReadingAnalyticsProps> = ({
   avgRating,
   onJournalEntriesClick,
 }) => {
-  const total = stats.wantToRead + stats.currentlyReading + stats.read;
-  const wantPercent = total > 0 ? (stats.wantToRead / total) * 100 : 0;
-  const readingPercent = total > 0 ? (stats.currentlyReading / total) * 100 : 0;
-  const readPercent = total > 0 ? (stats.read / total) * 100 : 0;
+  const total =
+    stats.wantToReadCount + stats.ongoingCount + stats.completedCount;
+  const wantPercent = total > 0 ? (stats.wantToReadCount / total) * 100 : 0;
+  const readingPercent = total > 0 ? (stats.ongoingCount / total) * 100 : 0;
+  const readPercent = total > 0 ? (stats.completedCount / total) * 100 : 0;
 
   const goalProgress =
     yearlyGoal > 0 ? (booksReadThisYear / yearlyGoal) * 100 : 0;
@@ -110,18 +111,20 @@ const ReadingAnalytics: React.FC<ReadingAnalyticsProps> = ({
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-blue-500"></div>
               <span className="text-sm text-gray-600">
-                Want to Read ({stats.wantToRead})
+                Want to Read ({stats.wantToReadCount})
               </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-amber-500"></div>
               <span className="text-sm text-gray-600">
-                Currently Reading ({stats.currentlyReading})
+                Currently Reading ({stats.ongoingCount})
               </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-green-500"></div>
-              <span className="text-sm text-gray-600">Read ({stats.read})</span>
+              <span className="text-sm text-gray-600">
+                Read ({stats.completedCount})
+              </span>
             </div>
           </div>
         </div>
@@ -193,7 +196,7 @@ const ReadingAnalytics: React.FC<ReadingAnalyticsProps> = ({
               </div>
             </div>
             <div className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-              {stats.journalEntries}
+              {stats.journalCount}
             </div>
           </button>
         </div>

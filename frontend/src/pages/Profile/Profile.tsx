@@ -9,66 +9,87 @@ import FavoriteBooksCarousel from "./components/FavoriteBooksCarousel";
 import ReadingAnalytics from "./components/ReadingAnalytics";
 
 const Profile = () => {
-  const { user: userParam } = useParams<{ user: string }>();
+  const { userName } = useParams();
   const navigate = useNavigate();
 
-  // Get current user from Redux
   const currentUser = useAppSelector((state) => state.auth.user);
   const isLoading = useAppSelector((state) => state.auth.loading);
 
-  // State for viewed profile - properly typed as UserData | null
   const [profileData, setProfileData] = useState<UserData | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const {
+    completed = [],
+    wantToRead = [],
+    ongoing = [],
+  } = currentUser?.shelves || {};
+
+  const completedCount = completed.length;
+  const wantToReadCount = wantToRead.length;
+  const ongoingCount = ongoing.length;
+  const journalCount = currentUser?.journals.length || 0;
+  const userStats = {
+    wantToReadCount,
+    ongoingCount,
+    completedCount,
+    journalCount,
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         setLoading(true);
-        // If viewing own profile or no userParam specified, use current user
-        if (!userParam || userParam === currentUser?.userName) {
-          setProfileData(currentUser);
-        } else {
-          // Fetch other user's profile data by username
-          // You'll need to add this endpoint to your backend
-          const response = await api.get(`/api/users/username/${userParam}`);
-          setProfileData(response.data);
+
+        if (!userName) {
+          if (currentUser) {
+            setProfileData(currentUser);
+          } else {
+            navigate("/login");
+          }
+          return;
         }
+
+        if (currentUser && userName === currentUser.userName) {
+          setProfileData(currentUser);
+          return;
+        }
+
+        const response = await api.get(`/api/users/${userName}`);
+        setProfileData(response.data);
       } catch (error) {
         console.error("Failed to fetch profile:", error);
-        // If user not found, redirect to home or show error
-        navigate("/");
+        // Don't navigate away, show error state instead
+        setProfileData(null);
       } finally {
         setLoading(false);
       }
     };
 
-    if (currentUser) {
-      fetchProfile();
-    } else {
-      setLoading(false);
-    }
-  }, [userParam, currentUser, navigate]);
+    fetchProfile();
+  }, [userName, currentUser?.userName, navigate]); // Changed dependency
 
   useEffect(() => {
-    // Check if current user is following this profile
-    if (currentUser && profileData && profileData.uid !== currentUser.uid) {
-      setIsFollowing(currentUser.following.includes(profileData.uid));
+    if (!currentUser || !profileData) {
+      setIsFollowing(false);
+      return;
     }
-  }, [currentUser, profileData]);
+    setIsFollowing(profileData.followers.includes(currentUser.uid));
+  }, [currentUser?.uid, profileData?.followers]); // <— depend on followers
 
   const handleFollowToggle = async () => {
     if (!currentUser || !profileData) return;
 
     try {
+      const previousFollowState = isFollowing;
+
+      setIsFollowing(!isFollowing);
+
       await api.post(`/api/users/follow`, {
         targetUid: profileData.uid,
       });
 
-      setIsFollowing(!isFollowing);
-
-      // Update the follower/following counts locally
-      if (!isFollowing) {
+      if (!previousFollowState) {
         setProfileData({
           ...profileData,
           followers: [...profileData.followers, currentUser.uid],
@@ -83,6 +104,8 @@ const Profile = () => {
       }
     } catch (error) {
       console.error("Failed to toggle follow:", error);
+
+      setIsFollowing(!isFollowing);
     }
   };
 
@@ -119,10 +142,13 @@ const Profile = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100">
         <div className="text-center">
-          <p className="text-xl text-amber-700">Profile not found</p>
+          <p className="text-xl text-amber-700 mb-2">Profile not found</p>
+          <p className="text-sm text-amber-600 mb-4">
+            The user @{userName} does not exist
+          </p>
           <button
             onClick={() => navigate("/")}
-            className="mt-4 px-6 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"
+            className="mt-4 px-6 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
           >
             Go Home
           </button>
@@ -130,14 +156,6 @@ const Profile = () => {
       </div>
     );
   }
-
-  // Transform user data for components
-  const stats = {
-    wantToRead: profileData.stats.wantToReadCount,
-    currentlyReading: profileData.stats.ongoingCount,
-    read: profileData.stats.completedCount,
-    journalEntries: profileData.stats.totalJournals,
-  };
 
   const followers = profileData.followers.length;
   const following = profileData.following.length;
@@ -171,14 +189,14 @@ const Profile = () => {
           onEditProfile={handleEditProfile}
         />
 
-        <StatsGrid stats={stats} />
+        <StatsGrid stats={userStats} />
 
         {profileData.favorites.length > 0 && (
           <FavoriteBooksCarousel favoriteBookKeys={profileData.favorites} />
         )}
 
         <ReadingAnalytics
-          stats={stats}
+          stats={userStats}
           yearlyGoal={profileData.stats.yearlyGoal}
           booksReadThisYear={profileData.stats.booksReadThisYear.length}
           avgRating={profileData.stats.avgRating}

@@ -47,7 +47,9 @@ const LoadingSkeleton: React.FC = () => {
 };
 
 const SearchResults: React.FC = () => {
-  const { searchResults, isLoading } = useAppSelector((state) => state.books);
+  const { searchResults, isLoading } = useAppSelector(
+    (state) => state.searchBooks
+  );
 
   const [currentPage, setCurrentPage] = useState(1);
   const hasLoadedBooksRef = useRef(false);

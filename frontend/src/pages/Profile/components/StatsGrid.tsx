@@ -4,42 +4,44 @@ import { Book, BookOpen, CheckCircle } from "lucide-react";
 
 interface StatsGridProps {
   stats: {
-    wantToRead: number;
-    currentlyReading: number;
-    read: number;
-    journalEntries: number;
+    wantToReadCount: number;
+    ongoingCount: number;
+    completedCount: number;
   };
 }
 
 const StatsGrid: React.FC<StatsGridProps> = ({ stats }) => {
-  const total = stats.wantToRead + stats.currentlyReading + stats.read;
-  const wantPercent = total > 0 ? (stats.wantToRead / total) * 100 : 0;
-  const readingPercent = total > 0 ? (stats.currentlyReading / total) * 100 : 0;
-  const readPercent = total > 0 ? (stats.read / total) * 100 : 0;
+  const total =
+    stats.wantToReadCount + stats.ongoingCount + stats.completedCount;
+  const wantPercent = total > 0 ? (stats.wantToReadCount / total) * 100 : 0;
+  const readingPercent = total > 0 ? (stats.ongoingCount / total) * 100 : 0;
+  const readPercent = total > 0 ? (stats.completedCount / total) * 100 : 0;
 
   const cards = [
     {
       title: "Want to Read",
-      value: stats.wantToRead,
+      value: stats.wantToReadCount,
       gradient: "from-blue-400 to-blue-500",
       percent: wantPercent,
       icon: <Book size={28} className="text-white" />,
     },
     {
       title: "Currently Reading",
-      value: stats.currentlyReading,
+      value: stats.ongoingCount,
       gradient: "from-amber-400 to-orange-400",
       percent: readingPercent,
       icon: <BookOpen size={28} className="text-white" />,
     },
     {
       title: "Books Read",
-      value: stats.read,
+      value: stats.completedCount,
       gradient: "from-green-400 to-emerald-500",
       percent: readPercent,
       icon: <CheckCircle size={28} className="text-white" />,
     },
   ];
+
+  console.log(stats);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

@@ -1,4 +1,5 @@
 import { LucideIcon } from "lucide-react";
+import { ShelfBook } from "../../../models/user";
 
 export interface Book {
   title: string;
@@ -15,8 +16,8 @@ export interface ShelfState {
 }
 
 export interface ExpandedShelfState {
-  read: boolean;
-  currentlyReading: boolean;
+  completed: boolean;
+  ongoing: boolean;
   wantToRead: boolean;
 }
 
@@ -30,7 +31,7 @@ export interface EmptyShelfProps {
 
 export interface ShelfProps {
   title: string;
-  bookKeys: string[];
+  shelfBooks: ShelfBook[];
   icon: LucideIcon;
   color: string;
   shelfKey: keyof ExpandedShelfState;

@@ -38,11 +38,9 @@ export interface AuthState {
   loading: boolean;
   error: string | null;
   isAuthenticated: boolean;
-}
-
-export interface AuthState {
-  user: UserData | null;
-  loading: boolean;
-  error: string | null;
-  isAuthenticated: boolean;
+  usernameCheck: {
+    checking: boolean;
+    available: boolean | null;
+    error: string | null;
+  };
 }

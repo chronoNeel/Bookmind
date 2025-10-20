@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Search } from "lucide-react";
 import SearchSuggestion from "./SearchSuggestion";
 import { useLocation, useNavigate } from "react-router-dom";
-import { searchBooks } from "../store/slices/bookSlice";
+import { searchBooks } from "../store/slices/searchSlice";
 import { useAppDispatch, useAppSelector } from "../hooks/redux";
 
 const SearchBar: React.FC = () => {
@@ -18,7 +18,9 @@ const SearchBar: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  const { searchResults, isLoading } = useAppSelector((state) => state.books);
+  const { searchResults, isLoading } = useAppSelector(
+    (state) => state.searchBooks
+  );
 
   // Get top 5 results for suggestions - memoized
   const suggestionBooks = searchResults.slice(0, 5);

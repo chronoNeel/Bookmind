@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Book } from "../types/Book";
-import { setCurrentPage } from "../store/slices/SearchSlice";
 
 interface SearchSuggestionProps {
   books: Book[];

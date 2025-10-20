@@ -19,6 +19,25 @@ interface LoginPayload {
   password: string;
 }
 
+// Check username availability
+export const checkUsernameAvailability = createAsyncThunk<
+  { available: boolean; username: string },
+  string,
+  { rejectValue: string }
+>("auth/checkUsername", async (username, { rejectWithValue }) => {
+  try {
+    const response = await api.get(`/api/users/check-username/${username}`);
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      return rejectWithValue(
+        error.response.data.error || "Failed to check username"
+      );
+    }
+    return rejectWithValue(error.message || "Failed to check username");
+  }
+});
+
 // Register user
 export const registerUser = createAsyncThunk<
   UserData,
@@ -76,12 +95,11 @@ export const fetchUserProfile = createAsyncThunk<
   UserData,
   string,
   { rejectValue: string }
->("auth/fetchProfile", async (uid, { rejectWithValue }) => {
+>("auth/fetchProfile", async (userName, { rejectWithValue }) => {
   try {
-    const response = await api.get(`/api/users/${uid}`);
+    const response = await api.get(`/api/users/${userName}`);
     return response.data;
   } catch (error: any) {
-    // if Axios error with response
     if (error.response) {
       return rejectWithValue(
         error.response.data.error || "Failed to fetch user profile"
@@ -101,6 +119,11 @@ const initialState: AuthState = {
   loading: true,
   error: null,
   isAuthenticated: false,
+  usernameCheck: {
+    checking: false,
+    available: null,
+    error: null,
+  },
 };
 
 const authSlice = createSlice({
@@ -123,6 +146,14 @@ const authSlice = createSlice({
       if (state.user) {
         state.user = { ...state.user, ...action.payload };
       }
+    },
+    // Reset username check state
+    resetUsernameCheck: (state) => {
+      state.usernameCheck = {
+        checking: false,
+        available: null,
+        error: null,
+      };
     },
   },
   extraReducers: (builder) => {
@@ -174,10 +205,29 @@ const authSlice = createSlice({
         state.user = null;
         state.isAuthenticated = false;
         state.loading = false;
+      })
+      // Check Username
+      .addCase(checkUsernameAvailability.pending, (state) => {
+        state.usernameCheck.checking = true;
+        state.usernameCheck.error = null;
+      })
+      .addCase(checkUsernameAvailability.fulfilled, (state, action) => {
+        state.usernameCheck.checking = false;
+        state.usernameCheck.available = action.payload.available;
+      })
+      .addCase(checkUsernameAvailability.rejected, (state, action) => {
+        state.usernameCheck.checking = false;
+        state.usernameCheck.error =
+          action.payload ?? "Failed to check username";
       });
   },
 });
 
-export const { setUser, setLoading, clearError, updateUserProfile } =
-  authSlice.actions;
+export const {
+  setUser,
+  setLoading,
+  clearError,
+  updateUserProfile,
+  resetUsernameCheck,
+} = authSlice.actions;
 export default authSlice.reducer;

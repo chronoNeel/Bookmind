@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import ReadingChallenge from "./components/ReadingChallenge";
 import UserStats from "./components/UserStats";
 import MotivationalQuote from "./components/MotivationalQuote";
@@ -9,13 +9,23 @@ import DailyTip from "./components/DailyTip";
 import SearchBar from "../../components/SearchBar";
 import UserSearch from "./components/UserSearch";
 import { useNavigate } from "react-router-dom";
+import { useAppSelector } from "../../hooks/redux";
 
 const Home = () => {
   const navigate = useNavigate();
 
-  const [readingGoal, setReadingGoal] = useState(25);
-  const [booksRead] = useState(12);
-  const [currentQuoteIndex] = useState(0);
+  const currentUser = useAppSelector((state) => state.auth.user);
+
+  const {
+    completed = [],
+    wantToRead = [],
+    ongoing = [],
+  } = currentUser?.shelves || {};
+
+  const completedCount = completed.length;
+  const wantToReadCount = wantToRead.length;
+  const ongoingCount = ongoing.length;
+  const userStats = { wantToReadCount, ongoingCount, completedCount };
 
   // Memoize static data
   const friendsActivity = useMemo(
@@ -106,15 +116,10 @@ const Home = () => {
                 {/* Left Sidebar */}
                 <div className="col-12 col-lg-3 order-lg-1">
                   <div className="d-flex flex-column gap-3 gap-lg-4">
-                    <ReadingChallenge
-                      readingGoal={readingGoal}
-                      setReadingGoal={setReadingGoal}
-                      booksRead={booksRead}
-                    />
-                    <UserStats />
-                    <MotivationalQuote
-                      quote={readingQuotes[currentQuoteIndex]}
-                    />
+                    {/* ReadingChallenge now self-contained */}
+                    <ReadingChallenge />
+                    <UserStats {...userStats} />
+                    <MotivationalQuote quote={readingQuotes[0]} />
                     <UserSearch onSearch={handleSearch} />
                   </div>
                 </div>

@@ -1,12 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import { RootState } from "../../store";
-import {
-  addBookToShelf,
-  removeBookFromShelf,
-} from "../../store/slices/shelfSlice";
 import SearchBar from "../../components/SearchBar";
 import BookDetailsCard from "./components/BookDetailsCard";
 import SimilarBooksCarousel from "./components/SimilarBooksCarousel";
@@ -16,10 +12,13 @@ import LoadingSpinner from "./components/LoadingSpinner";
 import ErrorMessage from "./components/ErrorMessage";
 import { mockJournalEntries } from "./components/mockData";
 import { BookDetails as Book, SimilarBook } from "../../types/Book";
+import { setBookStatus } from "../../store/slices/shelfSlice";
+import { useAppDispatch } from "../../hooks/redux";
+import { toast } from "react-toastify";
 
 const BookDetails = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const params = useParams<{ bookKey: string }>();
   const { bookKey } = params;
 
@@ -34,6 +33,8 @@ const BookDetails = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const shelves = useSelector((state: RootState) => state.shelf);
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+
   const [status, setStatus] = useState<
     "wantToRead" | "ongoing" | "completed" | null
   >(null);
@@ -146,22 +147,61 @@ const BookDetails = () => {
     getBookDetails();
   }, [bookKey]);
 
-  const handleStatusChange = (
+  const handleStatusChange = async (
     newStatus: "wantToRead" | "ongoing" | "completed" | "remove"
   ) => {
     if (!book?.key) return;
 
-    if (newStatus === "remove") {
-      dispatch(removeBookFromShelf(book.key));
-      setStatus(null);
-    } else {
-      dispatch(addBookToShelf({ shelf: newStatus, bookKey: book.key }));
-      setStatus(newStatus);
+    if (!currentUser) {
+      setIsModalOpen(false);
+
+      toast.warn("Please log in to add books to your shelves.", {
+        position: "top-center",
+      });
+
+      setTimeout(() => {
+        navigate("/login", { state: { from: `/book/${bookKey}` } });
+      }, 1500);
+
+      return;
     }
-    setIsModalOpen(false);
+
+    try {
+      const statusValue = newStatus === "remove" ? null : newStatus;
+
+      await dispatch(
+        setBookStatus({ bookKey: book.key, status: statusValue })
+      ).unwrap();
+
+      setStatus(statusValue);
+      setIsModalOpen(false);
+    } catch (error: any) {
+      if (error?.code === "AUTH_REQUIRED") {
+        setIsModalOpen(false);
+        const shouldRedirect = window.confirm(
+          error.message || "Please log in to continue. Redirect to login?"
+        );
+        if (shouldRedirect) {
+          navigate("/login", { state: { from: `/book/${bookKey}` } });
+        }
+      } else {
+        alert(
+          error?.message || "Failed to update book status. Please try again."
+        );
+      }
+    }
   };
 
   const handleAddJournal = () => {
+    // Check if user is authenticated before adding journal
+    if (!currentUser) {
+      alert("Please log in to add journal entries");
+      navigate("/login", {
+        state: { from: `/book/${bookKey}` },
+      });
+      return;
+    }
+
     if (book) {
       navigate("/add-journal", { state: { bookKey: book.key } });
     }

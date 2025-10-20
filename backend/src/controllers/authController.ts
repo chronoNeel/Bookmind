@@ -43,7 +43,10 @@ export const register = asyncHandler(
       fullName: fullName,
       userName: generateUserName(fullName, decodedToken.uid),
       bio: "",
-      profilePic: "https://via.placeholder.com/150",
+      profilePic:
+        "https://ui-avatars.com/api/?name=" +
+        encodeURIComponent(fullName) +
+        "&size=200&background=f59e0b&color=fff",
       followers: [],
       following: [],
       favorites: [],

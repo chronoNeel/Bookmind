@@ -1,35 +1,19 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { CheckCircle, Eye, BookOpen } from "lucide-react";
 import { Shelf } from "./components/Shelf";
-import { ShelfState, ExpandedShelfState } from "./components/types";
+import { ExpandedShelfState } from "./components/types";
 import { useAppSelector } from "../../hooks/redux";
 
-export default function MyBooks() {
-  const { completed, ongoing, wantToRead } = useAppSelector(
-    (state) => state.shelf
-  );
-
-  // Compute shelves from Redux state - updates when Redux state changes
-  const shelves = useMemo<ShelfState>(
-    () => ({
-      read: completed,
-      currentlyReading: ongoing,
-      wantToRead: wantToRead,
-    }),
-    [completed, ongoing, wantToRead]
-  );
-  console.log(shelves);
+const MyBooks = () => {
+  const shelves = useAppSelector((state) => state.auth.user?.shelves);
+  const { completed = [], ongoing = [], wantToRead = [] } = shelves || {};
+  console.log(completed, ongoing, wantToRead);
 
   const [expandedShelf, setExpandedShelf] = useState<ExpandedShelfState>({
-    read: false,
-    currentlyReading: false,
+    completed: false,
+    ongoing: false,
     wantToRead: false,
   });
-
-  const totalBooks =
-    shelves.read.length +
-    shelves.currentlyReading.length +
-    shelves.wantToRead.length;
 
   const toggleShelf = (shelfName: keyof ExpandedShelfState) => {
     setExpandedShelf((prev) => ({
@@ -61,34 +45,31 @@ export default function MyBooks() {
               </div>
             </div>
             <h1 className="text-3xl font-bold text-amber-900 mb-2">My Books</h1>
-            <p className="text-amber-700">
-              {totalBooks} books across {Object.keys(shelves).length} shelves
-            </p>
           </div>
 
           {/* Shelves */}
           <div className="space-y-6">
             <Shelf
-              title="Read"
-              bookKeys={shelves.read}
+              title="Completed"
+              shelfBooks={completed}
               icon={CheckCircle}
               color="bg-green-500"
-              shelfKey="read"
-              isExpanded={expandedShelf.read}
-              onToggle={() => toggleShelf("read")}
+              shelfKey="completed"
+              isExpanded={expandedShelf.completed}
+              onToggle={() => toggleShelf("completed")}
             />
             <Shelf
               title="Currently Reading"
-              bookKeys={shelves.currentlyReading}
+              shelfBooks={ongoing}
               icon={Eye}
               color="bg-blue-500"
-              shelfKey="currentlyReading"
-              isExpanded={expandedShelf.currentlyReading}
-              onToggle={() => toggleShelf("currentlyReading")}
+              shelfKey="ongoing"
+              isExpanded={expandedShelf.ongoing}
+              onToggle={() => toggleShelf("ongoing")}
             />
             <Shelf
-              title="Want to Read"
-              bookKeys={shelves.wantToRead}
+              title="Want to completed"
+              shelfBooks={wantToRead}
               icon={BookOpen}
               color="bg-amber-500"
               shelfKey="wantToRead"
@@ -100,4 +81,6 @@ export default function MyBooks() {
       </div>
     </div>
   );
-}
+};
+
+export default MyBooks;

@@ -1,67 +1,44 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { Book } from "../../types/Book";
-import { fetchBooks } from "../../api/bookApi";
+// store/slices/booksSlice.ts
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-interface BookState {
-  searchResults: Book[];
-  genres: Record<string, any[]>;
-  isLoading: boolean;
-  error: string | null;
+interface BookData {
+  title: string;
+  author: string;
+  coverUrl: string;
+  bookKey: string;
+  fetchedAt: number;
 }
 
-const initialState: BookState = {
-  searchResults: [],
-  genres: {},
-  isLoading: false,
-  error: null,
+interface BooksState {
+  cache: Record<string, BookData>;
+}
+
+const initialState: BooksState = {
+  cache: {},
 };
 
-export const searchBooks = createAsyncThunk(
-  "books/searchBooks",
-  async (searchTerm: string, { rejectWithValue }) => {
-    if (!searchTerm.trim()) {
-      return [];
-    }
-
-    try {
-      return await fetchBooks(searchTerm);
-    } catch (err: any) {
-      return rejectWithValue(err.message || "Error fetching books");
-    }
-  }
-);
-
-const bookSlice = createSlice({
+const booksSlice = createSlice({
   name: "books",
   initialState,
   reducers: {
-    clearSearchResults: (state) => {
-      state.searchResults = [];
-      state.error = null;
+    cacheBook: (state, action: PayloadAction<BookData>) => {
+      state.cache[action.payload.bookKey] = action.payload;
     },
-    clearError: (state) => {
-      state.error = null;
+    clearCache: (state) => {
+      state.cache = {};
     },
-  },
-  extraReducers: (builder) => {
-    builder
-      .addCase(searchBooks.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(searchBooks.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.error = null;
-        state.searchResults = action.payload;
-      })
-      .addCase(searchBooks.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload as string;
-        state.searchResults = [];
+    removeStaleBooks: (state, action: PayloadAction<number>) => {
+      const maxAge = action.payload; // in milliseconds
+      const now = Date.now();
+
+      Object.keys(state.cache).forEach((key) => {
+        if (now - state.cache[key].fetchedAt > maxAge) {
+          delete state.cache[key];
+        }
       });
+    },
   },
 });
 
-export const { clearSearchResults, clearError } = bookSlice.actions;
-
-export default bookSlice.reducer;
+export const { cacheBook, clearCache, removeStaleBooks } = booksSlice.actions;
+export default booksSlice.reducer;

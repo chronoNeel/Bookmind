@@ -4,10 +4,10 @@ import { ChevronDown, Plus, BookOpen, Edit3, X } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  addBookToShelf,
-  removeBookFromShelf,
-} from "../../../store/slices/shelfSlice";
+// import {
+//   addBookToShelf,
+//   removeBookFromShelf,
+// } from "../../../store/slices/shelfSlice";
 import { RootState } from "../../../store";
 
 interface BookCardProps {
@@ -93,18 +93,18 @@ const BookCard = ({ book, onClick }: BookCardProps) => {
   const handleStatusChange = (
     newStatus: "wantToRead" | "ongoing" | "completed" | "remove"
   ) => {
-    if (newStatus === "remove") {
-      dispatch(removeBookFromShelf(book.key));
-      setStatus(null);
-    } else {
-      dispatch(
-        addBookToShelf({
-          shelf: newStatus,
-          bookKey: book.key,
-        })
-      );
-      setStatus(newStatus);
-    }
+    // if (newStatus === "remove") {
+    //   dispatch(removeBookFromShelf(book.key));
+    //   setStatus(null);
+    // } else {
+    //   dispatch(
+    //     addBookToShelf({
+    //       shelf: newStatus,
+    //       bookKey: book.key,
+    //     })
+    //   );
+    //   setStatus(newStatus);
+    // }
     setIsModalOpen(false);
   };
 

@@ -1,56 +1,102 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+// src/store/shelves/shelfSlice.ts
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import api from "../../utils/api";
 
-interface ShelfState {
+// local shelf shape
+export type ShelfStatus =
+  | "wantToRead"
+  | "ongoing"
+  | "completed"
+  | "remove"
+  | null;
+
+export interface ShelfState {
   completed: string[];
   ongoing: string[];
   wantToRead: string[];
+  loading: boolean;
+  error: string | null;
 }
 
 const initialState: ShelfState = {
   completed: [],
   ongoing: [],
   wantToRead: [],
+  loading: false,
+  error: null,
 };
+
+export const setBookStatus = createAsyncThunk<
+  { bookKey: string; status: ShelfStatus },
+  { bookKey: string; status: ShelfStatus },
+  { rejectValue: { message: string; code?: string } }
+>("shelf/setBookStatus", async (payload, { rejectWithValue }) => {
+  const { bookKey, status } = payload;
+  console.log(bookKey, status);
+  try {
+    await api.post("/api/shelves/set-status", {
+      bookKey,
+      status: status ?? "remove",
+    });
+
+    return { bookKey, status };
+  } catch (err: any) {
+    return rejectWithValue({
+      message:
+        err?.response?.data?.error ||
+        err.message ||
+        "Failed to set book status",
+      code: err?.response?.status === 401 ? "AUTH_REQUIRED" : undefined,
+    });
+  }
+});
 
 const shelfSlice = createSlice({
   name: "shelf",
   initialState,
   reducers: {
-    addBookToShelf: (
+    // optional: local-only optimistic update (no API)
+    setBookStatusLocal: (
       state,
-      action: PayloadAction<{
-        shelf: "completed" | "ongoing" | "wantToRead";
-        bookKey: string;
-      }>
+      action: PayloadAction<{ bookKey: string; status: ShelfStatus }>
     ) => {
-      const { shelf, bookKey } = action.payload;
+      const { bookKey, status } = action.payload;
 
-      // Remove book from all shelves first
-      Object.keys(state).forEach((key) => {
-        state[key as keyof ShelfState] = state[key as keyof ShelfState].filter(
-          (k) => k !== bookKey
-        );
-      });
+      state.completed = state.completed.filter((k) => k !== bookKey);
+      state.ongoing = state.ongoing.filter((k) => k !== bookKey);
+      state.wantToRead = state.wantToRead.filter((k) => k !== bookKey);
 
-      // Add book to the specified shelf if not already there
-      if (!state[shelf].includes(bookKey)) {
-        state[shelf].push(bookKey);
+      if (status && status !== "remove") {
+        state[status].push(bookKey);
       }
     },
-
-    removeBookFromShelf: (state, action: PayloadAction<string>) => {
-      const bookKey = action.payload;
-      Object.keys(state).forEach((key) => {
-        state[key as keyof ShelfState] = state[key as keyof ShelfState].filter(
-          (k) => k !== bookKey
-        );
+    resetShelvesLocal: () => initialState,
+  },
+  extraReducers: (builder) => {
+    // setBookStatus
+    builder
+      .addCase(setBookStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(setBookStatus.fulfilled, (state, action) => {
+        state.loading = false;
+        const { bookKey, status } = action.payload;
+        // remove from all
+        state.completed = state.completed.filter((k) => k !== bookKey);
+        state.ongoing = state.ongoing.filter((k) => k !== bookKey);
+        state.wantToRead = state.wantToRead.filter((k) => k !== bookKey);
+        // add if not removing
+        if (status && status !== "remove") {
+          state[status].push(bookKey);
+        }
+      })
+      .addCase(setBookStatus.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message ?? "Failed to set book status";
       });
-    },
-
-    clearShelves: () => initialState,
   },
 });
 
-export const { addBookToShelf, clearShelves, removeBookFromShelf } =
-  shelfSlice.actions;
+export const { setBookStatusLocal, resetShelvesLocal } = shelfSlice.actions;
 export default shelfSlice.reducer;

@@ -27,12 +27,8 @@ const Login = () => {
       const result = await dispatch(loginUser({ email, password }) as any);
 
       if (!("error" in result)) {
-        setShowTextReveal(true);
-
-        // Navigate after animation (4s)
-        setTimeout(() => {
-          navigate("/");
-        }, 4000);
+        // Navigate to animation page immediately
+        navigate("/login-success");
       } else {
         alert(result.error.message || "Login failed. Please try again.");
       }
@@ -41,6 +37,8 @@ const Login = () => {
       alert("Something went wrong. Please try again.");
     }
   };
+
+  // Remove the showTextReveal logic from the component
 
   if (showTextReveal) {
     return <TextRevealAnimation />;

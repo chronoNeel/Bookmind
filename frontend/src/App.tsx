@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./utils/firebase";
 import {
@@ -30,10 +30,14 @@ import EditProfile from "./pages/EditProfile/EditProfile";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useAppDispatch } from "./hooks/redux";
+import TextRevealAnimation from "./pages/Login/TextRevealAnimation";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   const location = useLocation();
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const hideNavbarPaths = ["/login", "/signup"];
   const shouldHideNavbar = hideNavbarPaths.includes(location.pathname);
 
@@ -63,6 +67,7 @@ function App() {
   return (
     <div className="flex flex-col min-h-screen">
       {!shouldHideNavbar && <Navbar />}
+      <ToastContainer position="top-center" autoClose={1500} />
 
       <main className="flex-grow">
         <Routes>
@@ -73,6 +78,10 @@ function App() {
                 <Login />
               </ProtectedRoute>
             }
+          />
+          <Route
+            path="/login-success"
+            element={<TextRevealAnimation onComplete={() => navigate("/")} />}
           />
           <Route
             path="/signup"
@@ -109,7 +118,7 @@ function App() {
             }
           />
           <Route
-            path="/profile/:user"
+            path="/profile/:userName"
             element={
               <ProtectedRoute>
                 <Profile />

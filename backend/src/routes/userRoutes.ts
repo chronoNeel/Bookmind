@@ -1,11 +1,9 @@
 import express from "express";
 import {
-  getUserById,
+  getUserByHandle,
   updateUserProfile,
   updateUserStats,
-  getUserShelves,
-  addToShelf,
-  removeFromShelf,
+  checkUsernameAvailability,
   updateYearlyGoal,
   toggleFollow,
 } from "../controllers/userControllers";
@@ -15,14 +13,12 @@ import { authenticate } from "../middleware/authMiddleware";
 const router = express.Router();
 
 // Public route - no authentication needed
-router.get("/:uid", getUserById);
+router.get("/:handle", getUserByHandle);
+router.get("/check-username/:username", checkUsernameAvailability);
 
-// Protected routes - authentication required
-router.put("/profile", authenticate, updateUserProfile);
+// Protected routes
+router.put("/update", authenticate, updateUserProfile);
 router.put("/stats", authenticate, updateUserStats);
-router.get("/shelves/:uid", getUserShelves);
-router.post("/shelves/add", authenticate, addToShelf);
-router.post("/shelves/remove", authenticate, removeFromShelf);
 router.post("/follow", authenticate, toggleFollow);
 router.put("/yearly-goal", authenticate, updateYearlyGoal);
 

@@ -32,11 +32,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   onEditProfile,
 }) => {
   // Fallback profile picture
-  const displayProfilePic =
-    profilePic ||
-    "https://ui-avatars.com/api/?name=" +
-      encodeURIComponent(fullName) +
-      "&size=200&background=f59e0b&color=fff";
+  const displayProfilePic = profilePic;
 
   return (
     <div className="backdrop-blur-xl bg-white/80 rounded-3xl shadow-2xl border border-amber-200/50 overflow-hidden mb-8">
@@ -48,13 +44,6 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               src={displayProfilePic}
               alt={fullName}
               className="w-full h-full object-cover"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src =
-                  "https://ui-avatars.com/api/?name=" +
-                  encodeURIComponent(fullName) +
-                  "&size=200&background=f59e0b&color=fff";
-              }}
             />
           </div>
 

@@ -1,10 +1,28 @@
 // TextRevealAnimation.tsx
 
-import React from "react";
+import React, { useEffect } from "react";
 
-const TextRevealAnimation = () => {
+interface TextRevealAnimationProps {
+  onComplete?: () => void;
+  duration?: number; // Total animation duration in milliseconds
+}
+
+const TextRevealAnimation: React.FC<TextRevealAnimationProps> = ({
+  onComplete,
+  duration = 1800,
+}) => {
   const text = "BOOKMIND";
   const letters = text.split("");
+
+  useEffect(() => {
+    if (onComplete) {
+      const timer = setTimeout(() => {
+        onComplete();
+      }, duration);
+
+      return () => clearTimeout(timer);
+    }
+  }, [onComplete, duration]);
 
   return (
     <>
@@ -83,27 +101,6 @@ const TextRevealAnimation = () => {
               >
                 {letter}
               </span>
-            ))}
-          </div>
-
-          {/* Loading dots */}
-          <div
-            className="d-flex justify-content-center mt-2 subtitle-reveal"
-            style={{
-              gap: "0.5rem",
-              animationDelay: `${letters.length * 0.1 + 1}s`,
-            }}
-          >
-            {[0, 1, 2].map((dot) => (
-              <div
-                key={dot}
-                className="loading-dot rounded-circle bg-secondary"
-                style={{
-                  width: "12px",
-                  height: "12px",
-                  animationDelay: `${dot * 0.2}s`,
-                }}
-              ></div>
             ))}
           </div>
         </div>

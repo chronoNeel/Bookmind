@@ -4,7 +4,6 @@ import { Upload, Trash2, User } from "lucide-react";
 interface Props {
   previewImage: string | null;
   onUploadClick: () => void;
-  onRemove: () => void;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   error?: string;
 }
@@ -12,7 +11,6 @@ interface Props {
 const ProfilePictureInput: React.FC<Props> = ({
   previewImage,
   onUploadClick,
-  onRemove,
   onFileChange,
   error,
 }) => {
@@ -38,14 +36,6 @@ const ProfilePictureInput: React.FC<Props> = ({
               </div>
             )}
           </div>
-          {previewImage && (
-            <button
-              onClick={onRemove}
-              className="absolute -top-1 -right-1 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-md"
-            >
-              <Trash2 className="w-3 h-3" />
-            </button>
-          )}
         </div>
 
         <div className="flex-1">

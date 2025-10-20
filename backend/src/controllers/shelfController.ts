@@ -1,85 +1,98 @@
-// import { Request, Response } from "express";
-// import { db } from "../config/firebaseAdmin";
-// import { asyncHandler } from "../middleware/errorHandler";
-// import admin from "firebase-admin";
-// import { UpdateShelfDto } from "../models/Shelf";
-// import { requireUser } from "../utils/requireUser";
+import { Request, Response } from "express";
+import { db } from "../config/firebaseAdmin";
+import { FieldValue } from "firebase-admin/firestore";
+import { asyncHandler } from "../middleware/errorHandler";
+import { DecodedIdToken } from "firebase-admin/auth";
+import { ShelfBook } from "../models/User";
 
-// export const getUserShelf = asyncHandler(
-//   async (req: Request, res: Response) => {
-//     const { uid } = req.params;
+type ShelfStatus = "wantToRead" | "ongoing" | "completed" | "remove" | null;
 
-//     const shelfDoc = await db.collection("shelves").doc(uid).get();
+const SHELVES = ["completed", "ongoing", "wantToRead"] as const;
+type ShelfKey = (typeof SHELVES)[number];
 
-//     if (!shelfDoc.exists) {
-//       res.json({
-//         status: "ok",
-//         shelf: {
-//           userId: uid,
-//           completed: [],
-//           ongoing: [],
-//           wantToRead: [],
-//           updatedAt: new Date().toISOString(),
-//         },
-//       });
-//       return;
-//     }
+interface RequestWithUser extends Request {
+  user?: DecodedIdToken;
+}
 
-//     res.json({ status: "ok", shelf: shelfDoc.data() });
-//   }
-// );
+function requireUser(req: RequestWithUser) {
+  const uid = req.user?.uid;
+  if (!uid) {
+    const err: any = new Error("Unauthorized - No user found");
+    err.status = 401;
+    throw err;
+  }
+  return uid;
+}
 
-// export const updateShelf = asyncHandler(async (req: Request, res: Response) => {
-//   const user = requireUser(req);
-//   const userId = user.uid;
-//   const { bookId, fromShelf, toShelf }: UpdateShelfDto = req.body;
+export const setBookStatus = asyncHandler(
+  async (req: RequestWithUser, res: Response) => {
+    const uid = requireUser(req);
+    const { bookKey, status } = req.body;
 
-//   const shelfRef = db.collection("shelves").doc(userId);
-//   const shelfDoc = await shelfRef.get();
+    if (typeof bookKey !== "string" || !bookKey.trim()) {
+      return res.status(400).json({ error: "bookKey is required" });
+    }
 
-//   const batch = db.batch();
+    const normalizedStatus = (status ?? "remove") as Exclude<ShelfStatus, null>;
 
-//   // If shelf doesn't exist, create it
-//   if (!shelfDoc.exists) {
-//     batch.set(shelfRef, {
-//       userId,
-//       completed: toShelf === "completed" ? [bookId] : [],
-//       ongoing: toShelf === "ongoing" ? [bookId] : [],
-//       wantToRead: toShelf === "wantToRead" ? [bookId] : [],
-//       updatedAt: new Date().toISOString(),
-//     });
-//   } else {
-//     if (fromShelf) {
-//       batch.update(shelfRef, {
-//         [fromShelf]: admin.firestore.FieldValue.arrayRemove(bookId),
-//         updatedAt: new Date().toISOString(),
-//       });
-//     }
-//     batch.update(shelfRef, {
-//       [toShelf]: admin.firestore.FieldValue.arrayUnion(bookId),
-//       updatedAt: new Date().toISOString(),
-//     });
-//   }
+    if (
+      normalizedStatus !== "remove" &&
+      !SHELVES.includes(normalizedStatus as ShelfKey)
+    ) {
+      return res.status(400).json({ error: "Invalid status" });
+    }
 
-//   // Update user stats
-//   const userRef = db.collection("users").doc(userId);
-//   const statsUpdate: any = {};
+    const userRef = db.collection("users").doc(uid);
 
-//   if (fromShelf) {
-//     statsUpdate[`stats.${fromShelf}Count`] =
-//       admin.firestore.FieldValue.increment(-1);
-//   }
-//   statsUpdate[`stats.${toShelf}Count`] =
-//     admin.firestore.FieldValue.increment(1);
+    // Get current user data to find and remove the book from all shelves
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) {
+      return res.status(404).json({ error: "User not found" });
+    }
 
-//   if (toShelf === "completed") {
-//     statsUpdate["stats.booksReadThisYear"] =
-//       admin.firestore.FieldValue.arrayUnion(bookId);
-//   }
+    const userData = userDoc.data();
+    const shelves = userData?.shelves || {};
 
-//   batch.update(userRef, statsUpdate);
+    // Build the update object
+    const updateData: Record<string, any> = {
+      updatedAt: new Date().toISOString(),
+    };
 
-//   await batch.commit();
+    // Remove the book from all shelves by filtering out matching bookKey
+    SHELVES.forEach((shelfName) => {
+      const shelfBooks: ShelfBook[] = shelves[shelfName] || [];
+      const filteredBooks = shelfBooks.filter(
+        (book) => book.bookKey !== bookKey
+      );
+      updateData[`shelves.${shelfName}`] = filteredBooks;
+    });
 
-//   res.json({ status: "ok", message: "Shelf updated successfully" });
-// });
+    // If not removing, add the book to the target shelf with updated timestamp
+    if (normalizedStatus !== "remove") {
+      const currentShelf: ShelfBook[] = shelves[normalizedStatus] || [];
+      const filteredShelf = currentShelf.filter(
+        (book) => book.bookKey !== bookKey
+      );
+
+      const newShelfBook: ShelfBook = {
+        bookKey,
+        updatedAt: new Date().toISOString(),
+      };
+
+      updateData[`shelves.${normalizedStatus}`] = [
+        ...filteredShelf,
+        newShelfBook,
+      ];
+    }
+
+    await userRef.update(updateData);
+
+    return res.json({
+      status: "ok",
+      message:
+        normalizedStatus !== "remove"
+          ? `Book added to ${normalizedStatus} shelf`
+          : "Book removed from shelves",
+    });
+  }
+);

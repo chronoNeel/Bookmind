@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Book } from "./types";
 
 interface BookCardProps {
   bookKey: string;

@@ -21,13 +21,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   );
   const location = useLocation();
 
-  // Show loading state while Firebase auth initializes
-  if (loading) {
+  // Wait for auth state to be determined before making any decisions
+  if (requireAuth && loading) {
     return (
       fallback || (
-        <div className="flex justify-center items-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-          <span className="ml-3 text-gray-600">Loading...</span>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-lg">Loading...</div>
         </div>
       )
     );
@@ -38,11 +37,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
-  // If authentication is NOT required but user IS authenticated, redirect to my-books
+  // If authentication is NOT required but user IS authenticated, redirect to home
   // (useful for login/register pages when user is already logged in)
   if (!requireAuth && isAuthenticated) {
-    // Changed from "/" to "/my-books" to match your app's protected landing page
-    return <Navigate to="/my-books" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
