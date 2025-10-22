@@ -52,7 +52,6 @@ const Pagination = ({
         <ChevronLeft size={20} />
         <span className="hidden sm:inline">Previous</span>
       </button>
-
       <div className="flex gap-1">
         {getPageNumbers().map((page, index) => (
           <button
@@ -71,7 +70,6 @@ const Pagination = ({
           </button>
         ))}
       </div>
-
       <button
         onClick={() => handleChange(currentPage + 1)}
         disabled={currentPage === totalPages}

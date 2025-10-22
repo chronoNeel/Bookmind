@@ -2,40 +2,40 @@ import React, { useEffect, useState } from "react";
 
 interface BookCardProps {
   bookKey: string;
+  onClick: () => void;
 }
 
-export const BookCard: React.FC<BookCardProps> = ({ bookKey }) => {
-  const [loading, setLoading] = useState(true);
+const bookCache: Record<
+  string,
+  { title: string; author: string; coverUrl: string }
+> = {};
+
+const BookCard: React.FC<BookCardProps> = ({ bookKey, onClick }) => {
+  const [loading, setLoading] = useState(!bookCache[bookKey]);
   const [error, setError] = useState(false);
-  const [coverUrl, setCoverUrl] = useState<string>("");
-  const [title, setTitle] = useState<string>("");
-  const [author, setAuthor] = useState<string>("");
+  const [coverUrl, setCoverUrl] = useState(bookCache[bookKey]?.coverUrl || "");
+  const [title, setTitle] = useState(bookCache[bookKey]?.title || "");
+  const [author, setAuthor] = useState(bookCache[bookKey]?.author || "");
 
   useEffect(() => {
+    if (bookCache[bookKey]) return;
+
     const fetchBookDetails = async () => {
       try {
         setLoading(true);
         setError(false);
 
         const response = await fetch(`https://openlibrary.org${bookKey}.json`);
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch book");
-        }
-
+        if (!response.ok) throw new Error("Failed to fetch book");
         const data = await response.json();
 
-        // Set title
-        setTitle(data.title || "Unknown Title");
-
-        // Set cover if available
+        const bookTitle = data.title || "Unknown Title";
+        let cover = "";
         if (data.covers && data.covers.length > 0) {
-          setCoverUrl(
-            `https://covers.openlibrary.org/b/id/${data.covers[0]}-M.jpg`
-          );
+          cover = `https://covers.openlibrary.org/b/id/${data.covers[0]}-M.jpg`;
         }
 
-        // Fetch author names if available
+        let bookAuthor = "Unknown Author";
         if (data.authors && data.authors.length > 0) {
           try {
             const authorResponse = await fetch(
@@ -43,18 +43,21 @@ export const BookCard: React.FC<BookCardProps> = ({ bookKey }) => {
             );
             if (authorResponse.ok) {
               const authorData = await authorResponse.json();
-              setAuthor(authorData.name || "Unknown Author");
-            } else {
-              setAuthor("Unknown Author");
+              bookAuthor = authorData.name || "Unknown Author";
             }
-          } catch {
-            setAuthor("Unknown Author");
-          }
-        } else {
-          setAuthor("Unknown Author");
+          } catch {}
         }
-      } catch (error) {
-        console.error("Failed to fetch book details:", error);
+
+        const cached = {
+          title: bookTitle,
+          author: bookAuthor,
+          coverUrl: cover,
+        };
+        bookCache[bookKey] = cached;
+        setTitle(cached.title);
+        setAuthor(cached.author);
+        setCoverUrl(cached.coverUrl);
+      } catch {
         setError(true);
       } finally {
         setLoading(false);
@@ -64,24 +67,22 @@ export const BookCard: React.FC<BookCardProps> = ({ bookKey }) => {
     fetchBookDetails();
   }, [bookKey]);
 
-  if (loading) {
+  if (loading)
     return (
       <div className="w-32 h-48 flex items-center justify-center text-gray-400 text-sm">
         Loading...
       </div>
     );
-  }
 
-  if (error || !title) {
+  if (error || !title)
     return (
       <div className="w-32 h-48 flex items-center justify-center text-red-400 text-sm">
         Failed to load
       </div>
     );
-  }
 
   return (
-    <div className="flex-shrink-0 w-32 group cursor-pointer">
+    <div className="flex-shrink-0 w-32 group cursor-pointer" onClick={onClick}>
       <div className="relative overflow-hidden rounded-lg shadow-md transition-transform duration-300 group-hover:scale-105 group-hover:shadow-xl">
         {coverUrl ? (
           <img
@@ -108,3 +109,5 @@ export const BookCard: React.FC<BookCardProps> = ({ bookKey }) => {
     </div>
   );
 };
+
+export default BookCard;

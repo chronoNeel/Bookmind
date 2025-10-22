@@ -13,6 +13,7 @@ interface JournalCardProps {
 
 const JournalCard: React.FC<JournalCardProps> = ({ entry }) => {
   const navigate = useNavigate();
+
   return (
     <div
       onClick={() => navigate(`/journal-preview/${entry.id}`)}

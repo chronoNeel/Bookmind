@@ -15,8 +15,8 @@ const SortControls: React.FC<SortControlsProps> = ({
 }) => {
   return (
     <div className="bg-white rounded-xl shadow-sm p-6 mb-8 border-2 border-amber-200">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-        <div className="flex items-center space-x-3">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-center gap-3">
           <label className="text-sm font-semibold text-amber-800">
             Sort by:
           </label>

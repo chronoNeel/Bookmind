@@ -52,7 +52,6 @@ const AllJournalsFeed = () => {
           backgroundRepeat: "repeat",
         }}
       />
-
       <div className="relative z-10 max-w-6xl mx-auto">
         <SortControls
           sortBy={sortBy}
@@ -60,21 +59,18 @@ const AllJournalsFeed = () => {
           totalEntries={sortedJournals.length}
         />
 
-        {/* LOADING STATE */}
         {loading && (
-          <div className="text-center text-gray-700 text-lg py-12">
-            Loading journals...
+          <div className="flex justify-center py-16">
+            <div className="w-12 h-12 border-4 border-amber-400 border-t-transparent rounded-full animate-spin" />
           </div>
         )}
 
-        {/* ERROR STATE */}
         {error && !loading && (
           <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl text-center">
             {error}
           </div>
         )}
 
-        {/* EMPTY STATE */}
         {!loading && sortedJournals.length === 0 && !error && (
           <div className="bg-white rounded-xl shadow-sm p-12 text-center border-2 border-amber-200">
             <div className="text-6xl mb-4">📚</div>
@@ -87,7 +83,6 @@ const AllJournalsFeed = () => {
           </div>
         )}
 
-        {/* JOURNAL GRID */}
         {!loading && sortedJournals.length > 0 && (
           <>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6">
@@ -95,13 +90,11 @@ const AllJournalsFeed = () => {
                 <JournalCard key={entry.id} entry={entry} />
               ))}
             </div>
-
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={setCurrentPage}
             />
-
             <div className="mt-4 text-center text-sm text-amber-700">
               Showing {startIndex + 1}-
               {Math.min(startIndex + ITEMS_PER_PAGE, sortedJournals.length)} of{" "}

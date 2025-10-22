@@ -127,6 +127,19 @@ const BookCard = ({ book, onClick }: BookCardProps) => {
       ).unwrap();
 
       setStatus(statusValue);
+
+      const toasterText =
+        statusValue === null
+          ? "removed from your shelves"
+          : `Added to ${
+              statusValue === "wantToRead"
+                ? "Want to Read"
+                : statusValue === "ongoing"
+                ? "Ongoing"
+                : "Completed"
+            } shelf`;
+
+      toast.success(`${toasterText}`);
       setIsModalOpen(false);
     } catch (error: any) {
       if (error?.code === "AUTH_REQUIRED") {

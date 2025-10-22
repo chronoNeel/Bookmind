@@ -25,9 +25,7 @@ const MyBooks = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50">
-      {/* Main Content with contained paper texture */}
       <div className="relative p-4 md:p-8">
-        {/* Paper texture overlay - only for this section */}
         <div
           className="absolute inset-0 pointer-events-none opacity-30"
           style={{
@@ -36,9 +34,7 @@ const MyBooks = () => {
             backgroundSize: "60px 60px",
           }}
         />
-
         <div className="relative z-10 max-w-7xl mx-auto">
-          {/* Header */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mb-4">
               <div className="rounded-full border-4 border-amber-200 shadow-sm w-20 h-20 bg-amber-300 flex items-center justify-center overflow-hidden">
@@ -51,8 +47,6 @@ const MyBooks = () => {
             </div>
             <h1 className="text-3xl font-bold text-amber-900 mb-2">My Books</h1>
           </div>
-
-          {/* Shelves */}
           <div className="space-y-6">
             <Shelf
               title="Completed"
@@ -73,7 +67,7 @@ const MyBooks = () => {
               onToggle={() => toggleShelf("ongoing")}
             />
             <Shelf
-              title="Want to read"
+              title="Want to Read"
               shelfBooks={wantToRead}
               icon={BookOpen}
               color="bg-amber-500"
