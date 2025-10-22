@@ -28,7 +28,7 @@ const booksSlice = createSlice({
       state.cache = {};
     },
     removeStaleBooks: (state, action: PayloadAction<number>) => {
-      const maxAge = action.payload; // in milliseconds
+      const maxAge = action.payload;
       const now = Date.now();
 
       Object.keys(state.cache).forEach((key) => {

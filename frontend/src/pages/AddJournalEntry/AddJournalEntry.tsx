@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { toast } from "react-toastify";
 import { useAppDispatch } from "../../hooks/redux";
-import { addJournal } from "../../store/slices/journalSlice";
 import MoodSelector from "./Components/MoodSelector";
 import StarRating from "./Components/StarRating";
 import ReadingProgress from "./Components/ReadingProgress";
@@ -10,16 +10,9 @@ import GuidedPrompts from "./Components/GuidedPrompts";
 import JournalTextarea from "./Components/JournalTextarea";
 import ActionButtons from "./Components/ActionButtons";
 import HeaderCard from "./Components/HeaderCard";
-
-export interface Book {
-  key: string;
-  title: string;
-  description?: string | { value: string };
-  covers?: number[];
-  subjects?: string[];
-  first_publish_date?: string;
-  authors?: { author: { key: string } }[];
-}
+import { BookDetails } from "../../types/Book";
+import JournalEntry from "../../types/JournalEntry";
+import { createJournalEntry } from "../../store/slices/journalSlice";
 
 const AddJournalEntry: React.FC = () => {
   const location = useLocation();
@@ -27,7 +20,7 @@ const AddJournalEntry: React.FC = () => {
   const dispatch = useAppDispatch();
   const bookKey = location.state?.bookKey;
 
-  const [book, setBook] = useState<Book>({
+  const [book, setBook] = useState<BookDetails>({
     key: "",
     title: "",
     description: "",
@@ -36,6 +29,7 @@ const AddJournalEntry: React.FC = () => {
     first_publish_date: "",
     authors: [],
   });
+  const [authorName, setAuthorName] = useState("Unknown Author");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [rating, setRating] = useState(0);
@@ -49,7 +43,7 @@ const AddJournalEntry: React.FC = () => {
   const [promptResponses, setPromptResponses] = useState({});
 
   useEffect(() => {
-    const getBookDetails = async () => {
+    const fetchBookDetails = async () => {
       if (!bookKey) {
         setError("No book key provided");
         setLoading(false);
@@ -60,13 +54,23 @@ const AddJournalEntry: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        // Fetch only the book details needed for the journal entry
         const bookResponse = await axios.get(
           `https://openlibrary.org${bookKey}.json`
         );
-        const bookData = bookResponse.data;
+        const bookData: BookDetails = bookResponse.data;
+        let name = "Unknown Author";
+        if (bookData.authors?.length) {
+          try {
+            const authorKey = bookData.authors[0].author.key;
+            const authorResponse = await axios.get(
+              `https://openlibrary.org${authorKey}.json`
+            );
+            name = authorResponse.data?.name || "Unknown Author";
+          } catch (e) {
+            console.log(e);
+          }
+        }
 
-        // Fetch author name if available
         let authorName = "Unknown Author";
         if (bookData.authors?.length) {
           try {
@@ -75,16 +79,13 @@ const AddJournalEntry: React.FC = () => {
               `https://openlibrary.org${authorKey}.json`
             );
             authorName = authorResponse.data.name || "Unknown Author";
-          } catch (authorError) {
-            console.error("Error fetching author:", authorError);
+          } catch (err) {
+            console.error("Error fetching author:", err);
           }
         }
 
-        // Set the book data with author name
-        setBook({
-          ...bookData,
-          authorName,
-        });
+        setBook({ ...bookData });
+        setAuthorName(name);
       } catch (err) {
         console.error("Error fetching book details:", err);
         setError("Failed to load book details. Please try again.");
@@ -93,7 +94,7 @@ const AddJournalEntry: React.FC = () => {
       }
     };
 
-    getBookDetails();
+    fetchBookDetails();
   }, [bookKey]);
 
   const coverUrl = useMemo(
@@ -111,24 +112,42 @@ const AddJournalEntry: React.FC = () => {
   };
 
   const handleSave = async () => {
+    if (!bookKey) {
+      toast.error("No book selected");
+      return;
+    }
+
     setIsSaving(true);
-    await new Promise((res) => setTimeout(res, 1000));
-    dispatch(
-      addJournal({
-        book,
-        rating,
-        readingProgress,
-        entry,
-        isPrivate,
-        mood: selectedMood,
-        promptResponses,
-      })
-    );
-    setIsSaving(false);
-    navigate("/");
+
+    const payload: JournalEntry = {
+      bookKey,
+      bookTitle: book.title,
+      bookAuthor: authorName,
+      bookCoverUrl: coverUrl,
+      rating,
+      readingProgress,
+      isPrivate,
+      mood: selectedMood,
+      promptResponses,
+      entry,
+      upvotedBy: [],
+      downvotedBy: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    try {
+      await dispatch(createJournalEntry(payload)).unwrap();
+      toast.success("Journal entry saved successfully!");
+      navigate(-1);
+    } catch (err) {
+      console.error("Error saving journal entry:", err);
+      toast.error("Failed to save journal entry. Please try again.");
+      setIsSaving(false);
+    }
   };
 
-  const handleCancel = () => navigate("/search-results");
+  const handleCancel = () => navigate(-1);
 
   if (loading) {
     return (
@@ -157,7 +176,6 @@ const AddJournalEntry: React.FC = () => {
         background: "linear-gradient(135deg, #fffaea 50%, #fef3e2 100%)",
       }}
     >
-      {/* Paper texture overlay */}
       <div
         className="position-absolute top-0 start-0 w-100 h-100"
         style={{
@@ -170,11 +188,11 @@ const AddJournalEntry: React.FC = () => {
         }}
       />
 
-      {/* Main Content */}
       <div className="position-relative z-1 container max-w-3xl mx-auto">
         <HeaderCard
           book={book}
           coverUrl={coverUrl}
+          author={authorName}
           readingProgress={readingProgress}
           getStatusText={getStatusText}
         />

@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Book } from "../../../types/Book";
 import { ChevronDown, Plus, BookOpen, Edit3, X } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-// import {
-//   addBookToShelf,
-//   removeBookFromShelf,
-// } from "../../../store/slices/shelfSlice";
-import { RootState } from "../../../store";
+import { getCurrentUser } from "../../../utils/getUserData";
+import { getBookShelf, ShelfType } from "../../../utils/getBookData";
+import StatusModal from "../../BookDetails/components/StatusModal";
+import { useAppDispatch } from "../../../hooks/redux";
+import { toast } from "react-toastify";
+import { setBookStatus } from "../../../store/slices/shelfSlice";
 
 interface BookCardProps {
   book: Book;
@@ -17,24 +17,28 @@ interface BookCardProps {
 
 const BookCard = ({ book, onClick }: BookCardProps) => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-
-  const shelves = useSelector((state: RootState) => state.shelf);
-
-  const [status, setStatus] = useState<
-    "wantToRead" | "ongoing" | "completed" | null
-  >(null);
+  const dispatch = useAppDispatch();
+  const currentUser = getCurrentUser();
+  const [status, setStatus] = useState<ShelfType | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [description, setDescription] = useState("");
+  const [author, setAuthor] = useState<string>("Unknown Author");
 
-  const coverUrl = `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`;
+  const coverUrl = useMemo(() => {
+    if (!book?.cover_i) return undefined;
+    return `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`;
+  }, []);
 
-  const statusOptions = [
-    { value: "wantToRead", label: "Want to Read" },
-    { value: "ongoing", label: "Ongoing" },
-    { value: "completed", label: "Completed" },
-    { value: "remove", label: "Remove from Shelf" },
-  ];
+  useEffect(() => {
+    if (!book || !currentUser?.shelves) return;
+
+    const shelf = getBookShelf({
+      shelves: currentUser.shelves,
+      bookKey: book.key,
+    });
+
+    setStatus(shelf);
+  }, [currentUser?.shelves, book.key]);
 
   const statusColors = {
     wantToRead:
@@ -59,28 +63,34 @@ const BookCard = ({ book, onClick }: BookCardProps) => {
     );
   };
 
-  // Initialize status based on which shelf the book is in
-  useEffect(() => {
-    if (shelves.completed.includes(book.key)) {
-      setStatus("completed");
-    } else if (shelves.ongoing.includes(book.key)) {
-      setStatus("ongoing");
-    } else if (shelves.wantToRead.includes(book.key)) {
-      setStatus("wantToRead");
-    } else {
-      setStatus(null);
-    }
-  }, [shelves, book.key]);
-
   useEffect(() => {
     const getDescription = async () => {
       try {
-        const res = await axios.get(`/api/openlibrary${book.key}.json`);
+        const bookResponse = await axios.get(
+          `https://openlibrary.org${book.key}.json`
+        );
+        const bookData = bookResponse.data;
 
-        const descData =
-          res.data?.description?.value || res.data?.description || "";
+        const desc =
+          typeof bookData.description === "object"
+            ? bookData.description.value
+            : bookData.description || "No description available";
+        setDescription(desc);
 
-        setDescription(descData);
+        if (bookData.authors?.length) {
+          try {
+            const authorKey = bookData.authors[0].author.key;
+            const authorResponse = await axios.get(
+              `https://openlibrary.org${authorKey}.json`
+            );
+            setAuthor(authorResponse.data.name || "Unknown Author");
+          } catch (authorError) {
+            console.error("Error fetching author:", authorError);
+            setAuthor("Unknown Author");
+          }
+        } else {
+          setAuthor("Unknown Author");
+        }
       } catch (err) {
         console.error("Failed to fetch description:", err);
         setDescription("No description available");
@@ -90,202 +100,226 @@ const BookCard = ({ book, onClick }: BookCardProps) => {
     getDescription();
   }, [book.key]);
 
-  const handleStatusChange = (
+  const handleStatusChange = async (
     newStatus: "wantToRead" | "ongoing" | "completed" | "remove"
   ) => {
-    // if (newStatus === "remove") {
-    //   dispatch(removeBookFromShelf(book.key));
-    //   setStatus(null);
-    // } else {
-    //   dispatch(
-    //     addBookToShelf({
-    //       shelf: newStatus,
-    //       bookKey: book.key,
-    //     })
-    //   );
-    //   setStatus(newStatus);
-    // }
-    setIsModalOpen(false);
+    if (!book?.key) return;
+
+    if (!currentUser) {
+      setIsModalOpen(false);
+
+      toast.warn("Please log in to add books to your shelves.", {
+        position: "top-center",
+      });
+
+      setTimeout(() => {
+        navigate("/login", { state: { from: `/book/${book.key}` } });
+      }, 1500);
+
+      return;
+    }
+
+    try {
+      const statusValue = newStatus === "remove" ? null : newStatus;
+
+      await dispatch(
+        setBookStatus({ bookKey: book.key, status: statusValue })
+      ).unwrap();
+
+      setStatus(statusValue);
+      setIsModalOpen(false);
+    } catch (error: any) {
+      if (error?.code === "AUTH_REQUIRED") {
+        setIsModalOpen(false);
+        const shouldRedirect = window.confirm(
+          error.message || "Please log in to continue. Redirect to login?"
+        );
+        if (shouldRedirect) {
+          navigate("/login", { state: { from: `/book/${book.key}` } });
+        }
+      } else {
+        alert(
+          error?.message || "Failed to update book status. Please try again."
+        );
+      }
+    }
+  };
+
+  const handleAddJournal = (e: any) => {
+    e.stopPropagation();
+    if (!currentUser) {
+      alert("Please log in to add journal entries");
+      navigate("/login", {
+        state: { from: `/book/${book.key}` },
+      });
+      return;
+    }
+
+    if (book) {
+      navigate("/add-journal", { state: { bookKey: book.key } });
+    }
   };
 
   return (
     <>
       <div
-        className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 p-6 mb-4 group hover:bg-gradient-to-r hover:from-gray-50 hover:to-white"
+        className="card rounded-4 shadow-sm mb-4 hover-lift"
         onClick={onClick}
+        style={{
+          cursor: "pointer",
+          transition: "transform 0.25s ease, box-shadow 0.25s ease",
+          backgroundColor: "#ffffff",
+        }}
       >
-        <div className="flex gap-6">
-          {/* Book Cover */}
-          <div className="flex-shrink-0">
-            <div className="relative">
-              <img
-                src={coverUrl}
-                alt={`${book.title} cover`}
-                className="w-20 h-32 object-cover rounded-xl shadow-lg bg-gradient-to-br from-gray-100 to-gray-200 transition-transform duration-300 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            </div>
-          </div>
-
-          {/* Content Area */}
-          <div className="flex-1 min-w-0">
-            {/* Title and Author Section */}
-            <div className="mb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0 mr-4">
-                  <h3 className="font-bold text-gray-900 text-xl leading-tight mb-1 group-hover:text-gray-800 transition-colors">
-                    {book.title}
-                  </h3>
-                  <div className="flex items-center gap-2 mb-2">
-                    <p className="text-gray-600 font-medium">
-                      {book.author_name?.[0] || "Unknown Author"}
-                    </p>
-                    <span className="text-gray-400">•</span>
-                    <p className="text-gray-500 text-sm">
-                      {book.first_publish_year || "Unknown Year"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Entries Badge */}
-                <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-                  <div className="flex items-center gap-2">
-                    <Edit3 className="w-4 h-4" />
-                    <span className="font-semibold text-sm">3</span>
-                    <span className="text-sm">entries</span>
-                  </div>
-                </div>
+        <div className="card-body p-4">
+          <div className="row g-4">
+            {/* Book Cover */}
+            <div className="col-auto">
+              <div className="position-relative book-cover-wrapper">
+                <img
+                  src={coverUrl}
+                  alt={`${book.title} cover`}
+                  className="rounded-3 shadow-sm book-cover"
+                  style={{
+                    width: "88px",
+                    height: "132px",
+                    objectFit: "cover",
+                    transition: "transform 0.25s ease",
+                  }}
+                />
+                <div
+                  className="position-absolute top-0 start-0 w-100 h-100 rounded-3 book-overlay"
+                  style={{
+                    background:
+                      "linear-gradient(to top, rgba(0,0,0,0.15), transparent)",
+                    opacity: 0,
+                    transition: "opacity 0.25s ease",
+                  }}
+                ></div>
               </div>
             </div>
 
-            {/* Description */}
-            <div className="mb-4">
-              <p className="text-gray-600 leading-relaxed line-clamp-2">
-                {description}
-              </p>
-            </div>
+            {/* Book Details */}
+            <div className="col">
+              <div className="mb-3">
+                <div className="d-flex align-items-start justify-content-between">
+                  <div className="flex-grow-1 me-3">
+                    <h3
+                      className="fw-bold text-dark fs-5 mb-1 book-title"
+                      style={{ lineHeight: "1.3" }}
+                    >
+                      {book.title}
+                    </h3>
+                    <div className="d-flex align-items-center gap-2 mb-2">
+                      <p className="text-secondary fw-medium mb-0">
+                        {book.author_name?.[0] || "Unknown Author"}
+                      </p>
+                      <span className="text-muted">•</span>
+                      <p className="text-muted small mb-0">
+                        {book.first_publish_year || "Unknown Year"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-            {/* Action Buttons Row */}
-            <div className="flex items-center gap-4">
-              {/* Status Button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsModalOpen(true);
-                }}
-                className={`flex items-center gap-2 px-4 py-2.5 text-white font-medium rounded-xl transition-all duration-300 shadow-md hover:shadow-lg ${getStatusColor(
-                  status
-                )}`}
-              >
-                <span>{status ? statusLabels[status] : "Add to Shelf"}</span>
-                <ChevronDown className="w-4 h-4" />
-              </button>
+              {/* Description */}
+              <div className="mb-3">
+                <p
+                  className="text-secondary mb-0 line-clamp-2"
+                  style={{ lineHeight: "1.6" }}
+                >
+                  {description}
+                </p>
+              </div>
 
-              {/* Add Journal Entry Button */}
-              <button
-                className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-medium py-2.5 px-5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate("/add-journal", { state: { bookKey: book.key } });
-                }}
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add Journal Entry</span>
-              </button>
+              {/* Action Buttons Row */}
+              <div className="d-flex align-items-center gap-3 flex-wrap">
+                {/* Status Button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsModalOpen(true);
+                  }}
+                  className={`btn btn-lg d-flex align-items-center gap-2 rounded-pill shadow-sm text-white ${getStatusColor(
+                    status
+                  )}`}
+                  style={{
+                    transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                    paddingInline: "1rem",
+                  }}
+                >
+                  <span className="small fw-bold" style={{ lineHeight: "1.5" }}>
+                    {status ? statusLabels[status] : "Add to Shelf"}
+                  </span>
+                  <ChevronDown size={16} color="currentColor" />
+                </button>
 
-              {/* View Entries Button */}
-              <button
-                className="flex items-center gap-2 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-medium py-2.5 px-5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate("/view-entries", { state: { bookKey: book.key } });
-                }}
-              >
-                <BookOpen className="w-4 h-4" />
-                <span>View Entries</span>
-              </button>
+                {/* Add Journal Entry Button */}
+                <button
+                  className="btn btn-lg btn-success d-flex align-items-center rounded-pill gap-2 shadow-sm"
+                  onClick={(e) => {
+                    handleAddJournal(e);
+                  }}
+                  style={{
+                    border: "none",
+                    transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                    paddingInline: "1rem",
+                  }}
+                >
+                  <Plus size={16} />
+                  <span className="small fw-bold" style={{ lineHeight: "1.5" }}>
+                    Add Journal Entry
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Status Selection Modal */}
       {isModalOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsModalOpen(false);
-          }}
-        >
-          <div
-            className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4 transform transition-all"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-900">
-                Update Reading Status
-              </h3>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            {/* Book Info */}
-            <div className="mb-6 p-4 bg-gray-50 rounded-xl">
-              <p className="font-semibold text-gray-900 mb-1">{book.title}</p>
-              <p className="text-sm text-gray-600">
-                {book.author_name?.[0] || "Unknown Author"}
-              </p>
-            </div>
-
-            {/* Status Options */}
-            <div className="space-y-3">
-              {statusOptions.map((option) => {
-                const isRemoveOption = option.value === "remove";
-                const isCurrentStatus = status === option.value;
-
-                return (
-                  <button
-                    key={option.value}
-                    onClick={() =>
-                      handleStatusChange(
-                        option.value as
-                          | "wantToRead"
-                          | "ongoing"
-                          | "completed"
-                          | "remove"
-                      )
-                    }
-                    className={`w-full text-left px-5 py-4 rounded-xl font-medium transition-all duration-300 ${
-                      isRemoveOption
-                        ? "bg-red-50 hover:bg-red-100 text-red-600 border-2 border-red-200"
-                        : isCurrentStatus
-                        ? getStatusColor(option.value) + " text-white shadow-lg"
-                        : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-                    }`}
-                    disabled={isRemoveOption && status === null}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span>{option.label}</span>
-                      {isCurrentStatus && !isRemoveOption && (
-                        <span className="text-sm">✓ Current</span>
-                      )}
-                      {isRemoveOption && status === null && (
-                        <span className="text-sm opacity-50">Not on shelf</span>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+        <StatusModal
+          book={book}
+          author={author}
+          currentStatus={status}
+          onClose={() => setIsModalOpen(false)}
+          onStatusChange={handleStatusChange}
+        />
       )}
+
+      <style>{`
+      .hover-lift:hover {
+        transform: translateY(-3px);
+      }
+
+      .book-cover-wrapper:hover .book-cover {
+        transform: scale(1.04);
+      }
+
+      .book-cover-wrapper:hover .book-overlay {
+        opacity: 1 !important;
+      }
+
+      .book-title {
+        transition: color 0.25s ease;
+      }
+
+      .card:hover .book-title {
+        color: #374151 !important;
+      }
+
+      .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+      }
+    `}</style>
     </>
   );
 };

@@ -5,29 +5,28 @@ import MoodRating from "./MoodRating";
 import ReadingProgress from "./ReadingProgress";
 import JournalPreview from "./JournalPreview";
 import EntryFooter from "./EntryFooter";
-import JournalEntry from "../../../types/JournalEntry";
+import { Journal } from "../../../models/journal";
 
 interface JournalCardProps {
-  entry: JournalEntry;
-  navigate: ReturnType<typeof useNavigate>;
+  entry: Journal;
 }
 
-const JournalCard: React.FC<JournalCardProps> = ({ entry, navigate }) => {
-  // console.log(entry);
+const JournalCard: React.FC<JournalCardProps> = ({ entry }) => {
+  const navigate = useNavigate();
   return (
     <div
-      onClick={() => navigate("/journal/${entry.id}", { state: { entry } })}
+      onClick={() => navigate(`/journal-preview/${entry.id}`)}
       className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border-2 border-amber-200 overflow-hidden transform hover:-translate-y-1 cursor-pointer"
     >
-      <BookHeader headerBook={entry.book} />
+      <BookHeader bookKey={entry.bookKey} />
       <div className="p-5">
         <MoodRating mood={entry.mood} rating={entry.rating} />
         <ReadingProgress progress={entry.readingProgress} />
         <JournalPreview entry={entry} navigate={navigate} />
         <EntryFooter
           createdAt={entry.createdAt}
-          upvotes={entry.upvotes}
-          downvotes={entry.downvotes}
+          upvotes={entry.upvotedBy.length}
+          downvotes={entry.downvotedBy.length}
         />
       </div>
     </div>

@@ -1,182 +1,245 @@
 import { Request, Response } from "express";
 import { db } from "../config/firebaseAdmin";
 import { asyncHandler } from "../middleware/errorHandler";
-import admin from "firebase-admin";
-import {
-  CreateJournalDto,
-  UpdateJournalDto,
-  VoteJournalDto,
-} from "../models/Journal";
-import { requireUser } from "../utils/requireUser";
+import { DecodedIdToken } from "firebase-admin/auth";
 
+interface RequestWithUser extends Request {
+  user?: DecodedIdToken;
+}
+
+export default interface JournalEntry {
+  bookKey: string;
+  bookTitle: string;
+  bookAuthor: string;
+  bookCoverUrl: string;
+
+  rating: number;
+  readingProgress: number;
+  isPrivate: boolean;
+  mood: string;
+  promptResponses: {
+    [key: string]: string;
+  };
+  entry: string;
+
+  userId?: string;
+
+  upvotedBy: string[];
+  downvotedBy: string[];
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+function requireUser(req: RequestWithUser) {
+  const uid = req.user?.uid;
+  if (!uid) {
+    const err: any = new Error("Unauthorized - No user found");
+    err.status = 401;
+    throw err;
+  }
+  return uid;
+}
+
+// creating journal
 export const createJournal = asyncHandler(
-  async (req: Request, res: Response) => {
-    const user = requireUser(req);
-    const userId = user.uid;
-    const journalData: CreateJournalDto = req.body;
+  async (req: RequestWithUser, res: Response) => {
+    const userId = requireUser(req);
+    const {
+      bookKey,
+      bookTitle,
+      bookAuthor,
+      bookCoverUrl,
+      rating,
+      readingProgress,
+      isPrivate,
+      mood,
+      promptResponses,
+      entry,
+      createdAt,
+      updatedAt,
+    }: JournalEntry = req.body;
 
-    const userDoc = await db.collection("users").doc(userId).get();
-    const userData = userDoc.data();
-
-    if (!userData) {
-      res.status(404).json({ error: "User not found" });
-      return;
-    }
-
-    const journal = {
+    const journalData = {
+      bookKey,
+      bookTitle,
+      bookAuthor,
+      bookCoverUrl,
+      rating,
+      readingProgress,
+      isPrivate,
+      mood,
+      promptResponses,
+      entry,
       userId,
-      userName: userData.fullName,
-      userProfilePic: userData.profilePic,
-      ...journalData,
-      upvotes: 0,
-      downvotes: 0,
       upvotedBy: [],
       downvotedBy: [],
-      isPublic: journalData.isPublic ?? true,
-      createdAt: new Date().toISOString(),
+      createdAt,
+      updatedAt,
     };
 
-    const journalRef = await db.collection("journals").add(journal);
+    const journalRef = await db.collection("journals").add(journalData);
 
-    await db
-      .collection("bookJournals")
-      .doc(journalData.bookId)
-      .set(
-        {
-          journalIds: admin.firestore.FieldValue.arrayUnion(journalRef.id),
-          updatedAt: new Date().toISOString(),
-        },
-        { merge: true }
-      );
+    res.status(201).json({
+      status: "ok",
+      journalId: journalRef.id,
+      journal: { id: journalRef.id, ...journalData },
+    });
+  }
+);
 
-    // Update user stats
-    await db
-      .collection("users")
-      .doc(userId)
-      .update({
-        "stats.totalJournals": admin.firestore.FieldValue.increment(1),
+export const getAllPublicJournals = asyncHandler(
+  async (req: Request, res: Response) => {
+    const allJournals = await db
+      .collection("journals")
+      .where("isPrivate", "==", false)
+      .get();
+
+    const journals = allJournals.docs
+      .map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }))
+      .sort((a: any, b: any) => {
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
       });
 
-    res.status(201).json({ status: "ok", journalId: journalRef.id });
+    res.status(200).json({ status: "ok", journals });
   }
 );
 
 export const getJournalsByUser = asyncHandler(
   async (req: Request, res: Response) => {
-    const user = requireUser(req);
     const { uid } = req.params;
 
-    // Allow users to view their own journals or only public journals of others
-    const isOwnProfile = user.uid === uid;
-
-    let query = db.collection("journals").where("userId", "==", uid);
-
-    if (!isOwnProfile) {
-      query = query.where("isPublic", "==", true);
+    if (!uid) {
+      const err: any = new Error("User ID is required");
+      err.status = 400;
+      throw err;
     }
 
-    const snapshot = await query.orderBy("createdAt", "desc").get();
+    const allJournals = await db
+      .collection("journals")
+      .where("userId", "==", uid)
+      .orderBy("createdAt", "desc")
+      .get();
 
-    const journals = snapshot.docs.map((doc) => ({
+    const journals = allJournals.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
 
-    res.json({ status: "ok", journals });
+    res.status(200).json({ status: "ok", journals });
   }
 );
 
-export const updateJournal = asyncHandler(
+export const getJournalById = asyncHandler(
   async (req: Request, res: Response) => {
-    const user = requireUser(req);
-    const userId = user.uid;
-    const { id } = req.params;
-    const updateData: UpdateJournalDto = req.body;
+    const { journalId } = req.params;
 
-    const journalRef = db.collection("journals").doc(id);
+    if (!journalId) {
+      const err: any = new Error("Journal ID is required");
+      err.status = 400;
+      throw err;
+    }
+
+    const journalDoc = await db.collection("journals").doc(journalId).get();
+
+    if (!journalDoc.exists) {
+      const err: any = new Error("Journal not found");
+      err.status = 404;
+      throw err;
+    }
+
+    const journal = {
+      id: journalDoc.id,
+      ...journalDoc.data(),
+    };
+
+    res.status(200).json({ status: "ok", journal });
+  }
+);
+
+export const upvoteJournal = asyncHandler(
+  async (req: RequestWithUser, res: Response) => {
+    const userId = requireUser(req);
+    const { journalId } = req.params;
+
+    const journalRef = db.collection("journals").doc(journalId);
     const journalDoc = await journalRef.get();
 
     if (!journalDoc.exists) {
-      res.status(404).json({ error: "Journal not found" });
-      return;
+      const err: any = new Error("Journal not found");
+      err.status = 404;
+      throw err;
     }
 
-    const journalData = journalDoc.data()!;
+    const journalData = journalDoc.data();
+    const upvotedBy = journalData?.upvotedBy || [];
+    const downvotedBy = journalData?.downvotedBy || [];
 
-    // Check if user owns this journal
-    if (journalData.userId !== userId) {
-      res.status(403).json({ error: "Unauthorized to update this journal" });
-      return;
+    if (upvotedBy.includes(userId)) {
+      await journalRef.update({
+        upvotedBy: upvotedBy.filter((id: string) => id !== userId),
+        updatedAt: new Date().toISOString(),
+      });
+      return res.status(200).json({ status: "ok", message: "Upvote removed" });
     }
 
-    await journalRef.update({
-      ...updateData,
+    const updates: any = {
+      upvotedBy: [...upvotedBy, userId],
       updatedAt: new Date().toISOString(),
-    });
+    };
 
-    res.json({ status: "ok", message: "Journal updated successfully" });
+    if (downvotedBy.includes(userId)) {
+      updates.downvotedBy = downvotedBy.filter((id: string) => id !== userId);
+    }
+
+    await journalRef.update(updates);
+    res.status(200).json({ status: "ok", message: "Journal upvoted" });
   }
 );
 
-export const voteJournal = asyncHandler(async (req: Request, res: Response) => {
-  const user = requireUser(req);
-  const userId = user.uid;
-  const { id } = req.params;
-  const { voteType }: VoteJournalDto = req.body;
+export const downvoteJournal = asyncHandler(
+  async (req: RequestWithUser, res: Response) => {
+    const userId = requireUser(req);
+    const { journalId } = req.params;
 
-  const journalRef = db.collection("journals").doc(id);
-  const journalDoc = await journalRef.get();
+    const journalRef = db.collection("journals").doc(journalId);
+    const journalDoc = await journalRef.get();
 
-  if (!journalDoc.exists) {
-    res.status(404).json({ error: "Journal not found" });
-    return;
+    if (!journalDoc.exists) {
+      const err: any = new Error("Journal not found");
+      err.status = 404;
+      throw err;
+    }
+
+    const journalData = journalDoc.data();
+    const upvotedBy = journalData?.upvotedBy || [];
+    const downvotedBy = journalData?.downvotedBy || [];
+
+    if (downvotedBy.includes(userId)) {
+      await journalRef.update({
+        downvotedBy: downvotedBy.filter((id: string) => id !== userId),
+        updatedAt: new Date().toISOString(),
+      });
+      return res
+        .status(200)
+        .json({ status: "ok", message: "Downvote removed" });
+    }
+
+    const updates: any = {
+      downvotedBy: [...downvotedBy, userId],
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (upvotedBy.includes(userId)) {
+      updates.upvotedBy = upvotedBy.filter((id: string) => id !== userId);
+    }
+
+    await journalRef.update(updates);
+    res.status(200).json({ status: "ok", message: "Journal downvoted" });
   }
-
-  const journalData = journalDoc.data()!;
-  const upvotedBy: string[] = journalData.upvotedBy || [];
-  const downvotedBy: string[] = journalData.downvotedBy || [];
-
-  const hasUpvoted = upvotedBy.includes(userId);
-  const hasDownvoted = downvotedBy.includes(userId);
-
-  const updates: any = {};
-
-  if (voteType === "upvote") {
-    if (hasUpvoted) {
-      updates.upvotes = admin.firestore.FieldValue.increment(-1);
-      updates.upvotedBy = admin.firestore.FieldValue.arrayRemove(userId);
-    } else {
-      updates.upvotes = admin.firestore.FieldValue.increment(1);
-      updates.upvotedBy = admin.firestore.FieldValue.arrayUnion(userId);
-      if (hasDownvoted) {
-        updates.downvotes = admin.firestore.FieldValue.increment(-1);
-        updates.downvotedBy = admin.firestore.FieldValue.arrayRemove(userId);
-      }
-    }
-  } else if (voteType === "downvote") {
-    if (hasDownvoted) {
-      updates.downvotes = admin.firestore.FieldValue.increment(-1);
-      updates.downvotedBy = admin.firestore.FieldValue.arrayRemove(userId);
-    } else {
-      updates.downvotes = admin.firestore.FieldValue.increment(1);
-      updates.downvotedBy = admin.firestore.FieldValue.arrayUnion(userId);
-      if (hasUpvoted) {
-        updates.upvotes = admin.firestore.FieldValue.increment(-1);
-        updates.upvotedBy = admin.firestore.FieldValue.arrayRemove(userId);
-      }
-    }
-  } else if (voteType === "remove") {
-    if (hasUpvoted) {
-      updates.upvotes = admin.firestore.FieldValue.increment(-1);
-      updates.upvotedBy = admin.firestore.FieldValue.arrayRemove(userId);
-    }
-    if (hasDownvoted) {
-      updates.downvotes = admin.firestore.FieldValue.increment(-1);
-      updates.downvotedBy = admin.firestore.FieldValue.arrayRemove(userId);
-    }
-  }
-
-  await journalRef.update(updates);
-
-  res.json({ status: "ok", message: "Vote updated successfully" });
-});
+);

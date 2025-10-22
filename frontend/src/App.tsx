@@ -33,6 +33,7 @@ import { useAppDispatch } from "./hooks/redux";
 import TextRevealAnimation from "./pages/Login/TextRevealAnimation";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import EditJournalPage from "./pages/EditJournalPage.tsx/EditJournalPage";
 
 function App() {
   const location = useLocation();
@@ -117,6 +118,16 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="edit-journal/:id"
+            element={
+              <ProtectedRoute>
+                <EditJournalPage />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/profile/:userName"
             element={
@@ -154,7 +165,10 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/search-results" element={<SearchResults />} />
           <Route path="/book/:bookKey" element={<BookDetails />} />
-          <Route path="/journal/:entryId" element={<JournalDetail />} />
+          <Route
+            path="/journal-preview/:journalId"
+            element={<JournalDetail />}
+          />
           <Route path="/view-entries" element={<ViewEntries />} />
           <Route path="/users/:query" element={<UserSearchResult />} />
           <Route path="/genre/:genreName" element={<GenreBooks />} />

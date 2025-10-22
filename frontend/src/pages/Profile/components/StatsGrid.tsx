@@ -41,14 +41,12 @@ const StatsGrid: React.FC<StatsGridProps> = ({ stats }) => {
     },
   ];
 
-  console.log(stats);
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
       {cards.map((card, i) => (
         <div
           key={i}
-          className="group bg-white/80 backdrop-blur-xl rounded-2xl p-6 border hover:shadow-2xl transition-all"
+          className="group shadow-md bg-white/80 backdrop-blur-xl rounded-2xl p-6 bordertransition-transform duration-300 hover:-translate-y-2"
         >
           <div className="flex justify-between items-center mb-4">
             <div

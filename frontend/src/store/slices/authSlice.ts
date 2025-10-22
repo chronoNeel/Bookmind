@@ -80,8 +80,8 @@ export const loginUser = createAsyncThunk<
       password
     );
     const user = userCredential.user;
+    console.log(userCredential);
 
-    // Fetch complete user profile from backend
     const userProfile = await api.get(`/api/users/${user.uid}`);
 
     return userProfile.data;
@@ -112,6 +112,26 @@ export const fetchUserProfile = createAsyncThunk<
 // Logout user
 export const logoutUser = createAsyncThunk<void>("auth/logout", async () => {
   await signOut(auth);
+});
+
+// fetch username by id
+
+export const fetchUsernameByUid = createAsyncThunk<
+  string,
+  string,
+  { rejectValue: string }
+>("user/fetchUsernameByUid", async (uid, { rejectWithValue }) => {
+  try {
+    const response = await api.get(`/api/users/userId/${uid}`);
+    return response.data.userName;
+  } catch (error: any) {
+    if (error.response) {
+      return rejectWithValue(
+        error.response.data.error || "Failed to fetch username"
+      );
+    }
+    return rejectWithValue(error.message || "Failed to fetch username");
+  }
 });
 
 const initialState: AuthState = {

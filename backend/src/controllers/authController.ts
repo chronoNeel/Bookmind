@@ -6,7 +6,8 @@ import { asyncHandler } from "../middleware/errorHandler";
 function generateUserName(fullName: string, uid: string): string {
   const baseName = fullName.replace(/\s+/g, "").toLowerCase();
   const uidPart = uid.substring(0, 8);
-  return `${baseName}_${uidPart}`;
+  const randomNum = Math.floor(100 + Math.random() * 900);
+  return `${baseName}_${uidPart}_${randomNum}`;
 }
 
 export const register = asyncHandler(
@@ -78,7 +79,7 @@ export const register = asyncHandler(
     res.status(201).json({
       status: "ok",
       message: "User registered successfully",
-      user: userData, // Return the full user data
+      user: userData,
     });
   }
 );

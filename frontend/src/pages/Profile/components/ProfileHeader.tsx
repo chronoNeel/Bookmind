@@ -35,11 +35,11 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   const displayProfilePic = profilePic;
 
   return (
-    <div className="backdrop-blur-xl bg-white/80 rounded-3xl shadow-2xl border border-amber-200/50 overflow-hidden mb-8">
+    <div className="backdrop-blur-xl bg-white/80 rounded-3xl  border border-amber-200/50 overflow-hidden mb-8">
       <div className="px-6 sm:px-8 lg:px-12 py-8">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
           {/* Profile Picture */}
-          <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden shadow-2xl ring-4 ring-amber-200">
+          <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden shadow-md ring-4 ring-amber-200">
             <img
               src={displayProfilePic}
               alt={fullName}
@@ -83,14 +83,14 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 {isOwnProfile ? (
                   <button
                     onClick={onEditProfile}
-                    className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl"
+                    className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold hover:from-amber-600 hover:to-orange-600 transition-all shadow-md"
                   >
                     <Edit3 size={20} /> Edit Profile
                   </button>
                 ) : (
                   <button
                     onClick={onFollowToggle}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl ${
+                    className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-md ${
                       isFollowing
                         ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
                         : "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600"

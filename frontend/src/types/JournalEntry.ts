@@ -1,18 +1,25 @@
-import { Book } from "./Book";
+import { Book, BookDetails } from "./Book";
 
 export default interface JournalEntry {
-  id: string;
-  book: Book;
-  rating?: number;
-  readingProgress?: number;
+  bookKey: string;
+  bookTitle: string;
+  bookAuthor: string;
+  bookCoverUrl: string;
+
+  rating: number;
+  readingProgress: number;
   isPrivate: boolean;
   mood: string;
   promptResponses: {
     [key: string]: string;
   };
   entry: string;
+
+  userId?: string;
+
+  upvotedBy: string[];
+  downvotedBy: string[];
+
   createdAt: string;
   updatedAt: string;
-  upvotes: number;
-  downvotes: number;
 }

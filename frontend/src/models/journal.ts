@@ -1,22 +1,6 @@
-export interface Journal {
+import JournalEntry from "../types/JournalEntry";
+
+export type Journal = JournalEntry & {
   id: string;
   userId: string;
-  userName: string;
-  userProfilePic: string;
-  bookId: string;
-  bookTitle: string;
-  bookAuthor: string;
-  bookCover: string;
-  rating: number;
-  mood: string;
-  progress: number;
-  promptResponses: { prompt: string; answer: string }[];
-  entryText: string;
-  upvotes: number;
-  downvotes: number;
-  upvotedBy: string[];
-  downvotedBy: string[];
-  isPublic: boolean;
-  createdAt: string;
-  updatedAt?: string;
-}
+};

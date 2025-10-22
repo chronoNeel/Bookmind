@@ -1,17 +1,21 @@
 import express from "express";
 import {
   createJournal,
+  getAllPublicJournals,
   getJournalsByUser,
-  updateJournal,
-  voteJournal,
+  getJournalById,
+  upvoteJournal,
+  downvoteJournal,
 } from "../controllers/journalController";
 import { authenticateUser } from "../middleware/authMiddleware";
 
 const router = express.Router();
 
 router.post("/", authenticateUser, createJournal);
+router.get("/public", authenticateUser, getAllPublicJournals);
 router.get("/user/:uid", authenticateUser, getJournalsByUser);
-router.put("/:id", authenticateUser, updateJournal);
-router.post("/:id/vote", authenticateUser, voteJournal);
+router.get("/:journalId", authenticateUser, getJournalById);
+router.get("/upvote/:journalId", authenticateUser, upvoteJournal);
+router.get("/downvote/:journalId", authenticateUser, downvoteJournal);
 
 export default router;

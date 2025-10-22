@@ -18,7 +18,7 @@ export interface Journal {
   mood: string;
   progress: number;
   promptResponses: PromptResponse[];
-  entryText: string;
+  entry: string;
 
   upvotes: number;
   downvotes: number;

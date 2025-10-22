@@ -1,12 +1,10 @@
 import { Request, Response } from "express";
 import { db } from "../config/firebaseAdmin";
-import { FieldValue } from "firebase-admin/firestore";
 import { asyncHandler } from "../middleware/errorHandler";
 import { DecodedIdToken } from "firebase-admin/auth";
 import { ShelfBook } from "../models/User";
 
 type ShelfStatus = "wantToRead" | "ongoing" | "completed" | "remove" | null;
-
 const SHELVES = ["completed", "ongoing", "wantToRead"] as const;
 type ShelfKey = (typeof SHELVES)[number];
 
@@ -34,7 +32,6 @@ export const setBookStatus = asyncHandler(
     }
 
     const normalizedStatus = (status ?? "remove") as Exclude<ShelfStatus, null>;
-
     if (
       normalizedStatus !== "remove" &&
       !SHELVES.includes(normalizedStatus as ShelfKey)
@@ -43,45 +40,29 @@ export const setBookStatus = asyncHandler(
     }
 
     const userRef = db.collection("users").doc(uid);
-
-    // Get current user data to find and remove the book from all shelves
-    const userDoc = await userRef.get();
-    if (!userDoc.exists) {
+    const userSnap = await userRef.get();
+    if (!userSnap.exists) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const userData = userDoc.data();
-    const shelves = userData?.shelves || {};
+    const userData = userSnap.data() || {};
+    const shelves = userData.shelves || {};
+    const now = new Date().toISOString();
 
-    // Build the update object
-    const updateData: Record<string, any> = {
-      updatedAt: new Date().toISOString(),
-    };
-
-    // Remove the book from all shelves by filtering out matching bookKey
-    SHELVES.forEach((shelfName) => {
-      const shelfBooks: ShelfBook[] = shelves[shelfName] || [];
-      const filteredBooks = shelfBooks.filter(
-        (book) => book.bookKey !== bookKey
+    const updateData: Record<string, any> = { updatedAt: now };
+    for (const shelf of SHELVES) {
+      const list: ShelfBook[] = shelves[shelf] || [];
+      updateData[`shelves.${shelf}`] = list.filter(
+        (b) => b.bookKey !== bookKey
       );
-      updateData[`shelves.${shelfName}`] = filteredBooks;
-    });
+    }
 
-    // If not removing, add the book to the target shelf with updated timestamp
     if (normalizedStatus !== "remove") {
-      const currentShelf: ShelfBook[] = shelves[normalizedStatus] || [];
-      const filteredShelf = currentShelf.filter(
-        (book) => book.bookKey !== bookKey
-      );
-
-      const newShelfBook: ShelfBook = {
-        bookKey,
-        updatedAt: new Date().toISOString(),
-      };
-
+      const list: ShelfBook[] = shelves[normalizedStatus] || [];
+      const filtered = list.filter((b) => b.bookKey !== bookKey);
       updateData[`shelves.${normalizedStatus}`] = [
-        ...filteredShelf,
-        newShelfBook,
+        ...filtered,
+        { bookKey, updatedAt: now } as ShelfBook,
       ];
     }
 

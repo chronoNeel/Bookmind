@@ -3,6 +3,7 @@ import { Calendar, User } from "lucide-react";
 interface HeaderCardProps {
   book: any;
   coverUrl: string;
+  author: string;
   readingProgress: number;
   getStatusText: () => string;
 }
@@ -10,11 +11,12 @@ interface HeaderCardProps {
 const HeaderCard: React.FC<HeaderCardProps> = ({
   book,
   coverUrl,
+  author,
   readingProgress,
   getStatusText,
 }) => {
   return (
-    <div className="bg-white border-amber-100 rounded-xl shadow-lg p-6 border transition-all duration-300">
+    <div className="bg-white border-amber-100 rounded-xl shadow-md p-6 border transition-all duration-300 mb-3">
       <div className="flex items-start gap-4">
         <img
           src={coverUrl}
@@ -28,9 +30,7 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
           </h1>
           <p className="text-gray-900 opacity-80 flex items-center mb-2">
             <User className="w-4 h-4 mr-1" />
-            {Array.isArray(book.author_name)
-              ? book.author_name.join(", ")
-              : book.author_name}
+            {author}
           </p>
           <div className="flex items-center gap-4 text-sm opacity-60">
             <span className="flex items-center">

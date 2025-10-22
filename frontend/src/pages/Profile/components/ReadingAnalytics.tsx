@@ -34,7 +34,7 @@ const ReadingAnalytics: React.FC<ReadingAnalyticsProps> = ({
   const isAhead = booksAheadOrBehind >= 0;
 
   return (
-    <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 border shadow-2xl">
+    <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 border shadow-md">
       <h2 className="text-2xl font-bold text-gray-800 mb-8">
         Reading Statistics
       </h2>

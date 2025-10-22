@@ -1,181 +1,308 @@
-import {
-  createSlice,
-  current,
-  PayloadAction,
-  createSelector,
-} from "@reduxjs/toolkit";
-import { Book } from "../../types/Book";
+import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
+import api from "../../utils/api";
 import JournalEntry from "../../types/JournalEntry";
+import { Journal } from "../../models/journal";
 
-interface JournalState {
-  entriesByBook: {
-    [bookKey: string]: JournalEntry[];
-  };
-}
-
-const initialState: JournalState = {
-  entriesByBook: {},
+type JournalState = {
+  loading: boolean;
+  error: string | null;
+  entries: Journal[];
+  publicJournals: Journal[];
+  userJournals: Journal[];
+  currentJournal: Journal;
 };
 
-const journalSlice = createSlice({
+const initialState: JournalState = {
+  loading: false,
+  error: null,
+  entries: [],
+  publicJournals: [],
+  userJournals: [],
+  currentJournal: {
+    id: "",
+    userId: "",
+    bookKey: "",
+    bookTitle: "",
+    bookAuthor: "",
+    bookCoverUrl: "",
+    rating: 0,
+    readingProgress: 0,
+    isPrivate: false,
+    mood: "",
+    promptResponses: {},
+    entry: "",
+    upvotedBy: [],
+    downvotedBy: [],
+    createdAt: "",
+    updatedAt: "",
+  },
+};
+
+export const createJournalEntry = createAsyncThunk<
+  Journal,
+  JournalEntry,
+  { rejectValue: string }
+>("journal/createJournalEntry", async (journalData, { rejectWithValue }) => {
+  try {
+    const res = await api.post<{
+      status: string;
+      journalId: string;
+      journal: Journal;
+    }>("/api/journals/", journalData);
+
+    return res.data.journal;
+  } catch (error: any) {
+    const message =
+      error?.response?.data?.message || "Failed to create journal entry";
+    return rejectWithValue(message);
+  }
+});
+
+// Fetch all public journals
+export const fetchPublicJournals = createAsyncThunk<
+  Journal[],
+  void,
+  { rejectValue: string }
+>("journal/fetchPublicJournals", async (_, { rejectWithValue }) => {
+  try {
+    const res = await api.get<{ status: string; journals: Journal[] }>(
+      "/api/journals/public"
+    );
+    return res.data.journals;
+  } catch (error: any) {
+    const message =
+      error?.response?.data?.message || "Failed to fetch public journals";
+    return rejectWithValue(message);
+  }
+});
+
+// Fetch journal by ID
+export const fetchJournalById = createAsyncThunk<
+  Journal,
+  string,
+  { rejectValue: string }
+>("journal/fetchJournalById", async (journalId, { rejectWithValue }) => {
+  try {
+    const res = await api.get<{ status: string; journal: Journal }>(
+      `/api/journals/${journalId}`
+    );
+    return res.data.journal;
+  } catch (error: any) {
+    const message = error?.response?.data?.message || "Failed to fetch journal";
+    return rejectWithValue(message);
+  }
+});
+
+// Upvote journal
+export const upvoteJournal = createAsyncThunk<
+  { journalId: string; message: string },
+  string,
+  { rejectValue: string }
+>("journal/upvoteJournal", async (journalId, { rejectWithValue }) => {
+  try {
+    const res = await api.get<{ status: string; message: string }>(
+      `/api/journals/upvote/${journalId}`
+    );
+    return { journalId, message: res.data.message };
+  } catch (error: any) {
+    const message =
+      error?.response?.data?.message || "Failed to upvote journal";
+    return rejectWithValue(message);
+  }
+});
+
+// Downvote journal
+export const downvoteJournal = createAsyncThunk<
+  { journalId: string; message: string },
+  string,
+  { rejectValue: string }
+>("journal/downvoteJournal", async (journalId, { rejectWithValue }) => {
+  try {
+    const res = await api.get<{ status: string; message: string }>(
+      `/api/journals/downvote/${journalId}`
+    );
+    return { journalId, message: res.data.message };
+  } catch (error: any) {
+    const message =
+      error?.response?.data?.message || "Failed to downvote journal";
+    return rejectWithValue(message);
+  }
+});
+
+export const journalSlice = createSlice({
   name: "journal",
   initialState,
   reducers: {
-    addJournal(
-      state,
-      action: PayloadAction<{
-        book: Book;
-        rating?: number;
-        readingProgress?: number;
-        isPrivate: boolean;
-        mood: string;
-        promptResponses: { [key: string]: string };
-        entry: string;
-      }>
-    ) {
-      const {
-        book,
-        rating,
-        isPrivate,
-        readingProgress,
-        mood,
-        promptResponses,
-        entry,
-      } = action.payload;
-
-      const newEntry: JournalEntry = {
-        id: `${book.key}-${Date.now()}`,
-        book,
-        rating,
-        isPrivate,
-        mood,
-        readingProgress,
-        promptResponses: promptResponses || {},
-        entry,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        upvotes: 0,
-        downvotes: 0,
+    clearJournalError: (state) => {
+      state.error = null;
+    },
+    clearCurrentJournal: (state) => {
+      state.currentJournal = {
+        id: "",
+        userId: "",
+        bookKey: "",
+        bookTitle: "",
+        bookAuthor: "",
+        bookCoverUrl: "",
+        rating: 0,
+        readingProgress: 0,
+        isPrivate: false,
+        mood: "",
+        promptResponses: {},
+        entry: "",
+        upvotedBy: [],
+        downvotedBy: [],
+        createdAt: "",
+        updatedAt: "",
       };
-
-      if (!state.entriesByBook[book.key]) {
-        state.entriesByBook[book.key] = [];
-      }
-
-      state.entriesByBook[book.key].push(newEntry);
-
-      console.log(current(state));
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      // Create journal
+      .addCase(createJournalEntry.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        createJournalEntry.fulfilled,
+        (state, action: PayloadAction<Journal>) => {
+          state.loading = false;
+          state.entries.unshift(action.payload);
+          state.userJournals.unshift(action.payload);
+        }
+      )
+      .addCase(createJournalEntry.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.payload ??
+          action.error.message ??
+          "Failed to create journal entry";
+      })
 
-    updateJournal(
-      state,
-      action: PayloadAction<{
-        bookKey: string;
-        entryId: string;
-        updates: Partial<Omit<JournalEntry, "id" | "book" | "createdAt">>;
-      }>
-    ) {
-      const { bookKey, entryId, updates } = action.payload;
+      // Fetch public journals
+      .addCase(fetchPublicJournals.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        fetchPublicJournals.fulfilled,
+        (state, action: PayloadAction<Journal[]>) => {
+          state.loading = false;
+          state.publicJournals = action.payload;
+        }
+      )
+      .addCase(fetchPublicJournals.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.payload ??
+          action.error.message ??
+          "Failed to fetch public journals";
+      })
 
-      if (state.entriesByBook[bookKey]) {
-        const entryIndex = state.entriesByBook[bookKey].findIndex(
-          (entry) => entry.id === entryId
+      // Fetch single journal
+      .addCase(fetchJournalById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        fetchJournalById.fulfilled,
+        (state, action: PayloadAction<Journal>) => {
+          state.loading = false;
+          state.currentJournal = action.payload;
+        }
+      )
+      .addCase(fetchJournalById.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.payload ?? action.error.message ?? "Failed to fetch journal";
+      })
+
+      // Upvote journal
+      .addCase(upvoteJournal.fulfilled, (state, action) => {
+        const { journalId } = action.payload;
+        const updateVote = (journal: Journal) => {
+          const userId = localStorage.getItem("uid"); // current logged user id
+          if (!userId) return;
+
+          const hasUpvoted = journal.upvotedBy.includes(userId);
+          const hasDownvoted = journal.downvotedBy.includes(userId);
+
+          if (hasUpvoted) {
+            // remove upvote
+            journal.upvotedBy = journal.upvotedBy.filter((id) => id !== userId);
+          } else {
+            // add upvote, remove downvote if present
+            journal.upvotedBy.push(userId);
+            if (hasDownvoted) {
+              journal.downvotedBy = journal.downvotedBy.filter(
+                (id) => id !== userId
+              );
+            }
+          }
+        };
+
+        [state.publicJournals, state.userJournals, state.entries].forEach(
+          (list) => {
+            const j = list.find((x) => x.id === journalId);
+            if (j) updateVote(j);
+          }
         );
 
-        if (entryIndex !== -1) {
-          state.entriesByBook[bookKey][entryIndex] = {
-            ...state.entriesByBook[bookKey][entryIndex],
-            ...updates,
-            updatedAt: new Date().toISOString(),
-          };
+        if (state.currentJournal?.id === journalId) {
+          updateVote(state.currentJournal);
         }
-      }
-    },
+      })
+      .addCase(upvoteJournal.rejected, (state, action) => {
+        state.error =
+          action.payload ?? action.error.message ?? "Failed to upvote journal";
+      })
 
-    removeJournal(
-      state,
-      action: PayloadAction<{ bookKey: string; entryId: string }>
-    ) {
-      const { bookKey, entryId } = action.payload;
+      // Downvote journal
+      .addCase(downvoteJournal.fulfilled, (state, action) => {
+        const { journalId } = action.payload;
+        const updateVote = (journal: Journal) => {
+          const userId = localStorage.getItem("uid");
+          if (!userId) return;
 
-      if (state.entriesByBook[bookKey]) {
-        state.entriesByBook[bookKey] = state.entriesByBook[bookKey].filter(
-          (entry) => entry.id !== entryId
+          const hasDownvoted = journal.downvotedBy.includes(userId);
+          const hasUpvoted = journal.upvotedBy.includes(userId);
+
+          if (hasDownvoted) {
+            // remove downvote
+            journal.downvotedBy = journal.downvotedBy.filter(
+              (id) => id !== userId
+            );
+          } else {
+            // add downvote, remove upvote if present
+            journal.downvotedBy.push(userId);
+            if (hasUpvoted) {
+              journal.upvotedBy = journal.upvotedBy.filter(
+                (id) => id !== userId
+              );
+            }
+          }
+        };
+
+        [state.publicJournals, state.userJournals, state.entries].forEach(
+          (list) => {
+            const j = list.find((x) => x.id === journalId);
+            if (j) updateVote(j);
+          }
         );
 
-        // If no journals left for this book, optionally clean up
-        if (state.entriesByBook[bookKey].length === 0) {
-          delete state.entriesByBook[bookKey];
+        if (state.currentJournal?.id === journalId) {
+          updateVote(state.currentJournal);
         }
-      }
-    },
-
-    toggleJournalPrivacy(
-      state,
-      action: PayloadAction<{ bookKey: string; entryId: string }>
-    ) {
-      const { bookKey, entryId } = action.payload;
-
-      if (state.entriesByBook[bookKey]) {
-        const entry = state.entriesByBook[bookKey].find(
-          (entry) => entry.id === entryId
-        );
-
-        if (entry) {
-          entry.isPrivate = !entry.isPrivate;
-          entry.updatedAt = new Date().toISOString();
-        }
-      }
-    },
+      })
+      .addCase(downvoteJournal.rejected, (state, action) => {
+        state.error =
+          action.payload ??
+          action.error.message ??
+          "Failed to downvote journal";
+      });
   },
 });
 
-// Base selector
-const selectJournalState = (state: { journal: JournalState }) => state.journal;
-
-// Memoized selectors using createSelector
-export const selectJournalsByBook = createSelector(
-  [selectJournalState, (_, bookKey: string) => bookKey],
-  (journalState, bookKey) => journalState.entriesByBook[bookKey] || []
-);
-
-export const selectAllJournals = createSelector(
-  [selectJournalState],
-  (journalState) => Object.values(journalState.entriesByBook).flat()
-);
-
-export const selectPublicJournals = createSelector(
-  [selectAllJournals],
-  (allJournals) => allJournals.filter((entry) => !entry.isPrivate)
-);
-
-export const selectJournalsByMood = createSelector(
-  [selectAllJournals, (_, mood: string) => mood],
-  (allJournals, mood) => allJournals.filter((entry) => entry.mood === mood)
-);
-
-export const selectJournalById = createSelector(
-  [
-    selectJournalState,
-    (_, bookKey: string) => bookKey,
-    (_, __, entryId: string) => entryId,
-  ],
-  (journalState, bookKey, entryId) => {
-    const bookJournals = journalState.entriesByBook[bookKey];
-    return bookJournals?.find((entry) => entry.id === entryId);
-  }
-);
-
-export const selectJournalCountByBook = createSelector(
-  [selectJournalsByBook],
-  (journals) => journals.length
-);
-
-export const {
-  addJournal,
-  updateJournal,
-  removeJournal,
-  toggleJournalPrivacy,
-} = journalSlice.actions;
-
+export const { clearJournalError, clearCurrentJournal } = journalSlice.actions;
 export default journalSlice.reducer;

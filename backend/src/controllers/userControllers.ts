@@ -301,3 +301,35 @@ export const updateYearlyGoal = asyncHandler(
     });
   }
 );
+
+export const getUsernameFromUid = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const { uid } = req.params;
+    console.log("Backend ", uid);
+
+    if (!uid) {
+      res.status(400).json({ error: "UID is required" });
+      return;
+    }
+
+    const userDoc = await db.collection("users").doc(uid).get();
+
+    if (!userDoc.exists) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    const userData = userDoc.data();
+
+    if (!userData?.userName) {
+      res.status(404).json({ error: "Username not found for this user" });
+      return;
+    }
+
+    res.status(200).json({
+      status: "ok",
+      uid: uid,
+      userName: userData.userName,
+    });
+  }
+);

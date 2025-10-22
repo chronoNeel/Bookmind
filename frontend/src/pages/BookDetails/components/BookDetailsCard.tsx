@@ -40,7 +40,7 @@ const BookDetailsCard: React.FC<BookDetailsCardProps> = ({
               <img
                 src={coverUrl}
                 alt={book.title}
-                className="w-full rounded-2xl shadow-2xl transition-transform hover:scale-105 object-cover aspect-[2/3]"
+                className="w-full rounded-2xl shadow-md transition-transform hover:scale-105 object-cover aspect-[2/3]"
               />
             ) : (
               <div className="w-full aspect-[2/3] bg-gray-100 flex items-center justify-center rounded-2xl shadow-inner text-gray-400">

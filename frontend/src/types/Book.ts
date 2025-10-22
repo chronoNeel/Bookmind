@@ -1,11 +1,12 @@
 export interface Book {
+  // searchBook
   key: string;
   title: string;
 
   author_key?: string[];
   author_name?: string[];
 
-  cover_i?: number;
+  cover_i: number;
   cover_edition_key?: string;
 
   first_publish_year?: number;
@@ -41,17 +42,17 @@ export interface SimilarBook {
   subject: string;
 }
 
-export interface JournalEntry {
-  id: number;
-  user: {
-    name: string;
-    avatar: string;
-  };
-  rating: number;
-  date: string;
-  text: string;
-  upvotes: number;
-  downvotes: number;
-}
+// export interface JournalEntry {
+//   id: number;
+//   user: {
+//     name: string;
+//     avatar: string;
+//   };
+//   rating: number;
+//   date: string;
+//   text: string;
+//   upvotes: number;
+//   downvotes: number;
+// }
 
 export type ReadingStatus = "wantToRead" | "ongoing" | "completed" | null;

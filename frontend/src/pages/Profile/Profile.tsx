@@ -7,10 +7,12 @@ import ProfileHeader from "./components/ProfileHeader";
 import StatsGrid from "./components/StatsGrid";
 import FavoriteBooksCarousel from "./components/FavoriteBooksCarousel";
 import ReadingAnalytics from "./components/ReadingAnalytics";
+import { booksReadThisYear } from "../../utils/getUserData";
 
 const Profile = () => {
   const { userName } = useParams();
   const navigate = useNavigate();
+  const yearlyBookCount = booksReadThisYear();
 
   const currentUser = useAppSelector((state) => state.auth.user);
   const isLoading = useAppSelector((state) => state.auth.loading);
@@ -198,7 +200,7 @@ const Profile = () => {
         <ReadingAnalytics
           stats={userStats}
           yearlyGoal={profileData.stats.yearlyGoal}
-          booksReadThisYear={profileData.stats.booksReadThisYear.length}
+          booksReadThisYear={yearlyBookCount}
           avgRating={profileData.stats.avgRating}
           onJournalEntriesClick={handleJournalEntriesClick}
         />

@@ -15,6 +15,7 @@ import { BookDetails as Book, SimilarBook } from "../../types/Book";
 import { setBookStatus } from "../../store/slices/shelfSlice";
 import { useAppDispatch } from "../../hooks/redux";
 import { toast } from "react-toastify";
+import { getBookShelf, ShelfType } from "../../utils/getBookData";
 
 const BookDetails = () => {
   const navigate = useNavigate();
@@ -32,12 +33,9 @@ const BookDetails = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const shelves = useSelector((state: RootState) => state.shelf);
   const currentUser = useSelector((state: RootState) => state.auth.user);
 
-  const [status, setStatus] = useState<
-    "wantToRead" | "ongoing" | "completed" | null
-  >(null);
+  const [status, setStatus] = useState<ShelfType | null>(null);
 
   const coverUrl = useMemo(() => {
     if (!book?.covers?.length) return null;
@@ -46,18 +44,14 @@ const BookDetails = () => {
 
   // Initialize status based on which shelf the book is in
   useEffect(() => {
-    if (!book?.key) return;
+    if (!bookKey || !currentUser?.shelves) return;
 
-    if (shelves.completed.includes(book.key)) {
-      setStatus("completed");
-    } else if (shelves.ongoing.includes(book.key)) {
-      setStatus("ongoing");
-    } else if (shelves.wantToRead.includes(book.key)) {
-      setStatus("wantToRead");
-    } else {
-      setStatus(null);
-    }
-  }, [shelves, book?.key]);
+    const shelf = getBookShelf({
+      shelves: currentUser.shelves,
+      bookKey,
+    });
+    setStatus(shelf);
+  }, [currentUser?.shelves, bookKey]);
 
   useEffect(() => {
     const getBookDetails = async () => {
@@ -174,6 +168,19 @@ const BookDetails = () => {
       ).unwrap();
 
       setStatus(statusValue);
+
+      const toasterText =
+        statusValue === null
+          ? "removed from your shelves"
+          : `Added to ${
+              statusValue === "wantToRead"
+                ? "Want to Read"
+                : statusValue === "ongoing"
+                ? "Ongoing"
+                : "Completed"
+            } shelf`;
+
+      toast.success(`${toasterText}`);
       setIsModalOpen(false);
     } catch (error: any) {
       if (error?.code === "AUTH_REQUIRED") {
@@ -193,7 +200,6 @@ const BookDetails = () => {
   };
 
   const handleAddJournal = () => {
-    // Check if user is authenticated before adding journal
     if (!currentUser) {
       alert("Please log in to add journal entries");
       navigate("/login", {

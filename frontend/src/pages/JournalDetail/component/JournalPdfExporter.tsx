@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Download, FileText, Loader2 } from "lucide-react";
-import JournalEntry from "../../../types/JournalEntry";
+import { Journal } from "../../../models/journal";
 
 interface JournalPDFExporterProps {
-  entry: JournalEntry;
+  entry: Journal;
   className?: string;
 }
 
@@ -215,12 +215,12 @@ const JournalPDFExporter: React.FC<JournalPDFExporterProps> = ({
         <body>
           <div class="header">
             <img src="https://covers.openlibrary.org/b/id/${
-              entry.book.cover_i
-            }-M.jpg" alt="${entry.book.title}">
-            <div class="book-title">${entry.book.title}</div>
+              entry.bookCoverUrl
+            }-M.jpg" alt="${entry.bookTitle}">
+            <div class="book-title">${entry.bookTitle}</div>
             ${
-              entry.book.author_name
-                ? `<div class="author">by ${entry.book.author_name[0]}</div>`
+              entry.bookAuthor
+                ? `<div class="author">by ${entry.bookAuthor}</div>`
                 : ""
             }
             <div class="journal-writer">Journal by: Demo User</div>

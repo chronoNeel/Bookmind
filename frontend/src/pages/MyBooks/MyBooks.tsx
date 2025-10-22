@@ -3,11 +3,12 @@ import { CheckCircle, Eye, BookOpen } from "lucide-react";
 import { Shelf } from "./components/Shelf";
 import { ExpandedShelfState } from "./components/types";
 import { useAppSelector } from "../../hooks/redux";
+import { getCurrentUser } from "../../utils/getUserData";
 
 const MyBooks = () => {
+  const currentUser = getCurrentUser();
   const shelves = useAppSelector((state) => state.auth.user?.shelves);
   const { completed = [], ongoing = [], wantToRead = [] } = shelves || {};
-  console.log(completed, ongoing, wantToRead);
 
   const [expandedShelf, setExpandedShelf] = useState<ExpandedShelfState>({
     completed: false,
@@ -40,8 +41,12 @@ const MyBooks = () => {
           {/* Header */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mb-4">
-              <div className="rounded-full border-4 border-amber-200 shadow-sm w-20 h-20 bg-amber-300 flex items-center justify-center">
-                <BookOpen className="w-10 h-10 text-amber-700" />
+              <div className="rounded-full border-4 border-amber-200 shadow-sm w-20 h-20 bg-amber-300 flex items-center justify-center overflow-hidden">
+                <img
+                  src={currentUser?.profilePic}
+                  alt={currentUser?.fullName}
+                  className="w-full h-full object-cover rounded-full"
+                />
               </div>
             </div>
             <h1 className="text-3xl font-bold text-amber-900 mb-2">My Books</h1>
@@ -68,7 +73,7 @@ const MyBooks = () => {
               onToggle={() => toggleShelf("ongoing")}
             />
             <Shelf
-              title="Want to completed"
+              title="Want to read"
               shelfBooks={wantToRead}
               icon={BookOpen}
               color="bg-amber-500"
