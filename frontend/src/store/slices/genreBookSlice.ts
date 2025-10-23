@@ -33,8 +33,10 @@ export const getGenreBooks = createAsyncThunk(
       const data = await fetchGenreBooks(normalizedGenre);
 
       return { genre: normalizedGenre, books: data, fromCache: false };
-    } catch (err: any) {
-      return rejectWithValue(err.message || "Error fetching genre books");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Error fetching genre books";
+      return rejectWithValue(message);
     }
   }
 );

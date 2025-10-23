@@ -51,9 +51,9 @@ export const createJournalEntry = createAsyncThunk<
     }>("/api/journals/", journalData);
 
     return res.data.journal;
-  } catch (error: any) {
+  } catch (err: unknown) {
     const message =
-      error?.response?.data?.message || "Failed to create journal entry";
+      err instanceof Error ? err.message : "Failed to create journal entry";
     return rejectWithValue(message);
   }
 });
@@ -69,9 +69,9 @@ export const fetchPublicJournals = createAsyncThunk<
       "/api/journals/public"
     );
     return res.data.journals;
-  } catch (error: any) {
+  } catch (err: unknown) {
     const message =
-      error?.response?.data?.message || "Failed to fetch public journals";
+      err instanceof Error ? err.message : "Failed to fetch public journals";
     return rejectWithValue(message);
   }
 });
@@ -87,8 +87,9 @@ export const fetchJournalById = createAsyncThunk<
       `/api/journals/${journalId}`
     );
     return res.data.journal;
-  } catch (error: any) {
-    const message = error?.response?.data?.message || "Failed to fetch journal";
+  } catch (err: unknown) {
+    const message =
+      err instanceof Error ? err.message : "Failed to fetch journal";
     return rejectWithValue(message);
   }
 });
@@ -104,9 +105,9 @@ export const upvoteJournal = createAsyncThunk<
       `/api/journals/upvote/${journalId}`
     );
     return { journalId, message: res.data.message };
-  } catch (error: any) {
+  } catch (err: unknown) {
     const message =
-      error?.response?.data?.message || "Failed to upvote journal";
+      err instanceof Error ? err.message : "Failed to upvote journal";
     return rejectWithValue(message);
   }
 });
@@ -122,9 +123,9 @@ export const downvoteJournal = createAsyncThunk<
       `/api/journals/downvote/${journalId}`
     );
     return { journalId, message: res.data.message };
-  } catch (error: any) {
+  } catch (err: unknown) {
     const message =
-      error?.response?.data?.message || "Failed to downvote journal";
+      err instanceof Error ? err.message : "Failed to downvote journal";
     return rejectWithValue(message);
   }
 });

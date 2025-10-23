@@ -100,13 +100,13 @@ const FavoriteBooksCarousel: React.FC<FavoriteBooksCarouselProps> = ({
     }
   }, [favoriteBookKeys]);
 
-  const handlePrev = () => {
-    setIndex(Math.max(0, index - 1));
-  };
+  // const handlePrev = () => {
+  //   setIndex(Math.max(0, index - 1));
+  // };
 
-  const handleNext = () => {
-    setIndex(Math.min(maxIndex, index + 1));
-  };
+  // const handleNext = () => {
+  //   setIndex(Math.min(maxIndex, index + 1));
+  // };
 
   if (loading) {
     return (

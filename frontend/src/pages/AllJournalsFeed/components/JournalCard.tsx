@@ -19,7 +19,7 @@ const JournalCard: React.FC<JournalCardProps> = ({ entry }) => {
       onClick={() => navigate(`/journal-preview/${entry.id}`)}
       className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border-2 border-amber-200 overflow-hidden transform hover:-translate-y-1 cursor-pointer"
     >
-      <BookHeader bookKey={entry.bookKey} />
+      <BookHeader journal={entry} />
       <div className="p-5">
         <MoodRating mood={entry.mood} rating={entry.rating} />
         <ReadingProgress progress={entry.readingProgress} />

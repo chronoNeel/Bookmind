@@ -57,10 +57,10 @@ const JournalDetail = () => {
 
   // Load the journal when the component mounts
   useEffect(() => {
-    if (journalId) {
+    if (journalId && currentUser !== undefined) {
       dispatch(fetchJournalById(journalId));
     }
-  }, [dispatch, journalId]);
+  }, [dispatch, journalId, currentUser]);
 
   // Check if current user has voted
   const hasUpvoted =

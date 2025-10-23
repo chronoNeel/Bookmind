@@ -1,7 +1,6 @@
 import React from "react";
 import StatCard from "./StatsCard";
 import { Bookmark, Eye, CheckSquare } from "lucide-react";
-import { useAppSelector } from "../../../hooks/redux";
 
 interface userStat {
   wantToReadCount: number;
@@ -14,10 +13,6 @@ const UserStats: React.FC<userStat> = ({
   ongoingCount,
   completedCount,
 }) => {
-  const { completed, ongoing, wantToRead } = useAppSelector(
-    (state) => state.shelf
-  );
-
   return (
     <>
       <StatCard

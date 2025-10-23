@@ -4,14 +4,12 @@ import { fetchBooks } from "../../api/bookApi";
 
 interface BookState {
   searchResults: Book[];
-  genres: Record<string, any[]>;
   isLoading: boolean;
   error: string | null;
 }
 
 const initialState: BookState = {
   searchResults: [],
-  genres: {},
   isLoading: false,
   error: null,
 };
@@ -25,8 +23,10 @@ export const searchBooks = createAsyncThunk(
 
     try {
       return await fetchBooks(searchTerm);
-    } catch (err: any) {
-      return rejectWithValue(err.message || "Error fetching books");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Error fetching books";
+      return rejectWithValue(message);
     }
   }
 );

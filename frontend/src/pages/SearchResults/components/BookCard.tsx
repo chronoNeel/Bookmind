@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Book } from "../../../types/Book";
-import { ChevronDown, Plus, BookOpen, Edit3, X } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { getBookShelf, ShelfType } from "../../../utils/getBookData";
@@ -14,10 +14,11 @@ interface BookCardProps {
   onClick?: () => void;
 }
 
-const BookCard = ({ book, onClick }: BookCardProps) => {
+const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const currentUser = useAppSelector((state) => state.auth.user);
+
   const [status, setStatus] = useState<ShelfType | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [description, setDescription] = useState("");
@@ -26,7 +27,7 @@ const BookCard = ({ book, onClick }: BookCardProps) => {
   const coverUrl = useMemo(() => {
     if (!book?.cover_i) return undefined;
     return `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`;
-  }, []);
+  }, [book?.cover_i]);
 
   useEffect(() => {
     if (!book || !currentUser?.shelves) return;
@@ -37,7 +38,7 @@ const BookCard = ({ book, onClick }: BookCardProps) => {
     });
 
     setStatus(shelf);
-  }, [currentUser?.shelves, book.key]);
+  }, [currentUser?.shelves, book]);
 
   const statusColors = {
     wantToRead:
@@ -54,12 +55,9 @@ const BookCard = ({ book, onClick }: BookCardProps) => {
     completed: "Completed",
   };
 
-  const getStatusColor = (status: string | null) => {
-    if (!status) return statusColors.wantToRead;
-    return (
-      statusColors[status as keyof typeof statusColors] ||
-      statusColors.wantToRead
-    );
+  const getStatusColor = (value: ShelfType | null) => {
+    if (!value) return statusColors.wantToRead;
+    return statusColors[value] || statusColors.wantToRead;
   };
 
   useEffect(() => {
@@ -77,21 +75,21 @@ const BookCard = ({ book, onClick }: BookCardProps) => {
         setDescription(desc);
 
         if (bookData.authors?.length) {
-          try {
-            const authorKey = bookData.authors[0].author.key;
-            const authorResponse = await axios.get(
-              `https://openlibrary.org${authorKey}.json`
-            );
-            setAuthor(authorResponse.data.name || "Unknown Author");
-          } catch (authorError) {
-            console.error("Error fetching author:", authorError);
-            setAuthor("Unknown Author");
+          const authorKey = bookData.authors[0]?.author?.key;
+          if (authorKey) {
+            try {
+              const authorResponse = await axios.get(
+                `https://openlibrary.org${authorKey}.json`
+              );
+              setAuthor(authorResponse.data?.name || "Unknown Author");
+            } catch {
+              setAuthor("Unknown Author");
+            }
           }
         } else {
           setAuthor("Unknown Author");
         }
-      } catch (err) {
-        console.error("Failed to fetch description:", err);
+      } catch {
         setDescription("No description available");
       }
     };
@@ -100,8 +98,8 @@ const BookCard = ({ book, onClick }: BookCardProps) => {
   }, [book.key]);
 
   const handleStatusChange = async (
-    newStatus: "wantToRead" | "ongoing" | "completed" | "remove"
-  ) => {
+    newStatus: ShelfType | "remove"
+  ): Promise<void> => {
     if (!book?.key) return;
 
     if (!currentUser) {
@@ -138,38 +136,36 @@ const BookCard = ({ book, onClick }: BookCardProps) => {
                 : "Completed"
             } shelf`;
 
-      toast.success(`${toasterText}`);
+      toast.success(toasterText);
       setIsModalOpen(false);
-    } catch (error: any) {
-      if (error?.code === "AUTH_REQUIRED") {
+    } catch (error: unknown) {
+      const err = error as { code?: string; message?: string };
+      if (err?.code === "AUTH_REQUIRED") {
         setIsModalOpen(false);
         const shouldRedirect = window.confirm(
-          error.message || "Please log in to continue. Redirect to login?"
+          err.message || "Please log in to continue. Redirect to login?"
         );
         if (shouldRedirect) {
           navigate("/login", { state: { from: `/book/${book.key}` } });
         }
       } else {
         alert(
-          error?.message || "Failed to update book status. Please try again."
+          err?.message || "Failed to update book status. Please try again."
         );
       }
     }
   };
 
-  const handleAddJournal = (e: any) => {
+  const handleAddJournal = (e: React.MouseEvent<HTMLButtonElement>): void => {
     e.stopPropagation();
+
     if (!currentUser) {
       alert("Please log in to add journal entries");
-      navigate("/login", {
-        state: { from: `/book/${book.key}` },
-      });
+      navigate("/login", { state: { from: `/book/${book.key}` } });
       return;
     }
 
-    if (book) {
-      navigate("/add-journal", { state: { bookKey: book.key } });
-    }
+    navigate("/add-journal", { state: { bookKey: book.key } });
   };
 
   return (
@@ -207,7 +203,7 @@ const BookCard = ({ book, onClick }: BookCardProps) => {
                     opacity: 0,
                     transition: "opacity 0.25s ease",
                   }}
-                ></div>
+                />
               </div>
             </div>
 
@@ -247,7 +243,6 @@ const BookCard = ({ book, onClick }: BookCardProps) => {
 
               {/* Action Buttons Row */}
               <div className="d-flex align-items-center gap-3 flex-wrap">
-                {/* Status Button */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -267,12 +262,9 @@ const BookCard = ({ book, onClick }: BookCardProps) => {
                   <ChevronDown size={16} color="currentColor" />
                 </button>
 
-                {/* Add Journal Entry Button */}
                 <button
                   className="btn btn-lg btn-success d-flex align-items-center rounded-pill gap-2 shadow-sm"
-                  onClick={(e) => {
-                    handleAddJournal(e);
-                  }}
+                  onClick={handleAddJournal}
                   style={{
                     border: "none",
                     transition: "transform 0.2s ease, box-shadow 0.2s ease",
@@ -301,37 +293,31 @@ const BookCard = ({ book, onClick }: BookCardProps) => {
       )}
 
       <style>{`
-      .hover-lift:hover {
-        transform: translateY(-3px);
-      }
-
-      .book-cover-wrapper:hover .book-cover {
-        transform: scale(1.04);
-      }
-
-      .book-cover-wrapper:hover .book-overlay {
-        opacity: 1 !important;
-      }
-
-      .book-title {
-        transition: color 0.25s ease;
-      }
-
-      .card:hover .book-title {
-        color: #374151 !important;
-      }
-
-      .line-clamp-2 {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-      }
-
-      .btn:hover {
-        transform: translateY(-1px);
-      }
-    `}</style>
+        .hover-lift:hover {
+          transform: translateY(-3px);
+        }
+        .book-cover-wrapper:hover .book-cover {
+          transform: scale(1.04);
+        }
+        .book-cover-wrapper:hover .book-overlay {
+          opacity: 1 !important;
+        }
+        .book-title {
+          transition: color 0.25s ease;
+        }
+        .card:hover .book-title {
+          color: #374151 !important;
+        }
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        .btn:hover {
+          transform: translateY(-1px);
+        }
+      `}</style>
     </>
   );
 };
