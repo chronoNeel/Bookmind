@@ -16,12 +16,15 @@ import { setBookStatus } from "../../store/slices/shelfSlice";
 import { useAppDispatch } from "../../hooks/redux";
 import { toast } from "react-toastify";
 import { getBookShelf, ShelfType } from "../../utils/getBookData";
+import api from "../../utils/api";
+import { updateFavoriteBooks } from "../../store/slices/statsSlice";
 
 const BookDetails = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const params = useParams<{ bookKey: string }>();
   const { bookKey } = params;
+  if (!bookKey) throw new Error("Missing :bookKey in route");
 
   const [book, setBook] = useState<Book | null>(null);
   const [author, setAuthor] = useState<string>("Unknown Author");
@@ -31,6 +34,8 @@ const BookDetails = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [userFavorites, setUserFavorites] = useState<string[]>([]);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const currentUser = useSelector((state: RootState) => state.auth.user);
@@ -52,6 +57,14 @@ const BookDetails = () => {
     });
     setStatus(shelf);
   }, [currentUser?.shelves, bookKey]);
+
+  // Initialize favorite status from user's favorites
+  useEffect(() => {
+    if (currentUser?.favorites && bookKey) {
+      setIsFavorite(currentUser.favorites.includes(bookKey));
+      setUserFavorites(currentUser.favorites);
+    }
+  }, [currentUser?.favorites, bookKey]);
 
   useEffect(() => {
     const getBookDetails = async () => {
@@ -213,6 +226,45 @@ const BookDetails = () => {
     }
   };
 
+  const handleFavoriteToggle = async () => {
+    if (!currentUser) {
+      toast.warn("Please log in to manage favorites.", {
+        position: "top-center",
+      });
+      navigate("/login", { state: { from: `/book/${bookKey}` } });
+      return;
+    }
+
+    try {
+      // Dispatch Redux thunk
+      const result = await dispatch(updateFavoriteBooks({ bookKey })).unwrap();
+
+      // Update local state based on response
+      const isNowFavorite = result.favorites.includes(bookKey);
+      setIsFavorite(isNowFavorite);
+      setUserFavorites(result.favorites);
+
+      toast.success(
+        isNowFavorite ? "Added to favorites!" : "Removed from favorites!",
+        { position: "top-center" }
+      );
+    } catch (error: any) {
+      if (error?.code === "AUTH_REQUIRED") {
+        const shouldRedirect = window.confirm(
+          error.message || "Please log in to continue. Redirect to login?"
+        );
+        if (shouldRedirect) {
+          navigate("/login", { state: { from: `/book/${bookKey}` } });
+        }
+      } else {
+        toast.error(
+          error?.message || "Failed to update favorites. Please try again.",
+          { position: "top-center" }
+        );
+      }
+    }
+  };
+
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -235,7 +287,7 @@ const BookDetails = () => {
             genres={genres}
             isFavorite={isFavorite}
             status={status}
-            onFavoriteToggle={() => setIsFavorite(!isFavorite)}
+            onFavoriteToggle={handleFavoriteToggle}
             onStatusClick={() => setIsModalOpen(true)}
             onAddJournal={handleAddJournal}
           />

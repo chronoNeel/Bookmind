@@ -20,6 +20,7 @@ const Profile = () => {
   const [profileData, setProfileData] = useState<UserData | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [loading, setLoading] = useState(true);
+  console.log(currentUser);
 
   const {
     completed = [],

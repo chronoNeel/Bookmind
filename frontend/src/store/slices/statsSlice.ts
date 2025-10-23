@@ -44,6 +44,28 @@ export const updateYearlyGoal = createAsyncThunk<
   }
 });
 
+export const updateFavoriteBooks = createAsyncThunk<
+  { bookKey: string; favorites: string[] },
+  { bookKey: string },
+  { rejectValue: { message: string; code?: string } }
+>("profile/updateFavoriteBooks", async ({ bookKey }, { rejectWithValue }) => {
+  try {
+    const response = await api.put("/api/users/favorite-books", { bookKey });
+    return {
+      bookKey,
+      favorites: response.data.favorites,
+    };
+  } catch (err: any) {
+    return rejectWithValue({
+      message:
+        err?.response?.data?.error ||
+        err.message ||
+        "Failed to update favorite books",
+      code: err?.response?.status === 401 ? "AUTH_REQUIRED" : undefined,
+    });
+  }
+});
+
 const statsSlice = createSlice({
   name: "stats",
   initialState,

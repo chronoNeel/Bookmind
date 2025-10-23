@@ -7,6 +7,7 @@ import {
   updateYearlyGoal,
   toggleFollow,
   getUsernameFromUid,
+  updateFavoriteBooks,
 } from "../controllers/userControllers";
 import { authenticate } from "../middleware/authMiddleware";
 
@@ -21,5 +22,6 @@ router.put("/update", authenticate, updateUserProfile);
 router.put("/stats", authenticate, updateUserStats);
 router.post("/follow", authenticate, toggleFollow);
 router.put("/yearly-goal", authenticate, updateYearlyGoal);
+router.put("/favorite-books", authenticate, updateFavoriteBooks);
 
 export default router;

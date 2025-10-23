@@ -302,6 +302,56 @@ export const updateYearlyGoal = asyncHandler(
   }
 );
 
+export const updateFavoriteBooks = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const user = requireUser(req);
+    const { bookKey } = req.body;
+
+    if (!bookKey) {
+      console.log("haha");
+      res.status(400).json({ error: "Book key is required" });
+      return;
+    }
+
+    const userDoc = await db.collection("users").doc(user.uid).get();
+
+    if (!userDoc.exists) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    const userData = userDoc.data();
+    const currentFavorites = userData?.favorites || [];
+
+    // Check if bookKey already exists in favorites
+    const bookIndex = currentFavorites.indexOf(bookKey);
+    let updatedFavorites: string[];
+    let message: string;
+
+    if (bookIndex > -1) {
+      updatedFavorites = currentFavorites.filter(
+        (key: string) => key !== bookKey
+      );
+      message = "Book removed from favorites";
+    } else {
+      updatedFavorites = [...currentFavorites, bookKey];
+      message = "Book added to favorites";
+    }
+
+    // Update user document
+    await db.collection("users").doc(user.uid).update({
+      favorites: updatedFavorites,
+      updatedAt: new Date().toISOString(),
+    });
+
+    res.json({
+      status: "ok",
+      message,
+      favorites: updatedFavorites,
+    });
+  }
+);
+
 export const getUsernameFromUid = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     const { uid } = req.params;

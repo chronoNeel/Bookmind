@@ -6,10 +6,10 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
-      "/api/openlibrary": {
+      "/openlibrary.org": {
         target: "https://openlibrary.org",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/openlibrary/, ""),
+        rewrite: (path) => path.replace(/^\/openlibrary\.org/, ""),
       },
     },
   },

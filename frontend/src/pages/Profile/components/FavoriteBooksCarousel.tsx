@@ -29,26 +29,47 @@ const FavoriteBooksCarousel: React.FC<FavoriteBooksCarouselProps> = ({
     const fetchBooks = async () => {
       try {
         setLoading(true);
-        // Fetch book details for each favorite
         const bookPromises = favoriteBookKeys
           .slice(0, 10)
           .map(async (bookKey) => {
             try {
+              // Fetch book details
               const response = await fetch(
-                `https://openlibrary.org/works/${bookKey}.json`
+                `https://openlibrary.org${bookKey}.json`
               );
+
+              if (!response.ok) throw new Error("Failed to fetch book");
+
               const data = await response.json();
 
-              // Get cover ID
-              const coverId = data.covers?.[0];
+              // Get cover URL
+              let coverUrl =
+                "https://via.placeholder.com/150x225?text=No+Cover";
+              if (data.covers && data.covers.length > 0) {
+                coverUrl = `https://covers.openlibrary.org/b/id/${data.covers[0]}-M.jpg`;
+              }
+
+              // Fetch author name
+              let authorName = "Unknown Author";
+              if (data.authors && data.authors.length > 0) {
+                try {
+                  const authorResponse = await fetch(
+                    `https://openlibrary.org${data.authors[0].author.key}.json`
+                  );
+                  if (authorResponse.ok) {
+                    const authorData = await authorResponse.json();
+                    authorName = authorData.name || "Unknown Author";
+                  }
+                } catch (error) {
+                  console.error("Failed to fetch author:", error);
+                }
+              }
 
               return {
                 title: data.title || "Unknown Title",
-                author: data.authors?.[0]?.author?.name || "Unknown Author",
+                author: authorName,
                 bookKey: bookKey,
-                coverUrl: coverId
-                  ? `https://covers.openlibrary.org/b/id/${coverId}-M.jpg`
-                  : "https://via.placeholder.com/150x225?text=No+Cover",
+                coverUrl: coverUrl,
                 subject: data.subjects?.[0] || "General",
               };
             } catch (error) {
@@ -78,6 +99,14 @@ const FavoriteBooksCarousel: React.FC<FavoriteBooksCarouselProps> = ({
       setLoading(false);
     }
   }, [favoriteBookKeys]);
+
+  const handlePrev = () => {
+    setIndex(Math.max(0, index - 1));
+  };
+
+  const handleNext = () => {
+    setIndex(Math.min(maxIndex, index + 1));
+  };
 
   if (loading) {
     return (
