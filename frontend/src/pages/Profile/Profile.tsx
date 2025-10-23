@@ -7,14 +7,23 @@ import ProfileHeader from "./components/ProfileHeader";
 import StatsGrid from "./components/StatsGrid";
 import FavoriteBooksCarousel from "./components/FavoriteBooksCarousel";
 import ReadingAnalytics from "./components/ReadingAnalytics";
-import { booksReadThisYear } from "../../utils/getUserData";
 
 const Profile = () => {
   const { userName } = useParams();
   const navigate = useNavigate();
-  const yearlyBookCount = booksReadThisYear();
-
   const currentUser = useAppSelector((state) => state.auth.user);
+
+  const bookThisYear = React.useMemo(() => {
+    if (!currentUser?.shelves.completed) return 0;
+
+    const currentYear = new Date().getFullYear();
+
+    return currentUser.shelves.completed.filter((book) => {
+      const bookYear = new Date(book.updatedAt).getFullYear();
+      return bookYear === currentYear;
+    }).length;
+  }, [currentUser?.shelves.completed]);
+
   const isLoading = useAppSelector((state) => state.auth.loading);
 
   const [profileData, setProfileData] = useState<UserData | null>(null);
@@ -201,7 +210,7 @@ const Profile = () => {
         <ReadingAnalytics
           stats={userStats}
           yearlyGoal={profileData.stats.yearlyGoal}
-          booksReadThisYear={yearlyBookCount}
+          booksReadThisYear={bookThisYear}
           avgRating={profileData.stats.avgRating}
           onJournalEntriesClick={handleJournalEntriesClick}
         />

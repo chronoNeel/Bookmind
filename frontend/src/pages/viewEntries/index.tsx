@@ -130,7 +130,7 @@ const ViewEntries = () => {
 
         {/* Journal Entries */}
         <div className="row g-4">
-          {currentEntries.map((entry, index) => (
+          {currentEntries.map((entry) => (
             <div key={entry.id} className="col-12">
               <div
                 className="card border-0 shadow-sm h-100"

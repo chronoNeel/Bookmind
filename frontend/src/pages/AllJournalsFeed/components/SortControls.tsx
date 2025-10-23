@@ -13,6 +13,11 @@ const SortControls: React.FC<SortControlsProps> = ({
   setSortBy,
   totalEntries,
 }) => {
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
+    const value = e.target.value as "recent" | "rating" | "votes";
+    setSortBy(value);
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-sm p-6 mb-8 border-2 border-amber-200">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -22,7 +27,7 @@ const SortControls: React.FC<SortControlsProps> = ({
           </label>
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
+            onChange={handleChange}
             className="bg-amber-50 border-2 border-amber-300 rounded-lg px-4 py-2 text-sm font-medium text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400"
           >
             <option value="recent">Most Recent</option>

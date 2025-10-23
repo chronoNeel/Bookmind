@@ -3,10 +3,9 @@ import { CheckCircle, Eye, BookOpen } from "lucide-react";
 import { Shelf } from "./components/Shelf";
 import { ExpandedShelfState } from "./components/types";
 import { useAppSelector } from "../../hooks/redux";
-import { getCurrentUser } from "../../utils/getUserData";
 
 const MyBooks = () => {
-  const currentUser = getCurrentUser();
+  const currentUser = useAppSelector((state) => state.auth.user);
   const shelves = useAppSelector((state) => state.auth.user?.shelves);
   const { completed = [], ongoing = [], wantToRead = [] } = shelves || {};
 
@@ -45,7 +44,7 @@ const MyBooks = () => {
                 />
               </div>
             </div>
-            <h1 className="text-3xl font-bold text-amber-900 mb-2">My Books</h1>
+            <h1 className="text-3xl font-bold text-amber-900 mb-2">Shelves</h1>
           </div>
           <div className="space-y-6">
             <Shelf

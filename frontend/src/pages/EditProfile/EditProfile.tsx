@@ -21,6 +21,14 @@ interface ProfileData {
   email: string;
 }
 
+interface ValidationErrors {
+  fullName?: string;
+  userName?: string;
+  bio?: string;
+  profilePicture?: string;
+  general?: string;
+}
+
 const EditProfile: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -38,7 +46,7 @@ const EditProfile: React.FC = () => {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<any>({});
+  const [errors, setErrors] = useState<ValidationErrors>({});
   const [originalUsername, setOriginalUsername] = useState("");
 
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
@@ -87,7 +95,7 @@ const EditProfile: React.FC = () => {
 
       // Basic validation
       if (username.length < 3 || username.length > 30) {
-        setErrors((prev: any) => ({
+        setErrors((prev) => ({
           ...prev,
           userName: "Username must be 3-30 characters",
         }));
@@ -95,7 +103,7 @@ const EditProfile: React.FC = () => {
       }
 
       if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
-        setErrors((prev: any) => ({
+        setErrors((prev) => ({
           ...prev,
           userName:
             "Username can only contain letters, numbers, underscores, and hyphens",
@@ -104,7 +112,7 @@ const EditProfile: React.FC = () => {
       }
 
       // Clear error
-      setErrors((prev: any) => ({
+      setErrors((prev) => ({
         ...prev,
         userName: undefined,
       }));
@@ -186,7 +194,7 @@ const EditProfile: React.FC = () => {
       formData.userName !== originalUsername &&
       usernameCheck.available === false
     ) {
-      setErrors((prev: any) => ({
+      setErrors((prev) => ({
         ...prev,
         userName: "Username is already taken",
       }));
@@ -195,7 +203,7 @@ const EditProfile: React.FC = () => {
 
     // Check if still checking username
     if (usernameCheck.checking) {
-      setErrors((prev: any) => ({
+      setErrors((prev) => ({
         ...prev,
         general: "Please wait for username validation",
       }));

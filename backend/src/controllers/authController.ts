@@ -15,7 +15,7 @@ export const register = asyncHandler(
     const { fullName, token } = req.body;
 
     if (!fullName || !token) {
-      res.status(400).json({ error: "Display name and token are required" });
+      res.status(400).json({ error: "Full name and token are required" });
       return;
     }
 

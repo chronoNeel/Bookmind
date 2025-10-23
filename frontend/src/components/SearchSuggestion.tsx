@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Book } from "../types/Book";
 
@@ -57,7 +57,7 @@ const SearchSuggestion: React.FC<SearchSuggestionProps> = ({
           }}
           className="w-full text-center text-amber-600 font-medium py-2 hover:bg-amber-50 border-t border-gray-100"
         >
-          See all results for "{searchText}"
+          See all results for &quot;{searchText}&quot;
         </button>
       </div>
     </div>

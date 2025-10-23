@@ -351,7 +351,7 @@ const JournalPDFExporter: React.FC<JournalPDFExporterProps> = ({
       ) : (
         <>
           <Download size={18} />
-          <span>Download PDF</span>
+          <span>Save as PDF</span>
         </>
       )}
     </button>

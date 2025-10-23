@@ -18,12 +18,12 @@ const BookCard: React.FC<BookCardProps> = memo(
             className="position-relative overflow-hidden bg-light"
             style={{ height: "280px" }}
           >
-            <div className="w-100 h-100 bg-secondary animate-pulse"></div>
+            <div className="w-100 h-100 bg-secondary animate-pulse" />
           </div>
           <div className="card-body p-3 d-flex flex-column">
-            <div className="h-4 bg-secondary rounded mb-2 animate-pulse flex-grow-1"></div>
-            <div className="h-3 bg-secondary rounded mb-2 animate-pulse w-75"></div>
-            <div className="h-3 bg-secondary rounded animate-pulse w-50"></div>
+            <div className="h-4 bg-secondary rounded mb-2 animate-pulse flex-grow-1" />
+            <div className="h-3 bg-secondary rounded mb-2 animate-pulse w-75" />
+            <div className="h-3 bg-secondary rounded animate-pulse w-50" />
           </div>
         </div>
       );
@@ -33,11 +33,15 @@ const BookCard: React.FC<BookCardProps> = memo(
       ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`
       : "";
 
+    const handleClick = () => {
+      if (onClick) onClick();
+    };
+
     return (
       <div
         className="card h-100 card-hover shadow-sm"
         style={{ cursor: "pointer" }}
-        onClick={onClick}
+        onClick={handleClick}
       >
         <div
           className="position-relative overflow-hidden bg-light"

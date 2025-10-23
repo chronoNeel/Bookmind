@@ -18,7 +18,6 @@ import {
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 import { RootState } from "../../store";
 import { fetchUsernameByUid } from "../../store/slices/authSlice";
-import { getCurrentUser } from "../../utils/getUserData";
 import { toast } from "react-toastify";
 
 const JournalDetail = () => {
@@ -30,7 +29,7 @@ const JournalDetail = () => {
     (state: RootState) => state.journal
   );
 
-  const currentUser = getCurrentUser();
+  const currentUser = useAppSelector((state) => state.auth.user);
   const [userName, setUserName] = useState<string>("");
   const [loadingAuthor, setLoadingAuthor] = useState(false);
 

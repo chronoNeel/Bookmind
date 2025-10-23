@@ -31,13 +31,12 @@ const SearchBar: React.FC = () => {
     const query = params.get("q");
     if (query && query !== searchTerm) {
       setSearchTerm(query);
-      // Only dispatch if we haven't already searched for this term
       if (query !== lastSearchRef.current) {
         lastSearchRef.current = query;
         dispatch(searchBooks(query));
       }
     }
-  }, [location.search]);
+  }, [location.search, searchTerm, dispatch]);
 
   // Hide suggestions when navigating
   useEffect(() => {

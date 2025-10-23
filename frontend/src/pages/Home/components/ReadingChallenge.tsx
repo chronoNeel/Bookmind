@@ -1,16 +1,24 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { TrendingUp, Plus, Minus } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../../hooks/redux";
 import { toast } from "react-toastify";
 import { updateYearlyGoal } from "../../../store/slices/statsSlice";
 import { updateUserProfile } from "../../../store/slices/authSlice";
-import { booksReadThisYear, getCurrentUser } from "../../../utils/getUserData";
 
 const ReadingChallenge: React.FC = () => {
   const dispatch = useAppDispatch();
-  const currentUser = getCurrentUser();
+  const currentUser = useAppSelector((state) => state.auth.user);
 
-  const booksThisYear = booksReadThisYear();
+  const booksThisYear = React.useMemo(() => {
+    if (!currentUser?.shelves.completed) return 0;
+
+    const currentYear = new Date().getFullYear();
+
+    return currentUser.shelves.completed.filter((book) => {
+      const bookYear = new Date(book.updatedAt).getFullYear();
+      return bookYear === currentYear;
+    }).length;
+  }, [currentUser?.shelves.completed]);
 
   const readingGoal = currentUser?.stats?.yearlyGoal ?? 0;
 
@@ -45,14 +53,26 @@ const ReadingChallenge: React.FC = () => {
         position: "top-center",
         autoClose: 2000,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to update yearly goal:", error);
-      if (error?.code === "AUTH_REQUIRED") {
+
+      if (
+        error &&
+        typeof error === "object" &&
+        "code" in error &&
+        (error as { code?: string }).code === "AUTH_REQUIRED"
+      ) {
         toast.error("Please log in again to continue", {
           position: "top-center",
         });
+      } else if (error && typeof error === "object" && "message" in error) {
+        toast.error(
+          (error as { message?: string }).message ||
+            "Failed to update reading goal",
+          { position: "top-center" }
+        );
       } else {
-        toast.error(error?.message || "Failed to update reading goal", {
+        toast.error("Failed to update reading goal", {
           position: "top-center",
         });
       }

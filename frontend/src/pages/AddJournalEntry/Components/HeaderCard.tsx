@@ -1,7 +1,8 @@
 import { Calendar, User } from "lucide-react";
+import { BookDetails } from "../../../types/Book";
 
 interface HeaderCardProps {
-  book: any;
+  book: BookDetails;
   coverUrl: string;
   author: string;
   readingProgress: number;
@@ -35,7 +36,7 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
           <div className="flex items-center gap-4 text-sm opacity-60">
             <span className="flex items-center">
               <Calendar className="w-4 h-4 mr-1" />
-              {book.first_publish_year}
+              {book.first_publish_date}
             </span>
             <span
               className={`px-3 py-1 rounded-full text-xs font-medium ${

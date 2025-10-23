@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
 import SearchBar from "../../components/SearchBar";
@@ -16,7 +16,6 @@ import { setBookStatus } from "../../store/slices/shelfSlice";
 import { useAppDispatch } from "../../hooks/redux";
 import { toast } from "react-toastify";
 import { getBookShelf, ShelfType } from "../../utils/getBookData";
-import api from "../../utils/api";
 import { updateFavoriteBooks } from "../../store/slices/statsSlice";
 
 const BookDetails = () => {
@@ -34,13 +33,10 @@ const BookDetails = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [userFavorites, setUserFavorites] = useState<string[]>([]);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [status, setStatus] = useState<ShelfType | null>(null);
 
   const currentUser = useSelector((state: RootState) => state.auth.user);
-
-  const [status, setStatus] = useState<ShelfType | null>(null);
 
   const coverUrl = useMemo(() => {
     if (!book?.covers?.length) return null;
@@ -62,7 +58,6 @@ const BookDetails = () => {
   useEffect(() => {
     if (currentUser?.favorites && bookKey) {
       setIsFavorite(currentUser.favorites.includes(bookKey));
-      setUserFavorites(currentUser.favorites);
     }
   }, [currentUser?.favorites, bookKey]);
 
@@ -104,7 +99,7 @@ const BookDetails = () => {
               `https://openlibrary.org${authorKey}.json`
             );
             setAuthor(authorResponse.data.name || "Unknown Author");
-          } catch (authorError) {
+          } catch (authorError: unknown) {
             console.error("Error fetching author:", authorError);
             setAuthor("Unknown Author");
           }
@@ -124,18 +119,21 @@ const BookDetails = () => {
 
           const searchResponse = await axios.get(searchUrl);
 
-          (searchResponse.data.docs as any[])
-            .filter((doc) => doc.key && doc.key !== bookKey)
+          (searchResponse.data.docs as Array<Record<string, unknown>>)
+            .filter((doc) => typeof doc.key === "string" && doc.key !== bookKey)
             .forEach((doc) => {
-              const key = doc.key;
+              const key = doc.key as string;
               if (!uniqueBooks.has(key)) {
                 uniqueBooks.set(key, {
-                  title: doc.title,
-                  author: doc.author_name ? doc.author_name[0] : "Unknown",
-                  workKey: doc.key,
-                  coverUrl: doc.cover_i
-                    ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg`
-                    : null,
+                  title: doc.title as string,
+                  author: Array.isArray(doc.author_name)
+                    ? (doc.author_name[0] as string)
+                    : "Unknown",
+                  workKey: key,
+                  coverUrl:
+                    typeof doc.cover_i === "number"
+                      ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg`
+                      : null,
                   subject,
                 });
               }
@@ -143,8 +141,9 @@ const BookDetails = () => {
         }
 
         setSimilarBooks(Array.from(uniqueBooks.values()).slice(0, 20));
-      } catch (err) {
-        console.error("Error fetching data:", err);
+      } catch (err: unknown) {
+        const error = err as AxiosError;
+        console.error("Error fetching data:", error);
         setError("Failed to load book details. Please try again.");
       } finally {
         setLoading(false);
@@ -161,7 +160,6 @@ const BookDetails = () => {
 
     if (!currentUser) {
       setIsModalOpen(false);
-
       toast.warn("Please log in to add books to your shelves.", {
         position: "top-center",
       });
@@ -169,7 +167,6 @@ const BookDetails = () => {
       setTimeout(() => {
         navigate("/login", { state: { from: `/book/${bookKey}` } });
       }, 1500);
-
       return;
     }
 
@@ -193,21 +190,22 @@ const BookDetails = () => {
                 : "Completed"
             } shelf`;
 
-      toast.success(`${toasterText}`);
+      toast.success(toasterText);
       setIsModalOpen(false);
-    } catch (error: any) {
-      if (error?.code === "AUTH_REQUIRED") {
-        setIsModalOpen(false);
-        const shouldRedirect = window.confirm(
-          error.message || "Please log in to continue. Redirect to login?"
-        );
-        if (shouldRedirect) {
-          navigate("/login", { state: { from: `/book/${bookKey}` } });
+    } catch (error: unknown) {
+      if (typeof error === "object" && error && "code" in error) {
+        const err = error as { code?: string; message?: string };
+        if (err.code === "AUTH_REQUIRED") {
+          setIsModalOpen(false);
+          const shouldRedirect = window.confirm(
+            err.message || "Please log in to continue. Redirect to login?"
+          );
+          if (shouldRedirect) {
+            navigate("/login", { state: { from: `/book/${bookKey}` } });
+          }
         }
       } else {
-        alert(
-          error?.message || "Failed to update book status. Please try again."
-        );
+        alert("Failed to update book status. Please try again.");
       }
     }
   };
@@ -215,9 +213,7 @@ const BookDetails = () => {
   const handleAddJournal = () => {
     if (!currentUser) {
       alert("Please log in to add journal entries");
-      navigate("/login", {
-        state: { from: `/book/${bookKey}` },
-      });
+      navigate("/login", { state: { from: `/book/${bookKey}` } });
       return;
     }
 
@@ -236,38 +232,34 @@ const BookDetails = () => {
     }
 
     try {
-      // Dispatch Redux thunk
       const result = await dispatch(updateFavoriteBooks({ bookKey })).unwrap();
-
-      // Update local state based on response
       const isNowFavorite = result.favorites.includes(bookKey);
       setIsFavorite(isNowFavorite);
-      setUserFavorites(result.favorites);
 
       toast.success(
         isNowFavorite ? "Added to favorites!" : "Removed from favorites!",
         { position: "top-center" }
       );
-    } catch (error: any) {
-      if (error?.code === "AUTH_REQUIRED") {
-        const shouldRedirect = window.confirm(
-          error.message || "Please log in to continue. Redirect to login?"
-        );
-        if (shouldRedirect) {
-          navigate("/login", { state: { from: `/book/${bookKey}` } });
+    } catch (error: unknown) {
+      if (typeof error === "object" && error && "code" in error) {
+        const err = error as { code?: string; message?: string };
+        if (err.code === "AUTH_REQUIRED") {
+          const shouldRedirect = window.confirm(
+            err.message || "Please log in to continue. Redirect to login?"
+          );
+          if (shouldRedirect) {
+            navigate("/login", { state: { from: `/book/${bookKey}` } });
+          }
         }
       } else {
-        toast.error(
-          error?.message || "Failed to update favorites. Please try again.",
-          { position: "top-center" }
-        );
+        toast.error("Failed to update favorites. Please try again.", {
+          position: "top-center",
+        });
       }
     }
   };
 
-  if (loading) {
-    return <LoadingSpinner />;
-  }
+  if (loading) return <LoadingSpinner />;
 
   if (error || !book) {
     return <ErrorMessage error={error} onGoBack={() => navigate("/")} />;

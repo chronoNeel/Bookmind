@@ -39,8 +39,12 @@ const AddJournalEntry: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isPrivate, setIsPrivate] = useState(true);
   const [selectedMood, setSelectedMood] = useState("");
-  const [expandedPrompts, setExpandedPrompts] = useState({});
-  const [promptResponses, setPromptResponses] = useState({});
+  const [expandedPrompts, setExpandedPrompts] = useState<
+    Record<string, boolean>
+  >({});
+  const [promptResponses, setPromptResponses] = useState<
+    Record<string, string>
+  >({});
 
   useEffect(() => {
     const fetchBookDetails = async () => {
@@ -58,34 +62,23 @@ const AddJournalEntry: React.FC = () => {
           `https://openlibrary.org${bookKey}.json`
         );
         const bookData: BookDetails = bookResponse.data;
-        let name = "Unknown Author";
-        if (bookData.authors?.length) {
+
+        // Fetch first author's name (if available)
+        let fetchedAuthorName = "Unknown Author";
+        const firstAuthorKey = bookData.authors?.[0]?.author?.key;
+        if (firstAuthorKey) {
           try {
-            const authorKey = bookData.authors[0].author.key;
             const authorResponse = await axios.get(
-              `https://openlibrary.org${authorKey}.json`
+              `https://openlibrary.org${firstAuthorKey}.json`
             );
-            name = authorResponse.data?.name || "Unknown Author";
+            fetchedAuthorName = authorResponse.data?.name || "Unknown Author";
           } catch (e) {
-            console.log(e);
+            console.error("Error fetching author:", e);
           }
         }
 
-        let authorName = "Unknown Author";
-        if (bookData.authors?.length) {
-          try {
-            const authorKey = bookData.authors[0].author.key;
-            const authorResponse = await axios.get(
-              `https://openlibrary.org${authorKey}.json`
-            );
-            authorName = authorResponse.data.name || "Unknown Author";
-          } catch (err) {
-            console.error("Error fetching author:", err);
-          }
-        }
-
-        setBook({ ...bookData });
-        setAuthorName(name);
+        setBook(bookData);
+        setAuthorName(fetchedAuthorName);
       } catch (err) {
         console.error("Error fetching book details:", err);
         setError("Failed to load book details. Please try again.");

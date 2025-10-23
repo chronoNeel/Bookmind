@@ -19,11 +19,9 @@ export const getGenreBooks = createAsyncThunk(
   "books/getGenreBooks",
   async (genre: string, { rejectWithValue, getState }) => {
     try {
-      // Normalize genre to lowercase for consistency
       const normalizedGenre = genre.toLowerCase();
       const state = getState() as { genreBooks: BookState };
 
-      // Check cache with normalized genre name
       if (state.genreBooks.genres[normalizedGenre]?.length > 0) {
         return {
           genre: normalizedGenre,

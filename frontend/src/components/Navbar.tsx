@@ -124,7 +124,7 @@ const Navbar = () => {
                         : "nav-link text-secondary hover-custom"
                     }
                   >
-                    My Books
+                    Shelves
                   </NavLink>
                 </li>
                 <li className="nav-item">
@@ -186,7 +186,7 @@ const Navbar = () => {
                         className="dropdown-item dropdown-item-custom"
                         onClick={() => navigate("/my-books")}
                       >
-                        My Books
+                        Shelves
                       </button>
                       <hr className="dropdown-divider my-1 opacity-25" />
                       <button
@@ -261,7 +261,7 @@ const Navbar = () => {
                       }
                       onClick={handleNavClick}
                     >
-                      <i className="bi bi-book me-2"></i> My Books
+                      <i className="bi bi-book me-2"></i> Shelves
                     </NavLink>
                     <hr className="dropdown-divider my-1" />
                     <NavLink

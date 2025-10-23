@@ -3,10 +3,9 @@ import { Book } from "../../../types/Book";
 import { ChevronDown, Plus, BookOpen, Edit3, X } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { getCurrentUser } from "../../../utils/getUserData";
 import { getBookShelf, ShelfType } from "../../../utils/getBookData";
 import StatusModal from "../../BookDetails/components/StatusModal";
-import { useAppDispatch } from "../../../hooks/redux";
+import { useAppDispatch, useAppSelector } from "../../../hooks/redux";
 import { toast } from "react-toastify";
 import { setBookStatus } from "../../../store/slices/shelfSlice";
 
@@ -18,7 +17,7 @@ interface BookCardProps {
 const BookCard = ({ book, onClick }: BookCardProps) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const currentUser = getCurrentUser();
+  const currentUser = useAppSelector((state) => state.auth.user);
   const [status, setStatus] = useState<ShelfType | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [description, setDescription] = useState("");

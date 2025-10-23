@@ -22,7 +22,7 @@ export const fetchTrendingBooks = async (): Promise<Book[]> => {
   return booksWithCovers;
 };
 
-export const fetchGenreBooks = async (genre: string): Promise<any[]> => {
+export const fetchGenreBooks = async (genre: string): Promise<GenreBook[]> => {
   const response = await axiosInstance.get(
     `subjects/${genre.toLowerCase()}.json`,
     {
