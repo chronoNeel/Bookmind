@@ -19,7 +19,19 @@ interface LoginPayload {
   password: string;
 }
 
-// Check username availability
+// --- Error type guard ---
+interface ApiErrorShape {
+  response?: {
+    data?: { error?: string };
+    status?: number;
+  };
+  message?: string;
+}
+function isApiErrorShape(err: unknown): err is ApiErrorShape {
+  return typeof err === "object" && err !== null;
+}
+
+// --- Check username availability ---
 export const checkUsernameAvailability = createAsyncThunk<
   { available: boolean; username: string },
   string,
@@ -28,17 +40,19 @@ export const checkUsernameAvailability = createAsyncThunk<
   try {
     const response = await api.get(`/api/users/check-username/${username}`);
     return response.data;
-  } catch (error: any) {
-    if (error.response) {
+  } catch (error: unknown) {
+    if (isApiErrorShape(error)) {
       return rejectWithValue(
-        error.response.data.error || "Failed to check username"
+        error.response?.data?.error ||
+          error.message ||
+          "Failed to check username"
       );
     }
-    return rejectWithValue(error.message || "Failed to check username");
+    return rejectWithValue("Failed to check username");
   }
 });
 
-// Register user
+// --- Register user ---
 export const registerUser = createAsyncThunk<
   UserData,
   RegisterPayload,
@@ -59,15 +73,17 @@ export const registerUser = createAsyncThunk<
         fullName,
         token,
       });
-
-      return response.data.user;
-    } catch (error: any) {
-      return rejectWithValue(error.message);
+      return response.data.user as UserData;
+    } catch (error: unknown) {
+      if (isApiErrorShape(error)) {
+        return rejectWithValue(error.message || "Failed to register user");
+      }
+      return rejectWithValue("Failed to register user");
     }
   }
 );
 
-// Login user
+// --- Login user ---
 export const loginUser = createAsyncThunk<
   UserData,
   LoginPayload,
@@ -80,17 +96,18 @@ export const loginUser = createAsyncThunk<
       password
     );
     const user = userCredential.user;
-    console.log(userCredential);
 
     const userProfile = await api.get(`/api/users/${user.uid}`);
-
-    return userProfile.data;
-  } catch (error: any) {
-    return rejectWithValue(error.message);
+    return userProfile.data as UserData;
+  } catch (error: unknown) {
+    if (isApiErrorShape(error)) {
+      return rejectWithValue(error.message || "Failed to login");
+    }
+    return rejectWithValue("Failed to login");
   }
 });
 
-// Fetch user profile (for app initialization)
+// --- Fetch user profile (for app initialization) ---
 export const fetchUserProfile = createAsyncThunk<
   UserData,
   string,
@@ -98,24 +115,25 @@ export const fetchUserProfile = createAsyncThunk<
 >("auth/fetchProfile", async (userName, { rejectWithValue }) => {
   try {
     const response = await api.get(`/api/users/${userName}`);
-    return response.data;
-  } catch (error: any) {
-    if (error.response) {
+    return response.data as UserData;
+  } catch (error: unknown) {
+    if (isApiErrorShape(error)) {
       return rejectWithValue(
-        error.response.data.error || "Failed to fetch user profile"
+        error.response?.data?.error ||
+          error.message ||
+          "Failed to fetch user profile"
       );
     }
-    return rejectWithValue(error.message || "Failed to fetch user profile");
+    return rejectWithValue("Failed to fetch user profile");
   }
 });
 
-// Logout user
+// --- Logout user ---
 export const logoutUser = createAsyncThunk<void>("auth/logout", async () => {
   await signOut(auth);
 });
 
-// fetch username by id
-
+// --- Fetch username by UID ---
 export const fetchUsernameByUid = createAsyncThunk<
   string,
   string,
@@ -123,14 +141,16 @@ export const fetchUsernameByUid = createAsyncThunk<
 >("user/fetchUsernameByUid", async (uid, { rejectWithValue }) => {
   try {
     const response = await api.get(`/api/users/userId/${uid}`);
-    return response.data.userName;
-  } catch (error: any) {
-    if (error.response) {
+    return response.data.userName as string;
+  } catch (error: unknown) {
+    if (isApiErrorShape(error)) {
       return rejectWithValue(
-        error.response.data.error || "Failed to fetch username"
+        error.response?.data?.error ||
+          error.message ||
+          "Failed to fetch username"
       );
     }
-    return rejectWithValue(error.message || "Failed to fetch username");
+    return rejectWithValue("Failed to fetch username");
   }
 });
 
@@ -161,13 +181,11 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
-    // Update user profile locally (after API updates)
     updateUserProfile: (state, action: PayloadAction<Partial<UserData>>) => {
       if (state.user) {
         state.user = { ...state.user, ...action.payload };
       }
     },
-    // Reset username check state
     resetUsernameCheck: (state) => {
       state.usernameCheck = {
         checking: false,
@@ -250,4 +268,5 @@ export const {
   updateUserProfile,
   resetUsernameCheck,
 } = authSlice.actions;
+
 export default authSlice.reducer;

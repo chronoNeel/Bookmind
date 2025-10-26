@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../hooks/redux";
 import { logoutUser } from "../store/slices/authSlice";
 import bookmind_nav from "../assets/Bookmind_nav.svg";
@@ -8,6 +8,7 @@ import profile_pic from "../assets/profile_pic.png";
 const Navbar = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const location = useLocation();
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -39,6 +40,10 @@ const Navbar = () => {
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
   }, [dropdownOpen, mobileMenuOpen]);
+
+  useEffect(() => {
+    setDropdownOpen(false);
+  }, [location.pathname]);
 
   // Navigate to correct profile page
   const goToProfile = () => {

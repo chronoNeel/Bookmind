@@ -3,14 +3,12 @@ import { Upload, Trash2, User } from "lucide-react";
 
 interface Props {
   previewImage: string | null;
-  onUploadClick: () => void;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   error?: string;
 }
 
 const ProfilePictureInput: React.FC<Props> = ({
   previewImage,
-  onUploadClick,
   onFileChange,
   error,
 }) => {

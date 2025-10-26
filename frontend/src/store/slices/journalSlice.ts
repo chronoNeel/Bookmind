@@ -25,6 +25,7 @@ const initialState: JournalState = {
     bookTitle: "",
     bookAuthor: "",
     bookCoverUrl: "",
+    bookPublishYear: "",
     rating: 0,
     readingProgress: 0,
     isPrivate: false,
@@ -130,6 +131,26 @@ export const downvoteJournal = createAsyncThunk<
   }
 });
 
+// updating journal
+export const updateJournalEntry = createAsyncThunk<
+  Journal,
+  { id: string; data: Partial<JournalEntry> },
+  { rejectValue: string }
+>("journal/updateJournalEntry", async ({ id, data }, { rejectWithValue }) => {
+  try {
+    const res = await api.put<{
+      status: string;
+      journal: Journal;
+    }>(`/api/journals/update/${id}`, data);
+
+    return res.data.journal;
+  } catch (err: unknown) {
+    const message =
+      err instanceof Error ? err.message : "Failed to update journal entry";
+    return rejectWithValue(message);
+  }
+});
+
 export const journalSlice = createSlice({
   name: "journal",
   initialState,
@@ -145,6 +166,7 @@ export const journalSlice = createSlice({
         bookTitle: "",
         bookAuthor: "",
         bookCoverUrl: "",
+        bookPublishYear: "",
         rating: 0,
         readingProgress: 0,
         isPrivate: false,
@@ -301,6 +323,42 @@ export const journalSlice = createSlice({
           action.payload ??
           action.error.message ??
           "Failed to downvote journal";
+      })
+
+      // update journal
+
+      .addCase(updateJournalEntry.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        updateJournalEntry.fulfilled,
+        (state, action: PayloadAction<Journal>) => {
+          state.loading = false;
+          const updatedJournal = action.payload;
+
+          // Update in all lists
+          [state.entries, state.userJournals, state.publicJournals].forEach(
+            (list) => {
+              const index = list.findIndex((j) => j.id === updatedJournal.id);
+              if (index !== -1) {
+                list[index] = updatedJournal;
+              }
+            }
+          );
+
+          // Update current journal if it's the same
+          if (state.currentJournal?.id === updatedJournal.id) {
+            state.currentJournal = updatedJournal;
+          }
+        }
+      )
+      .addCase(updateJournalEntry.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.payload ??
+          action.error.message ??
+          "Failed to update journal entry";
       });
   },
 });

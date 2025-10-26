@@ -1,18 +1,23 @@
+import React from "react";
+
 interface ActionButtonsProps {
   isSaving: boolean;
   onSave: () => void;
   onCancel: () => void;
+  isEditMode: boolean;
 }
 
 const ActionButtons: React.FC<ActionButtonsProps> = ({
   isSaving,
   onSave,
   onCancel,
+  isEditMode,
 }) => {
   return (
     <div className="d-flex justify-content-end gap-3">
       <button
         onClick={onCancel}
+        disabled={isSaving}
         className="btn px-4 py-2 border-2 rounded-3 fw-medium transition-all"
         style={{
           borderColor: "rgba(253, 230, 138, 0.8)",
@@ -21,12 +26,16 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
           minWidth: "120px",
         }}
         onMouseOver={(e) => {
-          e.currentTarget.style.background = "rgba(253, 230, 138, 0.2)";
-          e.currentTarget.style.borderColor = "#f59e0b";
+          if (!isSaving) {
+            e.currentTarget.style.background = "rgba(253, 230, 138, 0.2)";
+            e.currentTarget.style.borderColor = "#f59e0b";
+          }
         }}
         onMouseOut={(e) => {
-          e.currentTarget.style.background = "rgba(255, 255, 255, 0.7)";
-          e.currentTarget.style.borderColor = "rgba(253, 230, 138, 0.8)";
+          if (!isSaving) {
+            e.currentTarget.style.background = "rgba(255, 255, 255, 0.7)";
+            e.currentTarget.style.borderColor = "rgba(253, 230, 138, 0.8)";
+          }
         }}
       >
         Cancel
@@ -66,8 +75,10 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
             >
               <span className="visually-hidden">Loading...</span>
             </div>
-            Saving...
+            {isEditMode ? "Updating..." : "Saving..."}
           </>
+        ) : isEditMode ? (
+          "Update Entry"
         ) : (
           "Save Entry"
         )}

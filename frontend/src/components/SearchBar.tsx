@@ -13,7 +13,8 @@ const SearchBar: React.FC = () => {
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const lastSearchRef = useRef<string>(""); // Track last search to avoid duplicates
+  const lastSearchRef = useRef<string>("");
+  const isInitialMountRef = useRef<boolean>(true);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -22,28 +23,39 @@ const SearchBar: React.FC = () => {
     (state) => state.searchBooks
   );
 
-  // Get top 5 results for suggestions - memoized
   const suggestionBooks = searchResults.slice(0, 5);
 
-  // Persist search term across navigation
+  // Persist search term across navigation - FIXED
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const query = params.get("q");
-    if (query && query !== searchTerm) {
-      setSearchTerm(query);
-      if (query !== lastSearchRef.current) {
-        lastSearchRef.current = query;
-        dispatch(searchBooks(query));
+
+    // Only sync from URL on initial mount or when URL query changes significantly
+    if (query) {
+      if (
+        isInitialMountRef.current ||
+        (query !== searchTerm && query !== lastSearchRef.current)
+      ) {
+        setSearchTerm(query);
+        if (query !== lastSearchRef.current) {
+          lastSearchRef.current = query;
+          dispatch(searchBooks(query));
+        }
       }
+    } else if (isInitialMountRef.current) {
+      // Clear search term if no query in URL on initial mount
+      setSearchTerm("");
     }
-  }, [location.search, searchTerm, dispatch]);
+
+    isInitialMountRef.current = false;
+  }, [location.search, dispatch, searchTerm]);
 
   // Hide suggestions when navigating
   useEffect(() => {
     setShowSuggestions(false);
   }, [location.pathname]);
 
-  // Optimized debounced search
+  // debounced search
   useEffect(() => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
@@ -55,7 +67,7 @@ const SearchBar: React.FC = () => {
       debounceTimerRef.current = setTimeout(() => {
         lastSearchRef.current = trimmedTerm;
         dispatch(searchBooks(trimmedTerm));
-      }, 300); // Reduced from 500ms to 300ms
+      }, 300);
     }
 
     return () => {

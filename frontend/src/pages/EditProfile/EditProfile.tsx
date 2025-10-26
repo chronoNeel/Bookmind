@@ -263,7 +263,6 @@ const EditProfile: React.FC = () => {
           <div className="p-6">
             <ProfilePictureInput
               previewImage={previewImage}
-              onUploadClick={() => {}}
               onFileChange={handleFileChange}
               error={errors.profilePicture}
             />

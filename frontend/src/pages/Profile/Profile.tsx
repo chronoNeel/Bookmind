@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAppSelector } from "../../hooks/redux";
 import { UserData } from "../../models/user";
@@ -8,54 +8,28 @@ import StatsGrid from "./components/StatsGrid";
 import FavoriteBooksCarousel from "./components/FavoriteBooksCarousel";
 import ReadingAnalytics from "./components/ReadingAnalytics";
 
-const Profile = () => {
-  const { userName } = useParams();
+const Profile: React.FC = () => {
+  const { userName } = useParams<{ userName?: string }>();
   const navigate = useNavigate();
+
   const currentUser = useAppSelector((state) => state.auth.user);
-
-  const bookThisYear = React.useMemo(() => {
-    if (!currentUser?.shelves.completed) return 0;
-
-    const currentYear = new Date().getFullYear();
-
-    return currentUser.shelves.completed.filter((book) => {
-      const bookYear = new Date(book.updatedAt).getFullYear();
-      return bookYear === currentYear;
-    }).length;
-  }, [currentUser?.shelves.completed]);
-
-  const isLoading = useAppSelector((state) => state.auth.loading);
+  const isAuthLoading = useAppSelector((state) => state.auth.loading);
 
   const [profileData, setProfileData] = useState<UserData | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [loading, setLoading] = useState(true);
-  console.log(currentUser);
 
-  const {
-    completed = [],
-    wantToRead = [],
-    ongoing = [],
-  } = currentUser?.shelves || {};
-
-  const completedCount = completed.length;
-  const wantToReadCount = wantToRead.length;
-  const ongoingCount = ongoing.length;
-  const journalCount = currentUser?.journals.length || 0;
-  const userStats = {
-    wantToReadCount,
-    ongoingCount,
-    completedCount,
-    journalCount,
-  };
-
+  // Fetch profile details (self or other)
   useEffect(() => {
+    let isMounted = true;
+
     const fetchProfile = async () => {
       try {
         setLoading(true);
 
         if (!userName) {
           if (currentUser) {
-            setProfileData(currentUser);
+            if (isMounted) setProfileData(currentUser);
           } else {
             navigate("/login");
           }
@@ -63,23 +37,26 @@ const Profile = () => {
         }
 
         if (currentUser && userName === currentUser.userName) {
-          setProfileData(currentUser);
+          if (isMounted) setProfileData(currentUser);
           return;
         }
 
-        const response = await api.get(`/api/users/${userName}`);
-        setProfileData(response.data);
+        const response = await api.get<UserData>(`/api/users/${userName}`);
+        if (isMounted) setProfileData(response.data);
       } catch (error) {
         console.error("Failed to fetch profile:", error);
-        // Don't navigate away, show error state instead
-        setProfileData(null);
+        if (isMounted) setProfileData(null);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     fetchProfile();
-  }, [userName, currentUser?.userName, navigate]); // Changed dependency
+
+    return () => {
+      isMounted = false;
+    };
+  }, [userName, currentUser, navigate]);
 
   useEffect(() => {
     if (!currentUser || !profileData) {
@@ -87,46 +64,91 @@ const Profile = () => {
       return;
     }
     setIsFollowing(profileData.followers.includes(currentUser.uid));
-  }, [currentUser?.uid, profileData?.followers]); // <— depend on followers
+  }, [currentUser, profileData]);
 
+  const {
+    completed = [],
+    wantToRead = [],
+    ongoing = [],
+  } = profileData?.shelves ?? {};
+
+  const userStats = useMemo(() => {
+    const completedCount = completed.length;
+    const wantToReadCount = wantToRead.length;
+    const ongoingCount = ongoing.length;
+    const journalCount = profileData?.journals?.length ?? 0;
+
+    return {
+      wantToReadCount,
+      ongoingCount,
+      completedCount,
+      journalCount,
+    };
+  }, [
+    completed.length,
+    wantToRead.length,
+    ongoing.length,
+    profileData?.journals?.length,
+  ]);
+
+  const booksReadThisYear = useMemo(() => {
+    if (!completed?.length) return 0;
+    const currentYear = new Date().getFullYear();
+    return completed.filter((book) => {
+      const bookYear = new Date(book.updatedAt).getFullYear();
+      return bookYear === currentYear;
+    }).length;
+  }, [completed]);
+
+  const followersCount = profileData?.followers?.length ?? 0;
+  const followingCount = profileData?.following?.length ?? 0;
+
+  const isOwnProfile = currentUser?.uid === profileData?.uid;
+
+  // --- Handlers
   const handleFollowToggle = async () => {
     if (!currentUser || !profileData) return;
 
+    const nextFollowing = !isFollowing;
+    setIsFollowing(nextFollowing);
+
+    setProfileData((prev) => {
+      if (!prev) return prev;
+      const alreadyFollowing = prev.followers.includes(currentUser.uid);
+      return {
+        ...prev,
+        followers: alreadyFollowing
+          ? prev.followers.filter((id) => id !== currentUser.uid)
+          : [...prev.followers, currentUser.uid],
+      };
+    });
+
     try {
-      const previousFollowState = isFollowing;
-
-      setIsFollowing(!isFollowing);
-
-      await api.post(`/api/users/follow`, {
-        targetUid: profileData.uid,
-      });
-
-      if (!previousFollowState) {
-        setProfileData({
-          ...profileData,
-          followers: [...profileData.followers, currentUser.uid],
-        });
-      } else {
-        setProfileData({
-          ...profileData,
-          followers: profileData.followers.filter(
-            (id) => id !== currentUser.uid
-          ),
-        });
-      }
+      await api.post(`/api/users/follow`, { targetUid: profileData.uid });
     } catch (error) {
       console.error("Failed to toggle follow:", error);
-
-      setIsFollowing(!isFollowing);
+      setIsFollowing((prev) => !prev);
+      setProfileData((prev) => {
+        if (!prev) return prev;
+        const wasFollowing = prev.followers.includes(currentUser.uid);
+        return {
+          ...prev,
+          followers: wasFollowing
+            ? prev.followers.filter((id) => id !== currentUser.uid)
+            : [...prev.followers, currentUser.uid],
+        };
+      });
     }
   };
 
   const handleFollowersClick = () => {
-    navigate(`/followers`, { state: { userId: profileData?.uid } });
+    if (!profileData?.uid) return;
+    navigate(`/followers`, { state: { userId: profileData.uid } });
   };
 
   const handleFollowingClick = () => {
-    navigate(`/followings`, { state: { userId: profileData?.uid } });
+    if (!profileData?.uid) return;
+    navigate(`/followings`, { state: { userId: profileData.uid } });
   };
 
   const handleEditProfile = () => {
@@ -134,31 +156,32 @@ const Profile = () => {
   };
 
   const handleJournalEntriesClick = () => {
-    navigate("/view-entries", { state: { userId: profileData?.uid } });
+    if (!profileData?.uid) return;
+    navigate("/view-entries", { state: { userId: profileData.uid } });
   };
 
-  // Loading state
-  if (isLoading || loading) {
+  // --- Loading state
+  if (isAuthLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto" />
           <p className="mt-4 text-amber-700">Loading profile...</p>
         </div>
       </div>
     );
   }
 
-  // If no profile data found
   if (!profileData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100">
         <div className="text-center">
           <p className="text-xl text-amber-700 mb-2">Profile not found</p>
           <p className="text-sm text-amber-600 mb-4">
-            The user @{userName} does not exist
+            The user @{userName ?? "unknown"} does not exist
           </p>
           <button
+            type="button"
             onClick={() => navigate("/")}
             className="mt-4 px-6 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
           >
@@ -169,15 +192,8 @@ const Profile = () => {
     );
   }
 
-  const followers = profileData.followers.length;
-  const following = profileData.following.length;
-
-  // Check if viewing own profile
-  const isOwnProfile = currentUser?.uid === profileData.uid;
-
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100">
-      {/* Background pattern */}
       <div
         className="absolute inset-0 opacity-[0.03]"
         style={{
@@ -191,8 +207,8 @@ const Profile = () => {
           fullName={profileData.fullName}
           bio={profileData.bio}
           profilePic={profileData.profilePic}
-          followers={followers}
-          following={following}
+          followers={followersCount}
+          following={followingCount}
           isFollowing={isFollowing}
           isOwnProfile={isOwnProfile}
           onFollowToggle={handleFollowToggle}
@@ -203,14 +219,14 @@ const Profile = () => {
 
         <StatsGrid stats={userStats} />
 
-        {profileData.favorites.length > 0 && (
+        {(profileData.favorites?.length ?? 0) > 0 && (
           <FavoriteBooksCarousel favoriteBookKeys={profileData.favorites} />
         )}
 
         <ReadingAnalytics
           stats={userStats}
           yearlyGoal={profileData.stats.yearlyGoal}
-          booksReadThisYear={bookThisYear}
+          booksReadThisYear={booksReadThisYear}
           avgRating={profileData.stats.avgRating}
           onJournalEntriesClick={handleJournalEntriesClick}
         />

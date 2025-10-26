@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { useAppDispatch } from "../../hooks/redux";
+import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 import MoodSelector from "./Components/MoodSelector";
 import StarRating from "./Components/StarRating";
 import ReadingProgress from "./Components/ReadingProgress";
@@ -12,13 +12,20 @@ import ActionButtons from "./Components/ActionButtons";
 import HeaderCard from "./Components/HeaderCard";
 import { BookDetails } from "../../types/Book";
 import JournalEntry from "../../types/JournalEntry";
-import { createJournalEntry } from "../../store/slices/journalSlice";
+import {
+  createJournalEntry,
+  fetchJournalById,
+  updateJournalEntry,
+} from "../../store/slices/journalSlice";
 
 const AddJournalEntry: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const bookKey = location.state?.bookKey;
+  const { journalId } = useParams();
+  const isEditMode = Boolean(journalId);
+  const { currentJournal } = useAppSelector((state) => state.journal);
 
   const [book, setBook] = useState<BookDetails>({
     key: "",
@@ -46,8 +53,35 @@ const AddJournalEntry: React.FC = () => {
     Record<string, string>
   >({});
 
+  // Load journal if editing
+  useEffect(() => {
+    if (journalId) dispatch(fetchJournalById(journalId));
+  }, [dispatch, journalId]);
+
+  // Populate form with existing journal data
+  useEffect(() => {
+    if (isEditMode && currentJournal) {
+      setBook({
+        key: currentJournal.bookKey,
+        title: currentJournal.bookTitle,
+        first_publish_date: currentJournal.bookPublishYear,
+      });
+      setAuthorName(currentJournal.bookAuthor);
+      setRating(currentJournal.rating);
+      setReadingProgress(currentJournal.readingProgress);
+      setIsPrivate(currentJournal.isPrivate);
+      setSelectedMood(currentJournal.mood);
+      setPromptResponses(currentJournal.promptResponses);
+      setEntry(currentJournal.entry);
+      setLoading(false);
+    }
+  }, [isEditMode, currentJournal]);
+
+  // Fetch book details if creating a new entry
   useEffect(() => {
     const fetchBookDetails = async () => {
+      if (isEditMode) return;
+
       if (!bookKey) {
         setError("No book key provided");
         setLoading(false);
@@ -56,31 +90,27 @@ const AddJournalEntry: React.FC = () => {
 
       try {
         setLoading(true);
-        setError(null);
-
         const bookResponse = await axios.get(
           `https://openlibrary.org${bookKey}.json`
         );
         const bookData: BookDetails = bookResponse.data;
 
-        // Fetch first author's name (if available)
         let fetchedAuthorName = "Unknown Author";
-        const firstAuthorKey = bookData.authors?.[0]?.author?.key;
-        if (firstAuthorKey) {
+        const authorKey = bookData.authors?.[0]?.author?.key;
+        if (authorKey) {
           try {
-            const authorResponse = await axios.get(
-              `https://openlibrary.org${firstAuthorKey}.json`
+            const authorRes = await axios.get(
+              `https://openlibrary.org${authorKey}.json`
             );
-            fetchedAuthorName = authorResponse.data?.name || "Unknown Author";
-          } catch (e) {
-            console.error("Error fetching author:", e);
+            fetchedAuthorName = authorRes.data?.name || "Unknown Author";
+          } catch {
+            /* ignore author fetch errors */
           }
         }
 
         setBook(bookData);
         setAuthorName(fetchedAuthorName);
-      } catch (err) {
-        console.error("Error fetching book details:", err);
+      } catch {
         setError("Failed to load book details. Please try again.");
       } finally {
         setLoading(false);
@@ -88,15 +118,17 @@ const AddJournalEntry: React.FC = () => {
     };
 
     fetchBookDetails();
-  }, [bookKey]);
+  }, [bookKey, isEditMode]);
 
-  const coverUrl = useMemo(
-    () =>
-      book?.covers?.[0]
-        ? `https://covers.openlibrary.org/b/id/${book.covers[0]}-M.jpg`
-        : "",
-    [book?.covers]
-  );
+  // Memoized cover URL (null instead of empty string)
+  const memoizedCoverUrl = useMemo(() => {
+    const id = book?.covers?.[0];
+    return id ? `https://covers.openlibrary.org/b/id/${id}-M.jpg` : null;
+  }, [book?.covers]);
+
+  const coverUrl = isEditMode
+    ? currentJournal?.bookCoverUrl || null
+    : memoizedCoverUrl;
 
   const getStatusText = () => {
     if (readingProgress === 0) return "Want to Read";
@@ -105,18 +137,14 @@ const AddJournalEntry: React.FC = () => {
   };
 
   const handleSave = async () => {
-    if (!bookKey) {
-      toast.error("No book selected");
-      return;
-    }
-
     setIsSaving(true);
 
     const payload: JournalEntry = {
-      bookKey,
+      bookKey: bookKey || currentJournal?.bookKey,
       bookTitle: book.title,
       bookAuthor: authorName,
-      bookCoverUrl: coverUrl,
+      bookCoverUrl: coverUrl || "",
+      bookPublishYear: book.first_publish_date || "",
       rating,
       readingProgress,
       isPrivate,
@@ -130,109 +158,90 @@ const AddJournalEntry: React.FC = () => {
     };
 
     try {
-      await dispatch(createJournalEntry(payload)).unwrap();
-      toast.success("Journal entry saved successfully!");
+      if (isEditMode && journalId) {
+        await dispatch(updateJournalEntry({ id: journalId, data: payload }));
+        toast.success("Journal entry updated successfully!");
+      } else {
+        await dispatch(createJournalEntry(payload)).unwrap();
+        toast.success("Journal entry saved successfully!");
+      }
       navigate(-1);
-    } catch (err) {
-      console.error("Error saving journal entry:", err);
+    } catch {
       toast.error("Failed to save journal entry. Please try again.");
+    } finally {
       setIsSaving(false);
     }
   };
 
-  const handleCancel = () => navigate(-1);
-
-  if (loading) {
+  if (loading)
     return (
       <div className="min-vh-100 d-flex align-items-center justify-content-center">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
+        <div className="spinner-border text-primary" role="status" />
       </div>
     );
-  }
 
-  if (error) {
+  if (error)
     return (
       <div className="min-vh-100 d-flex align-items-center justify-content-center">
-        <div className="alert alert-danger" role="alert">
-          {error}
-        </div>
+        <div className="alert alert-danger">{error}</div>
       </div>
     );
-  }
 
   return (
     <div
-      className="min-vh-100 position-relative overflow-hidden p-3 p-md-4"
+      className="min-vh-100 p-3 p-md-4"
       style={{
         background: "linear-gradient(135deg, #fffaea 50%, #fef3e2 100%)",
+        position: "relative",
       }}
     >
-      <div
-        className="position-absolute top-0 start-0 w-100 h-100"
-        style={{
-          pointerEvents: "none",
-          opacity: 0.3,
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23a0826d' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          backgroundRepeat: "repeat",
-          backgroundSize: "60px 60px",
-          zIndex: 0,
-        }}
-      />
-
-      <div className="position-relative z-1 container max-w-3xl mx-auto">
+      <div className="container max-w-3xl mx-auto position-relative">
         <HeaderCard
           book={book}
-          coverUrl={coverUrl}
+          coverUrl={coverUrl} // can be null safely
           author={authorName}
           readingProgress={readingProgress}
           getStatusText={getStatusText}
         />
 
         <div
-          className="rounded-3 shadow-sm p-4 p-md-5 mb-4"
+          className="rounded-3 shadow-sm p-4 p-md-5 mt-4"
           style={{
             background: "linear-gradient(135deg, #fff9f0 0%, #fff 100%)",
             border: "1px solid rgba(253, 230, 138, 0.5)",
-            borderRadius: "15px",
           }}
         >
           <MoodSelector
             selectedMood={selectedMood}
             setSelectedMood={setSelectedMood}
           />
-
           <StarRating
             rating={rating}
             hoverRating={hoverRating}
             setRating={setRating}
             setHoverRating={setHoverRating}
           />
-
           <ReadingProgress
             progress={readingProgress}
             setProgress={setReadingProgress}
           />
-
           <GuidedPrompts
             expandedPrompts={expandedPrompts}
             setExpandedPrompts={setExpandedPrompts}
             promptResponses={promptResponses}
             setPromptResponses={setPromptResponses}
           />
-
           <JournalTextarea
             entry={entry}
             setEntry={setEntry}
             isPrivate={isPrivate}
             setIsPrivate={setIsPrivate}
           />
-
           <ActionButtons
             isSaving={isSaving}
             onSave={handleSave}
-            onCancel={handleCancel}
+            onCancel={() => navigate(-1)}
+            isEditMode={isEditMode}
           />
         </div>
       </div>

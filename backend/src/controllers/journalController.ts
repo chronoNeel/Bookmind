@@ -12,6 +12,7 @@ export default interface JournalEntry {
   bookTitle: string;
   bookAuthor: string;
   bookCoverUrl: string;
+  bookPublishYear: string;
 
   rating: number;
   readingProgress: number;
@@ -50,6 +51,7 @@ export const createJournal = asyncHandler(
       bookTitle,
       bookAuthor,
       bookCoverUrl,
+      bookPublishYear,
       rating,
       readingProgress,
       isPrivate,
@@ -65,6 +67,7 @@ export const createJournal = asyncHandler(
       bookTitle,
       bookAuthor,
       bookCoverUrl,
+      bookPublishYear,
       rating,
       readingProgress,
       isPrivate,
@@ -241,5 +244,74 @@ export const downvoteJournal = asyncHandler(
 
     await journalRef.update(updates);
     res.status(200).json({ status: "ok", message: "Journal downvoted" });
+  }
+);
+
+export const updateJournal = asyncHandler(
+  async (req: RequestWithUser, res: Response) => {
+    const userId = requireUser(req);
+    const { journalId } = req.params;
+
+    const journalRef = db.collection("journals").doc(journalId);
+    const journalDoc = await journalRef.get();
+
+    if (!journalDoc.exists) {
+      const err: any = new Error("Journal not found");
+      err.status = 404;
+      throw err;
+    }
+
+    const journalData = journalDoc.data();
+
+    if (journalData?.userId != userId) {
+      const err: any = new Error("Unauthorized");
+      err.status = 403;
+      throw err;
+    }
+
+    const {
+      bookKey,
+      bookTitle,
+      bookAuthor,
+      bookCoverUrl,
+      bookPublishYear,
+      rating,
+      readingProgress,
+      isPrivate,
+      mood,
+      promptResponses,
+      entry,
+    } = req.body;
+
+    const updates: Partial<JournalEntry> = {
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (bookKey !== undefined) updates.bookKey = bookKey;
+    if (bookTitle !== undefined) updates.bookTitle = bookTitle;
+    if (bookAuthor !== undefined) updates.bookAuthor = bookAuthor;
+    if (bookCoverUrl !== undefined) updates.bookCoverUrl = bookCoverUrl;
+    if (bookPublishYear != undefined) updates.bookPublishYear = bookPublishYear;
+    if (rating !== undefined) updates.rating = rating;
+    if (readingProgress !== undefined)
+      updates.readingProgress = readingProgress;
+    if (isPrivate !== undefined) updates.isPrivate = isPrivate;
+    if (mood !== undefined) updates.mood = mood;
+    if (promptResponses !== undefined)
+      updates.promptResponses = promptResponses;
+    if (entry !== undefined) updates.entry = entry;
+
+    await journalRef.update(updates);
+
+    const updatedDoc = await journalRef.get();
+    const updatedJournal = {
+      id: updatedDoc.id,
+      ...updatedDoc.data(),
+    };
+
+    res.status(200).json({
+      status: "ok",
+      journal: updatedJournal,
+    });
   }
 );

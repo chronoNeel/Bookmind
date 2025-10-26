@@ -33,7 +33,6 @@ import { useAppDispatch } from "./hooks/redux";
 import TextRevealAnimation from "./pages/Login/TextRevealAnimation";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import EditJournalPage from "./pages/EditJournalPage.tsx/EditJournalPage";
 
 function App() {
   const location = useLocation();
@@ -120,10 +119,10 @@ function App() {
           />
 
           <Route
-            path="edit-journal/:id"
+            path="journal-edit/:journalId"
             element={
               <ProtectedRoute>
-                <EditJournalPage />
+                <AddJournalEntry />{" "}
               </ProtectedRoute>
             }
           />

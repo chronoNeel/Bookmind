@@ -23,7 +23,7 @@ const JournalCard: React.FC<JournalCardProps> = ({ entry }) => {
       <div className="p-5">
         <MoodRating mood={entry.mood} rating={entry.rating} />
         <ReadingProgress progress={entry.readingProgress} />
-        <JournalPreview entry={entry} navigate={navigate} />
+        <JournalPreview entry={entry} />
         <EntryFooter
           createdAt={entry.createdAt}
           upvotes={entry.upvotedBy.length}

@@ -6,7 +6,7 @@ interface ProfileHeaderProps {
   userName: string;
   fullName: string;
   bio: string;
-  profilePic: string;
+  profilePic?: string;
   followers: number;
   following: number;
   isFollowing: boolean;
@@ -31,37 +31,42 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   onFollowingClick,
   onEditProfile,
 }) => {
-  // Fallback profile picture
-  const displayProfilePic = profilePic;
+  // Use fallback profile picture if not provided
+  const displayProfilePic =
+    profilePic && profilePic.trim() !== ""
+      ? profilePic
+      : "https://via.placeholder.com/150?text=Profile";
 
   return (
-    <div className="backdrop-blur-xl bg-white/80 rounded-3xl  border border-amber-200/50 overflow-hidden mb-8">
+    <div className="backdrop-blur-xl bg-white/80 rounded-3xl border border-amber-200/50 overflow-hidden mb-8 shadow-sm">
       <div className="px-6 sm:px-8 lg:px-12 py-8">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
           {/* Profile Picture */}
-          <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden shadow-md ring-4 ring-amber-200">
+          <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden shadow-md ring-4 ring-amber-200 flex-shrink-0">
             <img
               src={displayProfilePic}
-              alt={fullName}
+              alt={`${fullName}'s profile picture`}
               className="w-full h-full object-cover"
             />
           </div>
 
           {/* Profile Info */}
           <div className="flex-1 text-center sm:text-left">
-            <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start mb-3 gap-4">
+            {/* Top Section */}
+            <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start mb-4 gap-4">
               <div>
                 {/* Name and Username */}
                 <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-amber-700 to-orange-600 bg-clip-text text-transparent">
                   {fullName}
                 </h1>
-                <p className="text-gray-500 text-lg mb-2">@{userName}</p>
+                <p className="text-gray-500 text-lg mb-3">@{userName}</p>
 
-                {/* Followers/Following */}
-                <div className="flex justify-center sm:justify-start gap-6 mb-3">
+                {/* Followers / Following */}
+                <div className="flex justify-center sm:justify-start gap-6">
                   <button
                     onClick={onFollowersClick}
                     className="flex items-center gap-2 hover:text-amber-600 transition-colors"
+                    aria-label="View followers"
                   >
                     <Users size={18} />
                     <span className="font-semibold">{followers}</span>
@@ -70,6 +75,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                   <button
                     onClick={onFollowingClick}
                     className="flex items-center gap-2 hover:text-amber-600 transition-colors"
+                    aria-label="View following"
                   >
                     <Users size={18} />
                     <span className="font-semibold">{following}</span>
@@ -78,31 +84,36 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-3">
+              {/* Action Button */}
+              <div>
                 {isOwnProfile ? (
                   <button
                     onClick={onEditProfile}
                     className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold hover:from-amber-600 hover:to-orange-600 transition-all shadow-md"
+                    aria-label="Edit profile"
                   >
-                    <Edit3 size={20} /> Edit Profile
+                    <Edit3 size={20} />
+                    Edit Profile
                   </button>
                 ) : (
                   <button
                     onClick={onFollowToggle}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-md ${
+                    className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all shadow-md ${
                       isFollowing
                         ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
                         : "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600"
                     }`}
+                    aria-label={isFollowing ? "Unfollow user" : "Follow user"}
                   >
                     {isFollowing ? (
                       <>
-                        <UserCheck size={20} /> Following
+                        <UserCheck size={20} />
+                        Following
                       </>
                     ) : (
                       <>
-                        <UserPlus size={20} /> Follow
+                        <UserPlus size={20} />
+                        Follow
                       </>
                     )}
                   </button>
@@ -112,7 +123,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
             {/* Bio */}
             <p className="text-gray-600 max-w-2xl mx-auto sm:mx-0">
-              {bio || "No bio yet."}
+              {bio?.trim() ? bio : "No bio yet."}
             </p>
           </div>
         </div>

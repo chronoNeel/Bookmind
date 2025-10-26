@@ -5,6 +5,7 @@ export default interface JournalEntry {
   bookTitle: string;
   bookAuthor: string;
   bookCoverUrl: string;
+  bookPublishYear: string;
 
   rating: number;
   readingProgress: number;

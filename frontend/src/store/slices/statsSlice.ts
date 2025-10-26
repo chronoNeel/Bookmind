@@ -1,6 +1,5 @@
 // src/store/stats/statsSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import type { AxiosError } from "axios";
 import api from "../../utils/api";
 
 export interface StatsState {
@@ -27,6 +26,20 @@ const initialState: StatsState = {
   error: null,
 };
 
+// Helper types for safe error narrowing
+interface ApiErrorShape {
+  response?: {
+    data?: {
+      error?: string;
+    };
+    status?: number;
+  };
+  message?: string;
+}
+function isApiErrorShape(err: unknown): err is ApiErrorShape {
+  return typeof err === "object" && err !== null;
+}
+
 export const updateYearlyGoal = createAsyncThunk<
   { yearlyGoal: number },
   { yearlyGoal: number },
@@ -35,11 +48,17 @@ export const updateYearlyGoal = createAsyncThunk<
   try {
     await api.put("/api/users/yearly-goal", { yearlyGoal });
     return { yearlyGoal };
-  } catch (err: any) {
+  } catch (err: unknown) {
+    if (isApiErrorShape(err)) {
+      return rejectWithValue({
+        message:
+          err.response?.data?.error || err.message || "Failed to set goal",
+        code: err.response?.status === 401 ? "AUTH_REQUIRED" : undefined,
+      });
+    }
+
     return rejectWithValue({
-      message:
-        err?.response?.data?.error || err.message || "Failed to set goal",
-      code: err?.response?.status === 401 ? "AUTH_REQUIRED" : undefined,
+      message: "Failed to set goal",
     });
   }
 });
@@ -53,15 +72,21 @@ export const updateFavoriteBooks = createAsyncThunk<
     const response = await api.put("/api/users/favorite-books", { bookKey });
     return {
       bookKey,
-      favorites: response.data.favorites,
+      favorites: response.data.favorites as string[],
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
+    if (isApiErrorShape(err)) {
+      return rejectWithValue({
+        message:
+          err.response?.data?.error ||
+          err.message ||
+          "Failed to update favorite books",
+        code: err.response?.status === 401 ? "AUTH_REQUIRED" : undefined,
+      });
+    }
+
     return rejectWithValue({
-      message:
-        err?.response?.data?.error ||
-        err.message ||
-        "Failed to update favorite books",
-      code: err?.response?.status === 401 ? "AUTH_REQUIRED" : undefined,
+      message: "Failed to update favorite books",
     });
   }
 });
