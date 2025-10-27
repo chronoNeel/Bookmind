@@ -8,6 +8,9 @@ import { auth } from "../../utils/firebase";
 import api from "../../utils/api";
 import { AuthState, UserData } from "../../models/user";
 
+// ---------------------------
+// Types
+// ---------------------------
 interface RegisterPayload {
   email: string;
   password: string;
@@ -19,7 +22,6 @@ interface LoginPayload {
   password: string;
 }
 
-// --- Error type guard ---
 interface ApiErrorShape {
   response?: {
     data?: { error?: string };
@@ -27,11 +29,15 @@ interface ApiErrorShape {
   };
   message?: string;
 }
+
 function isApiErrorShape(err: unknown): err is ApiErrorShape {
   return typeof err === "object" && err !== null;
 }
 
-// --- Check username availability ---
+// ---------------------------
+// Thunks
+// ---------------------------
+
 export const checkUsernameAvailability = createAsyncThunk<
   { available: boolean; username: string },
   string,
@@ -52,7 +58,6 @@ export const checkUsernameAvailability = createAsyncThunk<
   }
 });
 
-// --- Register user ---
 export const registerUser = createAsyncThunk<
   UserData,
   RegisterPayload,
@@ -83,7 +88,6 @@ export const registerUser = createAsyncThunk<
   }
 );
 
-// --- Login user ---
 export const loginUser = createAsyncThunk<
   UserData,
   LoginPayload,
@@ -107,7 +111,6 @@ export const loginUser = createAsyncThunk<
   }
 });
 
-// --- Fetch user profile (for app initialization) ---
 export const fetchUserProfile = createAsyncThunk<
   UserData,
   string,
@@ -128,12 +131,10 @@ export const fetchUserProfile = createAsyncThunk<
   }
 });
 
-// --- Logout user ---
 export const logoutUser = createAsyncThunk<void>("auth/logout", async () => {
   await signOut(auth);
 });
 
-// --- Fetch username by UID ---
 export const fetchUsernameByUid = createAsyncThunk<
   string,
   string,
@@ -154,8 +155,44 @@ export const fetchUsernameByUid = createAsyncThunk<
   }
 });
 
+// ---------------------------
+// Empty user template
+// ---------------------------
+
+export const emptyUser: UserData = {
+  uid: "",
+  email: "",
+  fullName: "",
+  userName: "",
+  bio: "",
+  profilePic: "",
+  followers: [],
+  following: [],
+  favorites: [],
+  shelves: {
+    completed: [],
+    ongoing: [],
+    wantToRead: [],
+  },
+  stats: {
+    completedCount: 0,
+    ongoingCount: 0,
+    wantToReadCount: 0,
+    yearlyGoal: 0,
+    booksReadThisYear: [],
+    avgRating: 0,
+    totalJournals: 0,
+  },
+  journals: [],
+  createdAt: "",
+};
+
+// ---------------------------
+// Initial state
+// ---------------------------
+
 const initialState: AuthState = {
-  user: null,
+  user: emptyUser,
   loading: true,
   error: null,
   isAuthenticated: false,
@@ -166,12 +203,16 @@ const initialState: AuthState = {
   },
 };
 
+// ---------------------------
+// Slice
+// ---------------------------
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
     setUser: (state, action: PayloadAction<UserData | null>) => {
-      state.user = action.payload;
+      state.user = action.payload ?? emptyUser;
       state.isAuthenticated = !!action.payload;
       state.loading = false;
     },
@@ -182,9 +223,7 @@ const authSlice = createSlice({
       state.error = null;
     },
     updateUserProfile: (state, action: PayloadAction<Partial<UserData>>) => {
-      if (state.user) {
-        state.user = { ...state.user, ...action.payload };
-      }
+      state.user = { ...state.user, ...action.payload };
     },
     resetUsernameCheck: (state) => {
       state.usernameCheck = {
@@ -196,7 +235,7 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Register
+      // --- Register ---
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -210,7 +249,8 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload ?? "Something went wrong";
       })
-      // Login
+
+      // --- Login ---
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -224,7 +264,8 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload ?? "Something went wrong";
       })
-      // Fetch Profile
+
+      // --- Fetch profile ---
       .addCase(fetchUserProfile.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -238,13 +279,15 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload ?? "Failed to fetch user profile";
       })
-      // Logout
+
+      // --- Logout ---
       .addCase(logoutUser.fulfilled, (state) => {
-        state.user = null;
+        state.user = emptyUser;
         state.isAuthenticated = false;
         state.loading = false;
       })
-      // Check Username
+
+      // --- Username check ---
       .addCase(checkUsernameAvailability.pending, (state) => {
         state.usernameCheck.checking = true;
         state.usernameCheck.error = null;
@@ -260,6 +303,10 @@ const authSlice = createSlice({
       });
   },
 });
+
+// ---------------------------
+// Exports
+// ---------------------------
 
 export const {
   setUser,

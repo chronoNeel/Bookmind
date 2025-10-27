@@ -142,13 +142,13 @@ const Profile: React.FC = () => {
   };
 
   const handleFollowersClick = () => {
-    if (!profileData?.uid) return;
-    navigate(`/followers`, { state: { userId: profileData.uid } });
+    if (!profileData?.uid || !userName) return;
+    navigate(`/user/${userName}/followers`);
   };
 
   const handleFollowingClick = () => {
-    if (!profileData?.uid) return;
-    navigate(`/followings`, { state: { userId: profileData.uid } });
+    if (!profileData?.uid || !userName) return;
+    navigate(`/user/${userName}/following`);
   };
 
   const handleEditProfile = () => {

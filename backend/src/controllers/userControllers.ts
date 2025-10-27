@@ -267,23 +267,6 @@ export const toggleFollow = asyncHandler(
   }
 );
 
-/**
- * Update yearly reading goal
- */
-export const updatekYearlyGoal = asyncHandler(
-  async (req: Request, res: Response) => {
-    const user = requireUser(req);
-    const { yearlyGoal } = req.body;
-
-    await db.collection("users").doc(user.uid).update({
-      "stats.yearlyGoal": yearlyGoal,
-      updatedAt: new Date().toISOString(),
-    });
-
-    res.json({ status: "ok", message: "Yearly goal updated successfully" });
-  }
-);
-
 export const updateYearlyGoal = asyncHandler(
   async (req: Request, res: Response) => {
     const user = requireUser(req);
@@ -380,6 +363,33 @@ export const getUsernameFromUid = asyncHandler(
       status: "ok",
       uid: uid,
       userName: userData.userName,
+    });
+  }
+);
+
+export const getUserByUid = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const { uid } = req.params;
+
+    if (!uid) {
+      res.status(400).json({ error: "User ID (uid) is required" });
+      return;
+    }
+
+    const userRef = db.collection("users").doc(uid);
+    const userDoc = await userRef.get();
+
+    if (!userDoc.exists) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    const userData = userDoc.data();
+
+    res.status(200).json({
+      status: "ok",
+      uid,
+      user: userData,
     });
   }
 );

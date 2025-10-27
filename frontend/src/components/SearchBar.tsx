@@ -19,9 +19,7 @@ const SearchBar: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  const { searchResults, isLoading } = useAppSelector(
-    (state) => state.searchBooks
-  );
+  const { searchResults, isLoading } = useAppSelector((state) => state.search);
 
   const suggestionBooks = searchResults.slice(0, 5);
 

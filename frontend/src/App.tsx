@@ -18,8 +18,6 @@ import Signup from "./pages/Signup/Signup";
 import Login from "./pages/Login/Login";
 import Profile from "./pages/Profile/Profile";
 import ViewEntries from "./pages/viewEntries";
-import Followers from "./pages/Followers/Followers";
-import Followings from "./pages/Followings/Followings";
 import BookDetails from "./pages/BookDetails/BookDetails";
 import AllJournalsFeed from "./pages/AllJournalsFeed/AllJournalsFeed";
 import AddJournalEntry from "./pages/AddJournalEntry/AddJournalEntry";
@@ -33,6 +31,7 @@ import { useAppDispatch } from "./hooks/redux";
 import TextRevealAnimation from "./pages/Login/TextRevealAnimation";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import FollowList from "./pages/FollowList/FollowList";
 
 function App() {
   const location = useLocation();
@@ -119,7 +118,7 @@ function App() {
           />
 
           <Route
-            path="journal-edit/:journalId"
+            path="/journal-edit/:journalId"
             element={
               <ProtectedRoute>
                 <AddJournalEntry />{" "}
@@ -136,18 +135,18 @@ function App() {
             }
           />
           <Route
-            path="/followers"
+            path="/user/:userName/followers"
             element={
               <ProtectedRoute>
-                <Followers />
+                <FollowList />
               </ProtectedRoute>
             }
           />
           <Route
-            path="/followings"
+            path="/user/:userName/following"
             element={
               <ProtectedRoute>
-                <Followings />
+                <FollowList />
               </ProtectedRoute>
             }
           />

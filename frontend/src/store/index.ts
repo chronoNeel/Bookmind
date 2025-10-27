@@ -2,11 +2,11 @@ import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import { persistStore, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage"; // defaults to localStorage
 import journalSlice from "./slices/journalSlice";
-import searchSlice from "./slices/searchSlice";
 import genreBookSlice from "./slices/genreBookSlice";
 import shelfSlice from "./slices/shelfSlice";
 import authSlice from "./slices/authSlice";
 import statSlice from "./slices/statsSlice";
+import searchSlice from "./slices/searchSlice";
 
 const persistConfig = {
   key: "root",
@@ -17,7 +17,7 @@ const persistConfig = {
 const rootReducer = combineReducers({
   auth: authSlice,
   journal: journalSlice,
-  searchBooks: searchSlice,
+  search: searchSlice,
   genreBooks: genreBookSlice,
   shelf: shelfSlice,
   stats: statSlice,

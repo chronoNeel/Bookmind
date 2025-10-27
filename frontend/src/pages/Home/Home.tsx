@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import ReadingChallenge from "./components/ReadingChallenge";
 import UserStats from "./components/UserStats";
 import MotivationalQuote from "./components/MotivationalQuote";
@@ -9,12 +9,18 @@ import DailyTip from "./components/DailyTip";
 import SearchBar from "../../components/SearchBar";
 import UserSearch from "./components/UserSearch";
 import { useNavigate } from "react-router-dom";
-import { useAppSelector } from "../../hooks/redux";
+import { useAppDispatch, useAppSelector } from "../../hooks/redux";
+import { searchUsers } from "../../store/slices/searchSlice";
+import { RootState } from "../../store";
 
 const Home = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
 
   const currentUser = useAppSelector((state) => state.auth.user);
+  const { userSearchResults, isLoadingUsers } = useAppSelector(
+    (state: RootState) => state.search
+  );
 
   const {
     completed = [],
@@ -79,8 +85,18 @@ const Home = () => {
     []
   );
 
-  const handleSearch = (query: string) => {
-    navigate(`/users/${query}`);
+  const handleSearch = useCallback(
+    (query: string) => {
+      if (!query) return;
+      dispatch(searchUsers(query));
+    },
+    [dispatch]
+  );
+
+  const handleSearchSumbit = (query: string) => {
+    navigate(`users/${encodeURIComponent(query)}`, {
+      state: { userSearchResults },
+    });
   };
 
   return (
@@ -120,7 +136,12 @@ const Home = () => {
                     <ReadingChallenge />
                     <UserStats {...userStats} />
                     <MotivationalQuote quote={readingQuotes[0]} />
-                    <UserSearch onSearch={handleSearch} />
+                    <UserSearch
+                      onSearch={handleSearch}
+                      onSubmit={handleSearchSumbit}
+                      suggestions={userSearchResults.map((u) => u.userName)}
+                      isLoadingUser={isLoadingUsers}
+                    />
                   </div>
                 </div>
 
