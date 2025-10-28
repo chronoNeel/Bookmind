@@ -1,7 +1,7 @@
 import React from "react";
 import { Clock, CheckCircle, Trash2 } from "lucide-react";
 import { statusOptions } from "./statusHelpers";
-import { BookDetails, ReadingStatus } from "../../../types/Book";
+import { BookDetails } from "../../../types/Book";
 
 // Define a union for all valid status values
 export type StatusValue = "wantToRead" | "ongoing" | "completed" | "remove";
@@ -9,7 +9,7 @@ export type StatusValue = "wantToRead" | "ongoing" | "completed" | "remove";
 interface Props {
   book: BookDetails;
   author: string;
-  currentStatus: ReadingStatus;
+  currentStatus: StatusValue;
   onClose: () => void;
   onStatusChange: (status: StatusValue) => void;
 }

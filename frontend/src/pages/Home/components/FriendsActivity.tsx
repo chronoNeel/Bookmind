@@ -16,7 +16,7 @@ const FriendsActivity: React.FC<FriendsActivityProps> = ({ activities }) => (
   <div className="card border-0 rounded-3 shadow-sm">
     <div className="card-body p-4">
       <h3 className="card-title h5 fw-bold mb-3 d-flex align-items-center">
-        <Users className="me-2 text-primary" size={20} /> Friends' Activity
+        <Users className="me-2 text-primary" size={20} /> {"Friends' Activity"}
       </h3>
       {activities.map((activity, index) => (
         <div
@@ -40,7 +40,7 @@ const FriendsActivity: React.FC<FriendsActivityProps> = ({ activities }) => (
             <p className="mb-1">
               <span className="fw-semibold">{activity.name}</span>{" "}
               {activity.action}{" "}
-              <span className="fw-semibold">"{activity.book}"</span>
+              <span className="fw-semibold">{`"${activity.book}"`}</span>
             </p>
             {activity.rating && (
               <p className="text-warning mb-1">

@@ -34,7 +34,7 @@ export interface UserData {
 }
 
 export interface AuthState {
-  user: UserData | null;
+  user: UserData;
   loading: boolean;
   error: string | null;
   isAuthenticated: boolean;

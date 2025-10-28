@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import BookCard from "./BookCard";
 import { Book } from "../../../types/Book";
 import { useNavigate } from "react-router-dom";
@@ -49,7 +48,7 @@ const TrendingBooks: React.FC = () => {
         {loading
           ? Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="col">
-                <BookCard book={{ key: "", title: "" }} isLoading />
+                <BookCard book={{ key: "", title: "", cover_i: 0 }} isLoading />
               </div>
             ))
           : books.map((book, i) => (

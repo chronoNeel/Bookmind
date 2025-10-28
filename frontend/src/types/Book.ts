@@ -41,18 +41,3 @@ export interface SimilarBook {
   coverUrl: string | null;
   subject: string;
 }
-
-// export interface JournalEntry {
-//   id: number;
-//   user: {
-//     name: string;
-//     avatar: string;
-//   };
-//   rating: number;
-//   date: string;
-//   text: string;
-//   upvotes: number;
-//   downvotes: number;
-// }
-
-export type ReadingStatus = "wantToRead" | "ongoing" | "completed" | null;

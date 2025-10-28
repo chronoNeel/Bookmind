@@ -6,7 +6,7 @@ import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
-export default tseslint.config(
+export default [
   {
     ignores: ["dist"],
   },
@@ -15,11 +15,12 @@ export default tseslint.config(
   {
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
+      parser: tseslint.parser,
       ecmaVersion: "latest",
+      sourceType: "module",
       globals: globals.browser,
       parserOptions: {
         ecmaFeatures: { jsx: true },
-        sourceType: "module",
       },
     },
     plugins: {
@@ -44,5 +45,5 @@ export default tseslint.config(
         { allowConstantExport: true },
       ],
     },
-  }
-);
+  },
+];

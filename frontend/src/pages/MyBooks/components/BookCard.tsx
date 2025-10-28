@@ -45,7 +45,9 @@ const BookCard: React.FC<BookCardProps> = ({ bookKey, onClick }) => {
               const authorData = await authorResponse.json();
               bookAuthor = authorData.name || "Unknown Author";
             }
-          } catch {}
+          } catch (error: unknown) {
+            console.log("Unable to fetch author data", error);
+          }
         }
 
         const cached = {

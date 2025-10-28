@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Heart, ChevronDown } from "lucide-react";
 import { getStatusColor, statusLabels } from "./statusHelpers";
-import { BookDetails, ReadingStatus } from "../../../types/Book";
+import { BookDetails } from "../../../types/Book";
 
 interface BookDetailsCardProps {
   book: BookDetails;
@@ -10,7 +10,7 @@ interface BookDetailsCardProps {
   description: string;
   genres: string[];
   isFavorite: boolean;
-  status: ReadingStatus;
+  status: "wantToRead" | "ongoing" | "completed" | null;
   onFavoriteToggle: () => void;
   onStatusClick: () => void;
   onAddJournal: () => void;
