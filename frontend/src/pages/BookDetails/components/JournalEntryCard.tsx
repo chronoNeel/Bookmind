@@ -1,6 +1,6 @@
 import React from "react";
 import { ThumbsUp, ThumbsDown, Star } from "lucide-react";
-import { JournalEntry } from "../../../types/Book";
+import { JournalEntry } from "@models/Book";
 
 interface JournalEntryCardProps {
   entry: JournalEntry;

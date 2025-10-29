@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, BookOpen, Loader2 } from "lucide-react";
-import { GenreBook } from "../../types/GenreBook";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 import { getGenreBooks } from "../../store/slices/genreBookSlice";
 

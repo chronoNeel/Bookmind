@@ -1,5 +1,5 @@
 import React, { memo, useState } from "react";
-import { Book } from "../../../types/Book";
+import { Book } from "@models/Book";
 
 interface BookCardProps {
   book: Book;

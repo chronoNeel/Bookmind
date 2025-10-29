@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { UserData } from "../../models/user";
+import { UserData } from "@models/user";
 import FollowCard from "./FollowCard";
 
 interface Props {

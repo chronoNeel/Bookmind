@@ -1,16 +1,17 @@
 import React, { useState } from "react";
 import { Heart, ChevronDown } from "lucide-react";
-import { getStatusColor, statusLabels } from "./statusHelpers";
-import { BookDetails } from "../../../types/Book";
+import { getStatusColor, getStatusLabel } from "./statusHelpers";
+import { BookDetails } from "@models/Book";
+import { StatusValue } from "@models/StatusModal";
 
 interface BookDetailsCardProps {
   book: BookDetails;
-  author: string;
+  authors: string;
   coverUrl: string | null;
   description: string;
   genres: string[];
   isFavorite: boolean;
-  status: "wantToRead" | "ongoing" | "completed" | null;
+  status: StatusValue;
   onFavoriteToggle: () => void;
   onStatusClick: () => void;
   onAddJournal: () => void;
@@ -18,7 +19,7 @@ interface BookDetailsCardProps {
 
 const BookDetailsCard: React.FC<BookDetailsCardProps> = ({
   book,
-  author,
+  authors,
   coverUrl,
   description,
   genres,
@@ -75,7 +76,7 @@ const BookDetailsCard: React.FC<BookDetailsCardProps> = ({
             </button>
           </div>
 
-          <p className="text-lg text-amber-800 font-medium">{author}</p>
+          <p className="text-lg text-amber-800 font-medium">{authors}</p>
 
           <div className="flex flex-wrap gap-2">
             {genres.map((genre, idx) => (
@@ -95,6 +96,7 @@ const BookDetailsCard: React.FC<BookDetailsCardProps> = ({
           >
             {description}
           </p>
+
           {description.length > 150 && (
             <button
               onClick={() => setShowFullDescription(!showFullDescription)}
@@ -112,7 +114,7 @@ const BookDetailsCard: React.FC<BookDetailsCardProps> = ({
                 status
               )}`}
             >
-              <span>{status ? statusLabels[status] : "Add to Shelf"}</span>
+              <span>{getStatusLabel(status)}</span>
               <ChevronDown className="w-4 h-4" />
             </button>
 

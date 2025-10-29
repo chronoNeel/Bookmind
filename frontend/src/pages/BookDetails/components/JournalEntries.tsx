@@ -1,6 +1,6 @@
 import React from "react";
 import JournalEntryCard from "./JournalEntryCard";
-import { JournalEntry } from "../../../types/Book";
+import { JournalEntry } from "@models/Book";
 
 interface JournalEntriesProps {
   entries: JournalEntry[];

@@ -8,7 +8,7 @@ import {
   Frown,
   Angry,
 } from "lucide-react";
-import Mood from "../../../types/Mood";
+import Mood from "@models/Mood";
 
 interface MoodSelectorProps {
   selectedMood: string;

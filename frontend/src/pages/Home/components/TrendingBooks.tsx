@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import BookCard from "./BookCard";
-import { Book } from "../../../types/Book";
+import { Book } from "@models/Book";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../../../api/axiosInstance";
+import axiosInstance from "@api/axiosInstance";
 
 const TrendingBooks: React.FC = () => {
   const navigate = useNavigate();

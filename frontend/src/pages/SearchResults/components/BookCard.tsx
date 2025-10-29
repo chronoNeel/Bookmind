@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Book } from "../../../types/Book";
+import { Book } from "@models/Book";
 import { ChevronDown, Plus } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { getBookShelf, ShelfType } from "../../../utils/getBookData";
-import StatusModal from "../../BookDetails/components/StatusModal";
-import { useAppDispatch, useAppSelector } from "../../../hooks/redux";
+import { getBookShelf, ShelfType } from "@utils/getBookData";
+import StatusModal from "@pages/BookDetails/components/StatusModal";
+import { useAppDispatch, useAppSelector } from "@hooks/redux";
 import { toast } from "react-toastify";
-import { setBookStatus } from "../../../store/slices/shelfSlice";
+import { setBookStatus } from "@store/slices/shelfSlice";
 
 interface BookCardProps {
   book: Book;

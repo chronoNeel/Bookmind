@@ -1,27 +1,20 @@
 import React from "react";
 import { Clock, CheckCircle, Trash2 } from "lucide-react";
 import { statusOptions } from "./statusHelpers";
-import { BookDetails } from "../../../types/Book";
-
-// Define a union for all valid status values
-export type StatusValue = "wantToRead" | "ongoing" | "completed" | "remove";
+import { BookDetails } from "@models/Book";
+import { StatusValue } from "@models/StatusModal";
 
 interface Props {
   book: BookDetails;
-  author: string;
+  authors: string;
   currentStatus: StatusValue;
   onClose: () => void;
   onStatusChange: (status: StatusValue) => void;
 }
 
-interface StatusOption {
-  label: string;
-  value: StatusValue;
-}
-
 const StatusModal: React.FC<Props> = ({
   book,
-  author,
+  authors,
   currentStatus,
   onClose,
   onStatusChange,
@@ -48,12 +41,12 @@ const StatusModal: React.FC<Props> = ({
           {/* Body */}
           <div className="modal-body">
             <div className="alert alert-light border rounded-3 mb-4">
-              <h6 className="fw-semibold mb-1">{book.title}</h6>
-              <small className="text-muted">{author}</small>
+              <h5 className="fw-semibold mb-1">{book.title}</h5>
+              <small className="text-muted">{authors}</small>
             </div>
 
             <div className="d-grid gap-2">
-              {(statusOptions as StatusOption[]).map((o) => {
+              {statusOptions.map((o) => {
                 const isSelected = currentStatus === o.value;
                 const isRemove = o.value === "remove";
 
@@ -88,7 +81,6 @@ const StatusModal: React.FC<Props> = ({
                         strokeWidth={2.5}
                       />
                     )}
-
                     {isRemove && <Trash2 size={20} />}
                   </button>
                 );
@@ -96,7 +88,6 @@ const StatusModal: React.FC<Props> = ({
             </div>
           </div>
 
-          {/* Footer */}
           <div className="modal-footer border-0 pt-0">
             <button
               type="button"

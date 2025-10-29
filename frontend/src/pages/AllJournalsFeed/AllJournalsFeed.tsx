@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import SortControls from "./components/SortControls";
 import JournalCard from "./components/JournalCard";
 import Pagination from "./components/Pagination";

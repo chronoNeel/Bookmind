@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../hooks/redux";
-import { logoutUser } from "../store/slices/authSlice";
+import { logoutUser } from "@store/slices/authSlice";
 import bookmind_nav from "../assets/Bookmind_nav.svg";
 import profile_pic from "../assets/profile_pic.png";
 

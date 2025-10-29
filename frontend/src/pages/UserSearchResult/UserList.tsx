@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Book, Users } from "lucide-react";
 import { useAppSelector } from "../../hooks/redux";
-import { UserData } from "../../models/user";
+import { UserData } from "@models/user";
 import api from "../../utils/api";
 
 interface Props {

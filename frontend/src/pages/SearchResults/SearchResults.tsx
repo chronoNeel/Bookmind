@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import SearchBar from "../../components/SearchBar";
+import SearchBar from "@components/SearchBar";
 import BookList from "./components/BookList";
 import Pagination from "./components/Pagination";
 import { useAppSelector } from "../../hooks/redux";

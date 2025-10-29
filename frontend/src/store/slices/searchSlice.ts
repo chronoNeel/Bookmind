@@ -1,8 +1,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { Book } from "../../types/Book";
+import { Book } from "@models/Book";
 import { fetchBooks } from "../../api/bookApi";
 import api from "../../utils/api";
-import { UserData } from "../../models/user";
+import { UserData } from "@models/user";
 
 interface SearchState {
   searchResults: Book[];

@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { fetchGenreBooks } from "../../api/bookApi";
-import { GenreBook } from "../../types/GenreBook";
+import { GenreBook } from "@models/GenreBook";
 
 // State interface
 interface BookState {

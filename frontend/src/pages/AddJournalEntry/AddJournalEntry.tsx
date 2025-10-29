@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { useAppDispatch, useAppSelector } from "../../hooks/redux";
+import { useAppDispatch, useAppSelector } from "@hooks/redux";
 import MoodSelector from "./Components/MoodSelector";
 import StarRating from "./Components/StarRating";
 import ReadingProgress from "./Components/ReadingProgress";
@@ -10,13 +10,13 @@ import GuidedPrompts from "./Components/GuidedPrompts";
 import JournalTextarea from "./Components/JournalTextarea";
 import ActionButtons from "./Components/ActionButtons";
 import HeaderCard from "./Components/HeaderCard";
-import { BookDetails } from "../../types/Book";
-import JournalEntry from "../../types/JournalEntry";
+import { BookDetails } from "@models/Book";
+import JournalEntry from "@models/JournalEntry";
 import {
   createJournalEntry,
   fetchJournalById,
   updateJournalEntry,
-} from "../../store/slices/journalSlice";
+} from "@store/slices/journalSlice";
 
 const AddJournalEntry: React.FC = () => {
   const location = useLocation();

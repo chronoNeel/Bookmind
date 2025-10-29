@@ -1,4 +1,4 @@
-import React, { FormEvent, useState } from "react";
+import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../../store/slices/authSlice";
 import { useAppDispatch } from "../../hooks/redux";

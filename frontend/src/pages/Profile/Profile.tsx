@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAppSelector } from "../../hooks/redux";
-import { UserData } from "../../models/user";
+import { UserData } from "@models/user";
 import api from "../../utils/api";
 import ProfileHeader from "./components/ProfileHeader";
 import StatsGrid from "./components/StatsGrid";

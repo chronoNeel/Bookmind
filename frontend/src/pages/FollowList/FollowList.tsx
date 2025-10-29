@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Loader2, Users } from "lucide-react";
 import { useAppSelector } from "../../hooks/redux";
-import { UserData } from "../../models/user";
+import { UserData } from "@models/user";
 import api from "../../utils/api";
 import FollowHeader from "./FollowHeader";
 import FollowSearch from "./FollowSearch";

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios, { AxiosError } from "axios";
 import { useSelector } from "react-redux";
@@ -11,22 +11,22 @@ import StatusModal from "./components/StatusModal";
 import LoadingSpinner from "./components/LoadingSpinner";
 import ErrorMessage from "./components/ErrorMessage";
 import { mockJournalEntries } from "./components/mockData";
-import { BookDetails as Book, SimilarBook } from "../../types/Book";
-import { setBookStatus } from "../../store/slices/shelfSlice";
-import { useAppDispatch } from "../../hooks/redux";
+import { BookDetails as Book, SimilarBook } from "@models/Book";
+import { setBookStatus } from "@store/slices/shelfSlice";
+import { useAppDispatch } from "@hooks/redux";
 import { toast } from "react-toastify";
-import { getBookShelf, ShelfType } from "../../utils/getBookData";
-import { updateFavoriteBooks } from "../../store/slices/statsSlice";
+import { getBookShelf } from "@utils/getBookData";
+import { updateFavoriteBooks } from "@store/slices/statsSlice";
+import { StatusValue } from "@models/StatusModal";
 
 const BookDetails = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const params = useParams<{ bookKey: string }>();
-  const { bookKey } = params;
+  const { bookKey } = useParams();
   if (!bookKey) throw new Error("Missing :bookKey in route");
 
   const [book, setBook] = useState<Book | null>(null);
-  const [author, setAuthor] = useState<string>("Unknown Author");
+  const [authors, setAuthors] = useState<string>("Unknown Author");
   const [description, setDescription] = useState<string>("");
   const [genres, setGenres] = useState<string[]>([]);
   const [similarBooks, setSimilarBooks] = useState<SimilarBook[]>([]);
@@ -34,7 +34,7 @@ const BookDetails = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [status, setStatus] = useState<ShelfType | null>(null);
+  const [status, setStatus] = useState<StatusValue>(null);
 
   const currentUser = useSelector((state: RootState) => state.auth.user);
 
@@ -43,7 +43,6 @@ const BookDetails = () => {
     return `https://covers.openlibrary.org/b/id/${book.covers[0]}-L.jpg`;
   }, [book?.covers]);
 
-  // Initialize status based on which shelf the book is in
   useEffect(() => {
     if (!bookKey || !currentUser?.shelves) return;
 
@@ -54,7 +53,6 @@ const BookDetails = () => {
     setStatus(shelf);
   }, [currentUser?.shelves, bookKey]);
 
-  // Initialize favorite status from user's favorites
   useEffect(() => {
     if (currentUser?.favorites && bookKey) {
       setIsFavorite(currentUser.favorites.includes(bookKey));
@@ -73,38 +71,44 @@ const BookDetails = () => {
         setLoading(true);
         setError(null);
 
-        // Fetch book details
         const bookResponse = await axios.get(
           `https://openlibrary.org${bookKey}.json`
         );
         const bookData = bookResponse.data;
         setBook(bookData);
 
-        // Set description
         const desc =
           typeof bookData.description === "object"
             ? bookData.description.value
             : bookData.description || "No description available";
         setDescription(desc);
 
-        // Set genres
         const subjects: string[] = bookData.subjects || [];
         setGenres(subjects.slice(0, 5));
 
-        // Fetch author details
         if (bookData.authors?.length) {
           try {
-            const authorKey = bookData.authors[0].author.key;
-            const authorResponse = await axios.get(
-              `https://openlibrary.org${authorKey}.json`
+            const authorNames = await Promise.all(
+              bookData.authors.map(
+                async (authorData: { author: { key: string } }) => {
+                  const key = authorData?.author?.key;
+                  if (!key) return null;
+
+                  const { data } = await axios.get(
+                    `/openlibrary.org${key}.json`
+                  );
+                  return data?.name || null;
+                }
+              )
             );
-            setAuthor(authorResponse.data.name || "Unknown Author");
+
+            setAuthors(authorNames.filter(Boolean).join(", "));
           } catch (authorError: unknown) {
             console.error("Error fetching author:", authorError);
-            setAuthor("Unknown Author");
+            setAuthors("Unknown Author");
           }
         } else {
-          setAuthor("Unknown Author");
+          setAuthors("Unknown Author");
         }
 
         // Fetch similar books
@@ -153,9 +157,7 @@ const BookDetails = () => {
     getBookDetails();
   }, [bookKey]);
 
-  const handleStatusChange = async (
-    newStatus: "wantToRead" | "ongoing" | "completed" | "remove"
-  ) => {
+  const handleStatusChange = async (newStatus: StatusValue) => {
     if (!book?.key) return;
 
     if (!currentUser) {
@@ -190,7 +192,9 @@ const BookDetails = () => {
                 : "Completed"
             } shelf`;
 
-      toast.success(toasterText);
+      toast.success(toasterText, {
+        position: "top-right",
+      });
       setIsModalOpen(false);
     } catch (error: unknown) {
       if (typeof error === "object" && error && "code" in error) {
@@ -279,7 +283,7 @@ const BookDetails = () => {
         <div className="max-w-7xl mx-auto px-6 pt-12 pb-16">
           <BookDetailsCard
             book={book}
-            author={author}
+            authors={authors}
             coverUrl={coverUrl}
             description={description}
             genres={genres}
@@ -314,7 +318,7 @@ const BookDetails = () => {
       {isModalOpen && (
         <StatusModal
           book={book}
-          author={author}
+          authors={authors}
           currentStatus={status}
           onClose={() => setIsModalOpen(false)}
           onStatusChange={handleStatusChange}

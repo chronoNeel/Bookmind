@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Search, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "../../hooks/redux";
 import { searchUsers } from "../../store/slices/searchSlice";
 import UserList from "./UserList";

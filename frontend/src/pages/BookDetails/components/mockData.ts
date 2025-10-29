@@ -1,6 +1,14 @@
-import { JournalEntry } from "../../../types/Book";
+interface MockJournalType {
+  id: number;
+  user: { name: string; avatar: string };
+  rating: number;
+  date: string;
+  text: string;
+  upvotes: number;
+  downvotes: number;
+}
 
-export const mockJournalEntries: JournalEntry[] = [
+export const mockJournalEntries: MockJournalType[] = [
   {
     id: 1,
     user: { name: "Sarah Johnson", avatar: "https://i.pravatar.cc/150?img=1" },

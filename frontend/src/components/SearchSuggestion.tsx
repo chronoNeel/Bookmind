@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Book } from "../types/Book";
+import { Book } from "@models/Book";
 
 interface SearchSuggestionProps {
   books: Book[];

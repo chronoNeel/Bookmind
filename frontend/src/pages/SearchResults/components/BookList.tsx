@@ -1,6 +1,6 @@
 import React from "react";
 import BookCard from "./BookCard";
-import { Book } from "../../../types/Book";
+import { Book } from "@models/Book";
 import { useNavigate } from "react-router-dom";
 
 interface BookListProps {

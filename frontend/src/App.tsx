@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./utils/firebase";
@@ -8,30 +8,29 @@ import {
   fetchUserProfile,
 } from "./store/slices/authSlice";
 
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
+import Navbar from "@components/Navbar";
+import Footer from "@components/Footer";
 
-import Home from "./pages/Home/Home";
-import MyBooks from "./pages/MyBooks/MyBooks";
-import SearchResults from "./pages/SearchResults/SearchResults";
-import Signup from "./pages/Signup/Signup";
-import Login from "./pages/Login/Login";
-import Profile from "./pages/Profile/Profile";
-import ViewEntries from "./pages/viewEntries";
-import BookDetails from "./pages/BookDetails/BookDetails";
-import AllJournalsFeed from "./pages/AllJournalsFeed/AllJournalsFeed";
-import AddJournalEntry from "./pages/AddJournalEntry/AddJournalEntry";
-import JournalDetail from "./pages/JournalDetail/JournalDetail";
-import UserSearchResult from "./pages/UserSearchResult/UserSearchResult";
-import GenreBooks from "./pages/GenreBooks/GenreBooks";
-import EditProfile from "./pages/EditProfile/EditProfile";
+import Home from "@pages/Home/Home";
+import MyBooks from "@pages/MyBooks/MyBooks";
+import SearchResults from "@pages/SearchResults/SearchResults";
+import Signup from "@pages/Signup/Signup";
+import Login from "@pages/Login/Login";
+import Profile from "@pages/Profile/Profile";
+import BookDetails from "@pages/BookDetails/BookDetails";
+import AllJournalsFeed from "@pages/AllJournalsFeed/AllJournalsFeed";
+import AddJournalEntry from "@pages/AddJournalEntry/AddJournalEntry";
+import JournalDetail from "@pages/JournalDetail/JournalDetail";
+import UserSearchResult from "@pages/UserSearchResult/UserSearchResult";
+import GenreBooks from "@pages/GenreBooks/GenreBooks";
+import EditProfile from "@pages/EditProfile/EditProfile";
 
-import ProtectedRoute from "./components/ProtectedRoute";
+import ProtectedRoute from "@components/ProtectedRoute";
 import { useAppDispatch } from "./hooks/redux";
-import TextRevealAnimation from "./pages/Login/TextRevealAnimation";
+import TextRevealAnimation from "@pages/Login/TextRevealAnimation";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import FollowList from "./pages/FollowList/FollowList";
+import FollowList from "@pages/FollowList/FollowList";
 
 function App() {
   const location = useLocation();
@@ -167,7 +166,6 @@ function App() {
             path="/journal-preview/:journalId"
             element={<JournalDetail />}
           />
-          <Route path="/view-entries" element={<ViewEntries />} />
           <Route path="/users/:query" element={<UserSearchResult />} />
           <Route path="/genre/:genreName" element={<GenreBooks />} />
         </Routes>

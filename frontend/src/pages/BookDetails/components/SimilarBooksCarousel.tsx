@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { SimilarBook } from "../../../types/Book";
+import { SimilarBook } from "@models/Book";
 
 interface SimilarBooksCarouselProps {
   similarBooks: SimilarBook[];

@@ -1,6 +1,6 @@
 import React from "react";
 import { Book, Users, UserCheck, UserPlus } from "lucide-react";
-import { UserData } from "../../models/user";
+import { UserData } from "@models/user";
 
 interface Props {
   user: UserData;

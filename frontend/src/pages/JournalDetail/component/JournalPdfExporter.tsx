@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Download, FileText, Loader2 } from "lucide-react";
-import { Journal } from "../../../models/journal";
+import { Journal } from "@models/journal";
 
 interface JournalPDFExporterProps {
   entry: Journal;

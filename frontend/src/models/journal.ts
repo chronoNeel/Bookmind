@@ -1,4 +1,4 @@
-import JournalEntry from "../types/JournalEntry";
+import JournalEntry from "./JournalEntry";
 
 export type Journal = JournalEntry & {
   id: string;

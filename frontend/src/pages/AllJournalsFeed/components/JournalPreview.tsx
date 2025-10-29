@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Journal } from "../../../models/journal";
+import { Journal } from "@models/journal";
 
 interface JournalPreviewProps {
   entry: Journal;

@@ -6,7 +6,7 @@ import {
 } from "firebase/auth";
 import { auth } from "../../utils/firebase";
 import api from "../../utils/api";
-import { AuthState, UserData } from "../../models/user";
+import { AuthState, UserData } from "@models/user";
 
 // ---------------------------
 // Types

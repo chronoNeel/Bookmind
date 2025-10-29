@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Search } from "lucide-react";
 import SearchSuggestion from "./SearchSuggestion";
 import { useLocation, useNavigate } from "react-router-dom";
-import { searchBooks } from "../store/slices/searchSlice";
+import { searchBooks } from "@store/slices/searchSlice";
 import { useAppDispatch, useAppSelector } from "../hooks/redux";
 
 const SearchBar: React.FC = () => {

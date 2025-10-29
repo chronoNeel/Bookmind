@@ -1,5 +1,5 @@
 import { Calendar, User } from "lucide-react";
-import { BookDetails } from "../../../types/Book";
+import { BookDetails } from "@models/Book";
 
 interface HeaderCardProps {
   book: BookDetails;

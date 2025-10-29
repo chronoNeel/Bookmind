@@ -5,7 +5,7 @@ import MoodRating from "./MoodRating";
 import ReadingProgress from "./ReadingProgress";
 import JournalPreview from "./JournalPreview";
 import EntryFooter from "./EntryFooter";
-import { Journal } from "../../../models/journal";
+import { Journal } from "@models/journal";
 
 interface JournalCardProps {
   entry: Journal;

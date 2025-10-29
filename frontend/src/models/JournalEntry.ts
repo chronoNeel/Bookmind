@@ -1,5 +1,3 @@
-import { Book, BookDetails } from "./Book";
-
 export default interface JournalEntry {
   bookKey: string;
   bookTitle: string;

@@ -1,5 +1,5 @@
 import { LucideIcon } from "lucide-react";
-import { ShelfBook } from "../../../models/user";
+import { ShelfBook } from "@models/user";
 
 export interface Book {
   title: string;

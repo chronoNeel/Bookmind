@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../utils/api";
-import JournalEntry from "../../types/JournalEntry";
-import { Journal } from "../../models/journal";
+import JournalEntry from "@models/JournalEntry";
+import { Journal } from "@models/journal";
 
 type JournalState = {
   loading: boolean;

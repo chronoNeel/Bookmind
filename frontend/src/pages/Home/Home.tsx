@@ -6,14 +6,14 @@ import TrendingBooks from "./components/TrendingBooks";
 import FriendsActivity from "./components/FriendsActivity";
 import PopularGenres from "./components/PopularGenres";
 import DailyTip from "./components/DailyTip";
-import SearchBar from "../../components/SearchBar";
+import SearchBar from "@components/SearchBar";
 import UserSearch from "./components/UserSearch";
 import { useNavigate } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "../../hooks/redux";
-import { searchUsers } from "../../store/slices/searchSlice";
-import { RootState } from "../../store";
+import { useAppDispatch, useAppSelector } from "@hooks/redux";
+import { searchUsers } from "@store/slices/searchSlice";
+import { RootState } from "@store";
 
-const Home = () => {
+const Home: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
@@ -106,7 +106,6 @@ const Home = () => {
         background: "linear-gradient(135deg, #fffaea 50%)",
       }}
     >
-      {/* Paper texture overlay */}
       <div
         className="position-absolute top-0 start-0 w-100 h-100"
         style={{
@@ -145,12 +144,10 @@ const Home = () => {
                   </div>
                 </div>
 
-                {/* Middle Panel - Trending Books */}
                 <div className="col-12 col-lg-6 order-lg-2">
                   <TrendingBooks />
                 </div>
 
-                {/* Right Sidebar */}
                 <div className="col-12 col-lg-3 order-lg-3">
                   <div className="d-flex flex-column gap-3 gap-lg-4">
                     <FriendsActivity activities={friendsActivity} />

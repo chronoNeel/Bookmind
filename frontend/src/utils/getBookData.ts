@@ -1,4 +1,4 @@
-import { ShelfBook } from "../models/user";
+import { ShelfBook } from "@models/user";
 
 export type ShelfType = "completed" | "ongoing" | "wantToRead";
 

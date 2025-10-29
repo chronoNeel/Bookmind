@@ -1,6 +1,6 @@
 import axiosInstance from "./axiosInstance";
-import { Book } from "../types/Book";
-import { GenreBook } from "../types/GenreBook";
+import { Book } from "@models/Book";
+import { GenreBook } from "@models/GenreBook";
 
 export const fetchBooks = async (searchTerm: string): Promise<Book[]> => {
   const response = await axiosInstance.get("/search.json", {

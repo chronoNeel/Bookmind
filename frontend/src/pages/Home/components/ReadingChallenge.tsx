@@ -1,15 +1,14 @@
 import React, { useState, useMemo, KeyboardEvent } from "react";
-import { TrendingUp, Plus, Minus, Edit2, Check, X } from "lucide-react";
+import { TrendingUp, Edit2, Check, X } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../../hooks/redux";
 import { toast } from "react-toastify";
-import { updateYearlyGoal } from "../../../store/slices/statsSlice";
-import { updateUserProfile } from "../../../store/slices/authSlice";
+import { updateYearlyGoal } from "@store/slices/statsSlice";
+import { updateUserProfile } from "@store/slices/authSlice";
 
 const ReadingChallenge: React.FC = () => {
   const dispatch = useAppDispatch();
   const currentUser = useAppSelector((state) => state.auth.user);
 
-  // Derive number of books completed this year
   const booksThisYear = useMemo(() => {
     if (!currentUser?.shelves?.completed) return 0;
 
@@ -24,12 +23,10 @@ const ReadingChallenge: React.FC = () => {
   }, [currentUser?.shelves?.completed]);
 
   const readingGoal = currentUser?.stats?.yearlyGoal ?? 0;
-
   const [isUpdatingGoal, setIsUpdatingGoal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [tempGoal, setTempGoal] = useState<string>("");
 
-  // Unified function to update goal (handles manual entry + +/-)
   const updateGoal = async (newGoal: number) => {
     if (!currentUser) {
       toast.warn("Please log in to set a goal", { position: "top-center" });
@@ -83,11 +80,6 @@ const ReadingChallenge: React.FC = () => {
     }
   };
 
-  // Handlers for + and -
-  const handleIncrease = () => updateGoal(readingGoal + 1);
-  const handleDecrease = () => updateGoal(Math.max(0, readingGoal - 1));
-
-  // Manual editing
   const handleEditClick = () => {
     setTempGoal(readingGoal.toString());
     setIsEditMode(true);
@@ -113,7 +105,6 @@ const ReadingChallenge: React.FC = () => {
     else if (e.key === "Escape") handleCancelEdit();
   };
 
-  // Computed values
   const safeGoal = Math.max(0, readingGoal);
   const progressPercentage =
     safeGoal > 0 ? Math.min((booksThisYear / safeGoal) * 100, 100) : 0;
@@ -136,7 +127,7 @@ const ReadingChallenge: React.FC = () => {
           color: #5d4a2f;
           font-weight: 600;
         }
-        .btn-warm, .btn-edit, .btn-save, .btn-cancel {
+        .btn-edit, .btn-save, .btn-cancel {
           border-radius: 50%;
           display: flex;
           align-items: center;
@@ -150,7 +141,7 @@ const ReadingChallenge: React.FC = () => {
           color: #5d4a2f;
           transition: all 0.2s ease;
         }
-        .btn-warm:hover:not(:disabled), .btn-edit:hover:not(:disabled) {
+        .btn-edit:hover:not(:disabled) {
           background: linear-gradient(135deg, #f5f0e6 0%, #e8dcc4 100%);
           border-color: #8b6f47;
           transform: scale(1.05);
@@ -196,23 +187,7 @@ const ReadingChallenge: React.FC = () => {
 
             {!isEditMode ? (
               <div className="d-flex align-items-center gap-2">
-                <button
-                  onClick={handleDecrease}
-                  disabled={isUpdatingGoal}
-                  className="btn-warm"
-                  aria-label="Decrease goal"
-                >
-                  <Minus size={14} />
-                </button>
                 <span className="h4 fw-bold mb-0 goal-text">{safeGoal}</span>
-                <button
-                  onClick={handleIncrease}
-                  disabled={isUpdatingGoal}
-                  className="btn-warm"
-                  aria-label="Increase goal"
-                >
-                  <Plus size={14} />
-                </button>
                 <button
                   onClick={handleEditClick}
                   className="btn-edit"
