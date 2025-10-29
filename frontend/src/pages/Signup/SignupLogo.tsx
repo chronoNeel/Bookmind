@@ -1,5 +1,3 @@
-// SignupLogo.tsx
-
 import React from "react";
 import assets from "../../assets/asstes";
 
@@ -17,11 +15,3 @@ const SignupLogo: React.FC = () => {
 };
 
 export default SignupLogo;
-
-/* 
-INSTRUCTIONS TO USE YOUR LOGO:
-1. Replace the entire <svg> element above with your logo's SVG code
-2. Adjust width and height props as needed (currently set to 80x80)
-3. Make sure your SVG has proper viewBox attributes
-4. If your logo has colors, they should complement the warm paper theme (#fffaea background)
-*/
