@@ -4,10 +4,12 @@ import { ChevronDown, Plus } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { getBookShelf, ShelfType } from "@utils/getBookData";
-import StatusModal from "@pages/BookDetails/components/StatusModal";
+import StatusModal from "@/components/StatusModal";
 import { useAppDispatch, useAppSelector } from "@hooks/redux";
 import { toast } from "react-toastify";
 import { setBookStatus } from "@store/slices/shelfSlice";
+import { getStatusColor } from "@utils/statusHelpers";
+import { StatusValue } from "@models/StatusModal";
 
 interface BookCardProps {
   book: Book;
@@ -22,7 +24,7 @@ const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
   const [status, setStatus] = useState<ShelfType | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [description, setDescription] = useState("");
-  const [author, setAuthor] = useState<string>("Unknown Author");
+  const [authors, setAuthors] = useState<string>("Unknown Author");
 
   const coverUrl = useMemo(() => {
     if (!book?.cover_i) return undefined;
@@ -40,24 +42,10 @@ const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
     setStatus(shelf);
   }, [currentUser?.shelves, book]);
 
-  const statusColors = {
-    wantToRead:
-      "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700",
-    ongoing:
-      "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600",
-    completed:
-      "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700",
-  };
-
   const statusLabels = {
     wantToRead: "Want to Read",
     ongoing: "Ongoing",
     completed: "Completed",
-  };
-
-  const getStatusColor = (value: ShelfType | null) => {
-    if (!value) return statusColors.wantToRead;
-    return statusColors[value] || statusColors.wantToRead;
   };
 
   useEffect(() => {
@@ -75,19 +63,28 @@ const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
         setDescription(desc);
 
         if (bookData.authors?.length) {
-          const authorKey = bookData.authors[0]?.author?.key;
-          if (authorKey) {
-            try {
-              const authorResponse = await axios.get(
-                `https://openlibrary.org${authorKey}.json`
-              );
-              setAuthor(authorResponse.data?.name || "Unknown Author");
-            } catch {
-              setAuthor("Unknown Author");
-            }
+          try {
+            const authorNames = await Promise.all(
+              bookData.authors.map(
+                async (authorData: { author: { key: string } }) => {
+                  const key = authorData?.author?.key;
+                  if (!key) return null;
+
+                  const { data } = await axios.get(
+                    `/openlibrary.org${key}.json`
+                  );
+                  return data?.name || null;
+                }
+              )
+            );
+
+            setAuthors(authorNames.filter(Boolean).join(", "));
+          } catch (authorError: unknown) {
+            console.error("Error fetching author:", authorError);
+            setAuthors("Unknown Author");
           }
         } else {
-          setAuthor("Unknown Author");
+          setAuthors("Unknown Author");
         }
       } catch {
         setDescription("No description available");
@@ -97,22 +94,18 @@ const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
     getDescription();
   }, [book.key]);
 
-  const handleStatusChange = async (
-    newStatus: ShelfType | "remove"
-  ): Promise<void> => {
+  const handleStatusChange = async (newStatus: StatusValue) => {
     if (!book?.key) return;
 
     if (!currentUser) {
       setIsModalOpen(false);
-
       toast.warn("Please log in to add books to your shelves.", {
         position: "top-center",
       });
 
       setTimeout(() => {
-        navigate("/login", { state: { from: `/book/${book.key}` } });
+        navigate("/login", { state: { from: `/search-results` } });
       }, 1500);
-
       return;
     }
 
@@ -136,22 +129,24 @@ const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
                 : "Completed"
             } shelf`;
 
-      toast.success(toasterText);
+      toast.success(toasterText, {
+        position: "top-right",
+      });
       setIsModalOpen(false);
     } catch (error: unknown) {
-      const err = error as { code?: string; message?: string };
-      if (err?.code === "AUTH_REQUIRED") {
-        setIsModalOpen(false);
-        const shouldRedirect = window.confirm(
-          err.message || "Please log in to continue. Redirect to login?"
-        );
-        if (shouldRedirect) {
-          navigate("/login", { state: { from: `/book/${book.key}` } });
+      if (typeof error === "object" && error && "code" in error) {
+        const err = error as { code?: string; message?: string };
+        if (err.code === "AUTH_REQUIRED") {
+          setIsModalOpen(false);
+          const shouldRedirect = window.confirm(
+            err.message || "Please log in to continue. Redirect to login?"
+          );
+          if (shouldRedirect) {
+            navigate("/login", { state: { from: `/search-results` } });
+          }
         }
       } else {
-        alert(
-          err?.message || "Failed to update book status. Please try again."
-        );
+        alert("Failed to update book status. Please try again.");
       }
     }
   };
@@ -285,7 +280,7 @@ const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
       {isModalOpen && (
         <StatusModal
           book={book}
-          author={author}
+          authors={authors}
           currentStatus={status}
           onClose={() => setIsModalOpen(false)}
           onStatusChange={handleStatusChange}

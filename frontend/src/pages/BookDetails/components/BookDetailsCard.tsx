@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Heart, ChevronDown } from "lucide-react";
-import { getStatusColor, getStatusLabel } from "./statusHelpers";
+import { getStatusColor, getStatusLabel } from "@utils/statusHelpers";
 import { BookDetails } from "@models/Book";
 import { StatusValue } from "@models/StatusModal";
 

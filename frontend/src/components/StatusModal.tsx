@@ -1,6 +1,6 @@
 import React from "react";
 import { Clock, CheckCircle, Trash2 } from "lucide-react";
-import { statusOptions } from "./statusHelpers";
+import { statusOptions } from "@utils/statusHelpers";
 import { BookDetails } from "@models/Book";
 import { StatusValue } from "@models/StatusModal";
 
@@ -30,7 +30,6 @@ const StatusModal: React.FC<Props> = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-          {/* Header */}
           <div className="modal-header border-0 pb-0">
             <h5 className="modal-title fw-bold d-flex align-items-center gap-2">
               <Clock size={20} /> Update Reading Status
@@ -38,7 +37,6 @@ const StatusModal: React.FC<Props> = ({
             <button type="button" className="btn-close" onClick={onClose} />
           </div>
 
-          {/* Body */}
           <div className="modal-body">
             <div className="alert alert-light border rounded-3 mb-4">
               <h5 className="fw-semibold mb-1">{book.title}</h5>
@@ -46,14 +44,14 @@ const StatusModal: React.FC<Props> = ({
             </div>
 
             <div className="d-grid gap-2">
-              {statusOptions.map((o) => {
-                const isSelected = currentStatus === o.value;
-                const isRemove = o.value === "remove";
+              {statusOptions.map((status) => {
+                const isSelected = currentStatus === status.value;
+                const isRemove = status.value === "remove";
 
                 return (
                   <button
-                    key={o.value}
-                    onClick={() => onStatusChange(o.value)}
+                    key={status.value}
+                    onClick={() => onStatusChange(status.value)}
                     disabled={isRemove && !currentStatus}
                     className={`btn text-start d-flex align-items-center justify-content-between border rounded-3 shadow-sm ${
                       isRemove ? "btn-outline-danger" : "bg-white"
@@ -72,7 +70,7 @@ const StatusModal: React.FC<Props> = ({
                       e.currentTarget.style.boxShadow = "";
                     }}
                   >
-                    <span className="fw-medium">{o.label}</span>
+                    <span className="fw-medium">{status.label}</span>
 
                     {isSelected && !isRemove && (
                       <CheckCircle
