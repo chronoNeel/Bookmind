@@ -2,16 +2,16 @@ import { Calendar, User } from "lucide-react";
 import { BookDetails } from "@models/Book";
 
 interface HeaderCardProps {
-  book: BookDetails;
   coverUrl: string | null;
+  title: string;
   author: string;
   readingProgress: number;
   getStatusText: () => string;
 }
 
 const HeaderCard: React.FC<HeaderCardProps> = ({
-  book,
   coverUrl,
+  title,
   author,
   readingProgress,
   getStatusText,
@@ -22,7 +22,7 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
         {coverUrl ? (
           <img
             src={coverUrl}
-            alt={book.title || "Book cover"}
+            alt={title || "Book cover"}
             className="w-20 h-28 object-cover rounded-lg shadow-md transition-transform hover:scale-105"
             onError={(e) => {
               e.currentTarget.onerror = null;
@@ -39,9 +39,7 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
         )}
 
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            {book.title}
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">{title}</h1>
 
           <p className="text-gray-900 opacity-80 flex items-center mb-2">
             <User className="w-4 h-4 mr-1" />
@@ -49,10 +47,10 @@ const HeaderCard: React.FC<HeaderCardProps> = ({
           </p>
 
           <div className="flex items-center gap-4 text-sm opacity-60">
-            <span className="flex items-center">
+            {/* <span className="flex items-center">
               <Calendar className="w-4 h-4 mr-1" />
-              {book.first_publish_date || "—"}
-            </span>
+              {publishDate || "—"}
+            </span> */}
 
             <span
               className={`px-3 py-1 rounded-full text-xs font-medium ${

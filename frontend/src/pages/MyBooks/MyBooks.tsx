@@ -4,7 +4,7 @@ import { Shelf } from "./components/Shelf";
 import { ExpandedShelfState } from "./components/types";
 import { useAppSelector } from "../../hooks/redux";
 
-const MyBooks = () => {
+const MyBooks: React.FC = () => {
   const currentUser = useAppSelector((state) => state.auth.user);
   const shelves = useAppSelector((state) => state.auth.user?.shelves);
   const { completed = [], ongoing = [], wantToRead = [] } = shelves || {};

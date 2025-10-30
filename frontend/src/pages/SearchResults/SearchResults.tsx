@@ -2,42 +2,10 @@ import React, { useEffect, useRef, useState } from "react";
 import SearchBar from "@components/SearchBar";
 import BookList from "./components/BookList";
 import Pagination from "./components/Pagination";
-import { useAppSelector } from "../../hooks/redux";
+import { LoadingSkeleton } from "./components/LoadingSkeleton";
+import { useAppSelector } from "@hooks/redux";
 
 const ITEMS_PER_PAGE = 10;
-
-const LoadingSkeleton: React.FC = () => {
-  return (
-    <div className="space-y-6">
-      {[...Array(6)].map((_, i) => (
-        <div
-          key={i}
-          className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 animate-pulse"
-        >
-          <div className="flex gap-6">
-            <div className="flex-shrink-0 w-24 h-36 bg-gray-200 rounded" />
-            <div className="flex-1 space-y-3">
-              <div className="h-6 bg-gray-200 rounded w-3/4" />
-
-              <div className="h-4 bg-gray-200 rounded w-1/2" />
-
-              <div className="space-y-2 pt-2">
-                <div className="h-3 bg-gray-200 rounded w-full" />
-                <div className="h-3 bg-gray-200 rounded w-5/6" />
-                <div className="h-3 bg-gray-200 rounded w-4/6" />
-              </div>
-
-              <div className="flex gap-4 pt-2">
-                <div className="h-4 bg-gray-200 rounded w-20" />
-                <div className="h-4 bg-gray-200 rounded w-24" />
-              </div>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
 
 const SearchResults: React.FC = () => {
   const { searchResults, isLoading } = useAppSelector((state) => state.search);
@@ -49,7 +17,6 @@ const SearchResults: React.FC = () => {
     setCurrentPage(1);
   }, [searchResults]);
 
-  // Track if we've ever loaded books to prevent skeleton on navigation back
   useEffect(() => {
     if (searchResults.length > 0) {
       hasLoadedBooksRef.current = true;
@@ -63,7 +30,6 @@ const SearchResults: React.FC = () => {
     startIndex + ITEMS_PER_PAGE
   );
 
-  // Only show loading skeleton if we're loading AND we haven't loaded books before
   const shouldShowLoading = isLoading && !hasLoadedBooksRef.current;
 
   return (

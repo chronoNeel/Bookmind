@@ -166,19 +166,15 @@ const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
   return (
     <>
       <div
-        className="card rounded-4 shadow-sm mb-4 hover-lift"
+        className="card mb-4 shadow-sm hover-lift border-0 bg-white"
         onClick={onClick}
-        style={{
-          cursor: "pointer",
-          transition: "transform 0.25s ease, box-shadow 0.25s ease",
-          backgroundColor: "#ffffff",
-        }}
+        style={{ cursor: "pointer", transition: "all 0.25s ease" }}
       >
         <div className="card-body p-4">
           <div className="row g-4">
             {/* Book Cover */}
             <div className="col-auto">
-              <div className="position-relative book-cover-wrapper">
+              <div className="position-relative overflow-hidden rounded-3">
                 <img
                   src={coverUrl}
                   alt={`${book.title} cover`}
@@ -190,86 +186,45 @@ const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
                     transition: "transform 0.25s ease",
                   }}
                 />
-                <div
-                  className="position-absolute top-0 start-0 w-100 h-100 rounded-3 book-overlay"
-                  style={{
-                    background:
-                      "linear-gradient(to top, rgba(0,0,0,0.15), transparent)",
-                    opacity: 0,
-                    transition: "opacity 0.25s ease",
-                  }}
-                />
               </div>
             </div>
 
             {/* Book Details */}
             <div className="col">
-              <div className="mb-3">
-                <div className="d-flex align-items-start justify-content-between">
-                  <div className="flex-grow-1 me-3">
-                    <h3
-                      className="fw-bold text-dark fs-5 mb-1 book-title"
-                      style={{ lineHeight: "1.3" }}
-                    >
-                      {book.title}
-                    </h3>
-                    <div className="d-flex align-items-center gap-2 mb-2">
-                      <p className="text-secondary fw-medium mb-0">
-                        {book.author_name?.[0] || "Unknown Author"}
-                      </p>
-                      <span className="text-muted">•</span>
-                      <p className="text-muted small mb-0">
-                        {book.first_publish_year || "Unknown Year"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+              <h5 className="fw-bold text-dark mb-1">{book.title}</h5>
+              <div className="d-flex align-items-center text-muted small mb-2">
+                <span>{book.author_name?.[0] || "Unknown Author"}</span>
+                <span className="mx-2">•</span>
+                <span>{book.first_publish_year || "Unknown Year"}</span>
               </div>
 
-              {/* Description */}
-              <div className="mb-3">
-                <p
-                  className="text-secondary mb-0 line-clamp-2"
-                  style={{ lineHeight: "1.6" }}
-                >
-                  {description}
-                </p>
-              </div>
+              <p className="text-secondary small mb-3 text-truncate-2">
+                {description}
+              </p>
 
-              {/* Action Buttons Row */}
-              <div className="d-flex align-items-center gap-3 flex-wrap">
+              {/* Action Buttons */}
+              <div className="d-flex align-items-center gap-2 flex-wrap">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsModalOpen(true);
                   }}
-                  className={`btn btn-lg d-flex align-items-center gap-2 rounded-pill shadow-sm text-white ${getStatusColor(
+                  style={{ width: "180px", fontSize: "0.85rem" }}
+                  className={`btn btn-sm fw-bold text-white rounded-pill shadow-sm d-flex align-items-center justify-content-center gap-2 py-2 px-3 ${getStatusColor(
                     status
                   )}`}
-                  style={{
-                    transition: "transform 0.2s ease, box-shadow 0.2s ease",
-                    paddingInline: "1rem",
-                  }}
                 >
-                  <span className="small fw-bold" style={{ lineHeight: "1.5" }}>
-                    {status ? statusLabels[status] : "Add to Shelf"}
-                  </span>
-                  <ChevronDown size={16} color="currentColor" />
+                  {status ? statusLabels[status] : "Add to Shelf"}
+                  <ChevronDown size={16} />
                 </button>
 
                 <button
-                  className="btn btn-lg btn-success d-flex align-items-center rounded-pill gap-2 shadow-sm"
                   onClick={handleAddJournal}
-                  style={{
-                    border: "none",
-                    transition: "transform 0.2s ease, box-shadow 0.2s ease",
-                    paddingInline: "1rem",
-                  }}
+                  style={{ width: "180px", fontSize: "0.85rem" }}
+                  className="btn btn-sm fw-bold text-white rounded-pill shadow-sm d-flex align-items-center justify-content-center gap-2 py-2 px-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
                 >
                   <Plus size={16} />
-                  <span className="small fw-bold" style={{ lineHeight: "1.5" }}>
-                    Add Journal Entry
-                  </span>
+                  <span className="text-center">Add Journal Entry</span>
                 </button>
               </div>
             </div>
@@ -288,31 +243,20 @@ const BookCard: React.FC<BookCardProps> = ({ book, onClick }) => {
       )}
 
       <style>{`
-        .hover-lift:hover {
-          transform: translateY(-3px);
-        }
-        .book-cover-wrapper:hover .book-cover {
-          transform: scale(1.04);
-        }
-        .book-cover-wrapper:hover .book-overlay {
-          opacity: 1 !important;
-        }
-        .book-title {
-          transition: color 0.25s ease;
-        }
-        .card:hover .book-title {
-          color: #374151 !important;
-        }
-        .line-clamp-2 {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .btn:hover {
-          transform: translateY(-1px);
-        }
-      `}</style>
+      .hover-lift:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+      }
+      .book-cover:hover {
+        transform: scale(1.05);
+      }
+      .text-truncate-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+    `}</style>
     </>
   );
 };

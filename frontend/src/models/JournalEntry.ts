@@ -1,9 +1,8 @@
 export default interface JournalEntry {
   bookKey: string;
   bookTitle: string;
-  bookAuthor: string;
+  bookAuthorList: string[];
   bookCoverUrl: string;
-  bookPublishYear: string;
 
   rating: number;
   readingProgress: number;

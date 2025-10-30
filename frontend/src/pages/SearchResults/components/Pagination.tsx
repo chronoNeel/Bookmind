@@ -12,6 +12,9 @@ const Pagination: React.FC<PaginationProps> = ({
   currentPage,
   onPageChange,
 }) => {
+  const pages: number[] = [];
+  for (let i = 1; i <= totalPages; i++) pages.push(i);
+
   const handlePrevPage = () => {
     if (currentPage > 1) {
       onPageChange(currentPage - 1);
@@ -32,50 +35,50 @@ const Pagination: React.FC<PaginationProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-center gap-4 mt-10">
-      {/* Prev Button */}
+    <div className="flex items-center justify-center gap-2 mt-10">
       <button
         onClick={handlePrevPage}
         disabled={currentPage === 1}
-        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105
+        className={`flex items-center gap-1 px-4 py-2 !rounded-lg font-medium transition-colors
         ${
           currentPage === 1
-            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-            : "bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white"
+            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+            : "text-white hover:opacity-90"
         }`}
+        style={currentPage !== 1 ? { backgroundColor: "#4F200D" } : {}}
       >
         <ChevronLeft className="w-4 h-4" />
         Prev
       </button>
 
-      {/* Page Numbers */}
       <div className="flex items-center gap-2">
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+        {pages.map((page) => (
           <button
             key={page}
             onClick={() => handlePageClick(page)}
-            className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105
+            className={`px-4 py-2 !rounded-lg font-medium transition-colors
             ${
               currentPage === page
-                ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white"
-                : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                ? "text-white"
+                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
             }`}
+            style={currentPage === page ? { backgroundColor: "#4F200D" } : {}}
           >
             {page}
           </button>
         ))}
       </div>
 
-      {/* Next Button */}
       <button
         onClick={handleNextPage}
         disabled={currentPage === totalPages}
-        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105
+        className={`flex items-center gap-1 px-4 py-2 !rounded-lg font-medium transition-colors
         ${
           currentPage === totalPages
-            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-            : "bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white"
+            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+            : "text-white hover:opacity-90"
         }`}
+        style={currentPage !== totalPages ? { backgroundColor: "#4F200D" } : {}}
       >
         Next
         <ChevronRight className="w-4 h-4" />

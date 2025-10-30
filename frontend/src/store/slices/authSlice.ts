@@ -34,9 +34,9 @@ function isApiErrorShape(err: unknown): err is ApiErrorShape {
   return typeof err === "object" && err !== null;
 }
 
-// ---------------------------
-// Thunks
-// ---------------------------
+// thunks
+
+// check username availability
 
 export const checkUsernameAvailability = createAsyncThunk<
   { available: boolean; username: string },
@@ -57,6 +57,8 @@ export const checkUsernameAvailability = createAsyncThunk<
     return rejectWithValue("Failed to check username");
   }
 });
+
+// register user
 
 export const registerUser = createAsyncThunk<
   UserData,
@@ -88,6 +90,8 @@ export const registerUser = createAsyncThunk<
   }
 );
 
+// login user
+
 export const loginUser = createAsyncThunk<
   UserData,
   LoginPayload,
@@ -111,6 +115,8 @@ export const loginUser = createAsyncThunk<
   }
 });
 
+// fetch user profile using username
+
 export const fetchUserProfile = createAsyncThunk<
   UserData,
   string,
@@ -131,18 +137,23 @@ export const fetchUserProfile = createAsyncThunk<
   }
 });
 
+// log out user
+
 export const logoutUser = createAsyncThunk<void>("auth/logout", async () => {
   await signOut(auth);
 });
 
-export const fetchUsernameByUid = createAsyncThunk<
-  string,
+// fetchh name by id
+export const fetchNameByUid = createAsyncThunk<
+  UserData,
   string,
   { rejectValue: string }
 >("user/fetchUsernameByUid", async (uid, { rejectWithValue }) => {
   try {
     const response = await api.get(`/api/users/userId/${uid}`);
-    return response.data.userName as string;
+    const user = response.data.user as UserData;
+
+    return user;
   } catch (error: unknown) {
     if (isApiErrorShape(error)) {
       return rejectWithValue(
@@ -154,10 +165,6 @@ export const fetchUsernameByUid = createAsyncThunk<
     return rejectWithValue("Failed to fetch username");
   }
 });
-
-// ---------------------------
-// Empty user template
-// ---------------------------
 
 export const emptyUser: UserData = {
   uid: "",

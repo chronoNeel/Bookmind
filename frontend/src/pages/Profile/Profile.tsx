@@ -19,7 +19,6 @@ const Profile: React.FC = () => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Fetch profile details (self or other)
   useEffect(() => {
     let isMounted = true;
 

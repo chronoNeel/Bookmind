@@ -1,7 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
-import { toast } from "react-toastify";
 import { useAppDispatch, useAppSelector } from "@hooks/redux";
 import MoodSelector from "./Components/MoodSelector";
 import StarRating from "./Components/StarRating";
@@ -10,125 +8,55 @@ import GuidedPrompts from "./Components/GuidedPrompts";
 import JournalTextarea from "./Components/JournalTextarea";
 import ActionButtons from "./Components/ActionButtons";
 import HeaderCard from "./Components/HeaderCard";
-import { BookDetails } from "@models/Book";
 import JournalEntry from "@models/JournalEntry";
-import {
-  createJournalEntry,
-  fetchJournalById,
-  updateJournalEntry,
-} from "@store/slices/journalSlice";
+import { fetchJournalById } from "@store/slices/journalSlice";
+import { useBookData } from "@hooks/useBookData";
+import { useJournalSave } from "../../hooks/useJournalSave";
+import LoadingSpinner from "./Components/LoadingSpinner";
+import ErrorDisplay from "./Components/ErrorDisplay";
+import { useJournalForm } from "@hooks/useJournalForm";
 
 const AddJournalEntry: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const bookKey = location.state?.bookKey;
+
+  const { currentJournal } = useAppSelector((state) => state.journal);
   const { journalId } = useParams();
   const isEditMode = Boolean(journalId);
-  const { currentJournal } = useAppSelector((state) => state.journal);
 
-  const [book, setBook] = useState<BookDetails>({
-    key: "",
-    title: "",
-    description: "",
-    covers: [],
-    subjects: [],
-    first_publish_date: "",
-    authors: [],
-  });
-  const [authorName, setAuthorName] = useState("Unknown Author");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [rating, setRating] = useState(0);
+  const bookKey = location.state?.bookKey || currentJournal?.bookKey;
+
   const [hoverRating, setHoverRating] = useState(0);
-  const [entry, setEntry] = useState("");
-  const [readingProgress, setReadingProgress] = useState(0);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isPrivate, setIsPrivate] = useState(true);
-  const [selectedMood, setSelectedMood] = useState("");
   const [expandedPrompts, setExpandedPrompts] = useState<
     Record<string, boolean>
   >({});
-  const [promptResponses, setPromptResponses] = useState<
-    Record<string, string>
-  >({});
 
-  // Load journal if editing
   useEffect(() => {
     if (journalId) dispatch(fetchJournalById(journalId));
   }, [dispatch, journalId]);
 
-  // Populate form with existing journal data
-  useEffect(() => {
-    if (isEditMode && currentJournal) {
-      setBook({
-        key: currentJournal.bookKey,
-        title: currentJournal.bookTitle,
-        first_publish_date: currentJournal.bookPublishYear,
-      });
-      setAuthorName(currentJournal.bookAuthor);
-      setRating(currentJournal.rating);
-      setReadingProgress(currentJournal.readingProgress);
-      setIsPrivate(currentJournal.isPrivate);
-      setSelectedMood(currentJournal.mood);
-      setPromptResponses(currentJournal.promptResponses);
-      setEntry(currentJournal.entry);
-      setLoading(false);
-    }
-  }, [isEditMode, currentJournal]);
+  const { title, authors, coverUrl, loading, error } = useBookData(bookKey);
+  const { isSaving, handleJournalSave } = useJournalSave();
 
-  // Fetch book details if creating a new entry
-  useEffect(() => {
-    const fetchBookDetails = async () => {
-      if (isEditMode) return;
+  const {
+    rating,
+    setRating,
+    entry,
+    setEntry,
+    readingProgress,
+    setReadingProgress,
+    isPrivate,
+    setIsPrivate,
+    selectedMood,
+    setSelectedMood,
+    promptResponses,
+    setPromptResponses,
+  } = useJournalForm(currentJournal, isEditMode);
 
-      if (!bookKey) {
-        setError("No book key provided");
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        const bookResponse = await axios.get(
-          `https://openlibrary.org${bookKey}.json`
-        );
-        const bookData: BookDetails = bookResponse.data;
-
-        let fetchedAuthorName = "Unknown Author";
-        const authorKey = bookData.authors?.[0]?.author?.key;
-        if (authorKey) {
-          try {
-            const authorRes = await axios.get(
-              `https://openlibrary.org${authorKey}.json`
-            );
-            fetchedAuthorName = authorRes.data?.name || "Unknown Author";
-          } catch {
-            /* ignore author fetch errors */
-          }
-        }
-
-        setBook(bookData);
-        setAuthorName(fetchedAuthorName);
-      } catch {
-        setError("Failed to load book details. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBookDetails();
-  }, [bookKey, isEditMode]);
-
-  // Memoized cover URL (null instead of empty string)
-  const memoizedCoverUrl = useMemo(() => {
-    const id = book?.covers?.[0];
-    return id ? `https://covers.openlibrary.org/b/id/${id}-M.jpg` : null;
-  }, [book?.covers]);
-
-  const coverUrl = isEditMode
+  const displayCoverUrl = isEditMode
     ? currentJournal?.bookCoverUrl || null
-    : memoizedCoverUrl;
+    : coverUrl;
 
   const getStatusText = () => {
     if (readingProgress === 0) return "Want to Read";
@@ -137,14 +65,11 @@ const AddJournalEntry: React.FC = () => {
   };
 
   const handleSave = async () => {
-    setIsSaving(true);
-
     const payload: JournalEntry = {
       bookKey: bookKey || currentJournal?.bookKey,
-      bookTitle: book.title,
-      bookAuthor: authorName,
+      bookTitle: title,
+      bookAuthorList: authors,
       bookCoverUrl: coverUrl || "",
-      bookPublishYear: book.first_publish_date || "",
       rating,
       readingProgress,
       isPrivate,
@@ -157,35 +82,16 @@ const AddJournalEntry: React.FC = () => {
       updatedAt: new Date().toISOString(),
     };
 
-    try {
-      if (isEditMode && journalId) {
-        await dispatch(updateJournalEntry({ id: journalId, data: payload }));
-        toast.success("Journal entry updated successfully!");
-      } else {
-        await dispatch(createJournalEntry(payload)).unwrap();
-        toast.success("Journal entry saved successfully!");
-      }
-      navigate(-1);
-    } catch {
-      toast.error("Failed to save journal entry. Please try again.");
-    } finally {
-      setIsSaving(false);
-    }
+    handleJournalSave(payload, journalId, isEditMode);
   };
 
-  if (loading)
-    return (
-      <div className="min-vh-100 d-flex align-items-center justify-content-center">
-        <div className="spinner-border text-primary" role="status" />
-      </div>
-    );
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
-  if (error)
-    return (
-      <div className="min-vh-100 d-flex align-items-center justify-content-center">
-        <div className="alert alert-danger">{error}</div>
-      </div>
-    );
+  if (error) {
+    return <ErrorDisplay error={error} />;
+  }
 
   return (
     <div
@@ -197,9 +103,9 @@ const AddJournalEntry: React.FC = () => {
     >
       <div className="container max-w-3xl mx-auto position-relative">
         <HeaderCard
-          book={book}
-          coverUrl={coverUrl} // can be null safely
-          author={authorName}
+          title={title}
+          coverUrl={displayCoverUrl}
+          author={authors.join(", ")}
           readingProgress={readingProgress}
           getStatusText={getStatusText}
         />

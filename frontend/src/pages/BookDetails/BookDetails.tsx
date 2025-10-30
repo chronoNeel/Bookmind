@@ -76,6 +76,7 @@ const BookDetails = () => {
         );
         const bookData = bookResponse.data;
         setBook(bookData);
+        console.log(book);
 
         const desc =
           typeof bookData.description === "object"
