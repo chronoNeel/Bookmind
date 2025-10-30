@@ -14,7 +14,7 @@ export const AuthorCard: React.FC<Props> = ({
   userName,
   navigate,
 }) => (
-  <div className="mt-8 bg-yellow-100 rounded-lg p-5 shadow-md border-l-4 border-yellow-300">
+  <div className="mt-8 bg-yellow-100 rounded-lg px-5 py-4 shadow-md border-l-4 border-yellow-300">
     <div className="flex items-center justify-between">
       <div>
         <p className="handwritten-title text-lg text-gray-800">Journal by</p>

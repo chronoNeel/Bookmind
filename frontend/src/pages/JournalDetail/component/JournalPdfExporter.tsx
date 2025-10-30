@@ -333,19 +333,15 @@ const JournalPDFExporter: React.FC<JournalPDFExporterProps> = ({
     <button
       onClick={generatePDF}
       disabled={isGenerating}
-      className={`
-        inline-flex items-center gap-2 px-4 py-2.5 
-        bg-amber-500 hover:bg-amber-600 
-        text-white font-medium rounded-lg
-        transition-all duration-200
-        disabled:opacity-50 disabled:cursor-not-allowed
-        shadow-md hover:shadow-lg
-        ${className}
-      `}
+      className={`btn btn-warning text-amber-950 d-flex align-items-center gap-2 px-4 py-2 rounded-pill fw-medium shadow-sm ${className}`}
+      style={{
+        transition: "all 0.2s",
+        cursor: isGenerating ? "not-allowed" : "pointer",
+      }}
     >
       {isGenerating ? (
         <>
-          <Loader2 size={18} className="animate-spin" />
+          <Loader2 size={18} className="spinner-border spinner-border-sm" />
           <span>Generating PDF...</span>
         </>
       ) : (

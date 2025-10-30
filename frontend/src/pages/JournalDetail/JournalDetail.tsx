@@ -13,7 +13,6 @@ import { toast } from "react-toastify";
 import { JournalContent } from "./component/JournalContent";
 import { JournalError } from "./component/JournalError";
 import { JournalHeader } from "./component/JournalHeader";
-import { AuthorCard } from "./component/AuthorCard";
 import { JournalPrompts } from "./component/JournalPrompts";
 import { JournalEntry } from "./component/JournalEntry";
 import { JournalActions } from "./component/JournalActions";
@@ -32,7 +31,6 @@ const JournalDetail: React.FC = () => {
 
   const [authorFullName, setAuthorFullName] = useState("");
   const [userName, setUserName] = useState("");
-  const [loadingAuthor, setLoadingAuthor] = useState(false);
   const [isVoting, setIsVoting] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
 
@@ -47,7 +45,6 @@ const JournalDetail: React.FC = () => {
   useEffect(() => {
     const loadAuthor = async () => {
       if (currentJournal?.userId) {
-        setLoadingAuthor(true);
         try {
           const userData = await dispatch(
             fetchNameByUid(currentJournal.userId)
@@ -56,8 +53,6 @@ const JournalDetail: React.FC = () => {
           setUserName(userData.userName);
         } catch {
           setAuthorFullName("Unknown Author");
-        } finally {
-          setLoadingAuthor(false);
         }
       }
     };
@@ -107,13 +102,12 @@ const JournalDetail: React.FC = () => {
 
   return (
     <JournalContent>
-      <JournalHeader journal={currentJournal} navigate={navigate} />
-      <AuthorCard
+      <JournalHeader
+        journal={currentJournal}
         authorFullName={authorFullName}
-        loading={loadingAuthor}
         userName={userName}
-        navigate={navigate}
       />
+
       <JournalPrompts promptResponses={currentJournal.promptResponses} />
       <JournalEntry entry={currentJournal.entry} />
       <JournalActions
