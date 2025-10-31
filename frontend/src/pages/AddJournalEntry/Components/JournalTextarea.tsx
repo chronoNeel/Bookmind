@@ -23,7 +23,7 @@ const JournalTextarea: React.FC<JournalTextareaProps> = ({
     <div className="mb-5">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <label className="fw-semibold fs-5" style={{ color: "#5a4a3a" }}>
-          Review & Reflections
+          Your thoughts
         </label>
 
         {/* Privacy Toggle */}

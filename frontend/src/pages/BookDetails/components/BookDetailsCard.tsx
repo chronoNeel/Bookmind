@@ -1,11 +1,10 @@
 import React, { useState } from "react";
 import { Heart, ChevronDown } from "lucide-react";
 import { getStatusColor, getStatusLabel } from "@utils/statusHelpers";
-import { BookDetails } from "@models/Book";
 import { StatusValue } from "@models/StatusModal";
 
 interface BookDetailsCardProps {
-  book: BookDetails;
+  title: string;
   authors: string;
   coverUrl: string | null;
   description: string;
@@ -18,7 +17,7 @@ interface BookDetailsCardProps {
 }
 
 const BookDetailsCard: React.FC<BookDetailsCardProps> = ({
-  book,
+  title,
   authors,
   coverUrl,
   description,
@@ -40,7 +39,7 @@ const BookDetailsCard: React.FC<BookDetailsCardProps> = ({
             {coverUrl ? (
               <img
                 src={coverUrl}
-                alt={book.title}
+                alt={title}
                 className="w-full rounded-2xl shadow-md transition-transform hover:scale-105 object-cover aspect-[2/3]"
               />
             ) : (
@@ -55,7 +54,7 @@ const BookDetailsCard: React.FC<BookDetailsCardProps> = ({
         <div className="space-y-6 min-w-0">
           <div className="flex items-start justify-between gap-4">
             <h1 className="text-4xl font-bold text-gray-900 break-words">
-              {book.title}
+              {title}
             </h1>
             <button
               onClick={onFavoriteToggle}

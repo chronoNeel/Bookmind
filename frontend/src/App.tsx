@@ -67,14 +67,14 @@ function App() {
       {!shouldHideNavbar && <Navbar />}
       <ToastContainer
         position="top-center"
-        toastStyle={{ marginTop: "50px" }}
+        style={{ marginTop: "50px" }}
+        toastStyle={{}}
         autoClose={1500}
         hideProgressBar={false}
         newestOnTop={false}
         closeOnClick={true}
         pauseOnHover={false}
       />
-
       <main className="flex-grow">
         <Routes>
           <Route

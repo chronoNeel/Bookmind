@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import SortControls from "./components/SortControls";
 import JournalCard from "./components/JournalCard";
-import Pagination from "./components/Pagination";
-import { useAppDispatch, useAppSelector } from "../../hooks/redux";
-import { RootState } from "../../store";
-import { fetchPublicJournals } from "../../store/slices/journalSlice";
+import Pagination from "@components/Pagination";
+import { useAppDispatch, useAppSelector } from "@hooks/redux";
+import { RootState } from "@store";
+import { fetchPublicJournals } from "@store/slices/journalSlice";
 
 const ITEMS_PER_PAGE = 9;
 
@@ -90,16 +90,14 @@ const AllJournalsFeed = () => {
                 <JournalCard key={entry.id} entry={entry} />
               ))}
             </div>
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
-            <div className="mt-4 text-center text-sm text-amber-700">
-              Showing {startIndex + 1}-
-              {Math.min(startIndex + ITEMS_PER_PAGE, sortedJournals.length)} of{" "}
-              {sortedJournals.length} entries
-            </div>
+
+            {totalPages > 1 && (
+              <Pagination
+                totalPages={totalPages}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+              />
+            )}
           </>
         )}
       </div>

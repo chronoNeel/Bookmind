@@ -1,11 +1,10 @@
 import React from "react";
 import { Clock, CheckCircle, Trash2 } from "lucide-react";
 import { statusOptions } from "@utils/statusHelpers";
-import { BookDetails } from "@models/Book";
 import { StatusValue } from "@models/StatusModal";
 
 interface Props {
-  book: BookDetails;
+  title: string;
   authors: string;
   currentStatus: StatusValue;
   onClose: () => void;
@@ -13,7 +12,7 @@ interface Props {
 }
 
 const StatusModal: React.FC<Props> = ({
-  book,
+  title,
   authors,
   currentStatus,
   onClose,
@@ -39,7 +38,7 @@ const StatusModal: React.FC<Props> = ({
 
           <div className="modal-body">
             <div className="alert alert-light border rounded-3 mb-4">
-              <h5 className="fw-semibold mb-1">{book.title}</h5>
+              <h5 className="fw-semibold mb-1">{title}</h5>
               <small className="text-muted">{authors}</small>
             </div>
 

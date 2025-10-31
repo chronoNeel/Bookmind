@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import SearchBar from "@components/SearchBar";
 import BookList from "./components/BookList";
-import Pagination from "./components/Pagination";
 import { LoadingSkeleton } from "./components/LoadingSkeleton";
 import { useAppSelector } from "@hooks/redux";
+import Pagination from "@components/Pagination";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -39,7 +39,6 @@ const SearchResults: React.FC = () => {
         background: "linear-gradient(135deg, #fffaea 50%)",
       }}
     >
-      {/* Paper texture overlay */}
       <div
         className="position-absolute top-0 start-0 w-100 h-100"
         style={{

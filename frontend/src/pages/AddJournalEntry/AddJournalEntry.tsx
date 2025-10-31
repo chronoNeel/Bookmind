@@ -11,7 +11,7 @@ import HeaderCard from "./Components/HeaderCard";
 import JournalEntry from "@models/JournalEntry";
 import { fetchJournalById } from "@store/slices/journalSlice";
 import { useBookData } from "@hooks/useBookData";
-import { useJournalSave } from "../../hooks/useJournalSave";
+import { useJournalSave } from "@hooks/useJournalSave";
 import LoadingSpinner from "./Components/LoadingSpinner";
 import ErrorDisplay from "./Components/ErrorDisplay";
 import { useJournalForm } from "@hooks/useJournalForm";
