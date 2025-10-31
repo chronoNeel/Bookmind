@@ -53,14 +53,13 @@ export const JournalHeader: React.FC<Props> = ({
         <div className="flex flex-col justify-between flex-1">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 cursor-pointer hover:text-amber-600 transition-colors">
-              {bookAuthorList.join(", ")}
+              {bookTitle}
             </h1>
 
             <p className="text-gray-600 text-lg mt-1">
               by {bookAuthorList.join(", ")}
             </p>
 
-            {/* Journal by section */}
             <div className="text-sm text-gray-700 mt-2">
               Journal by{" "}
               <span

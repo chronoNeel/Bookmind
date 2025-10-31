@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Journal } from "@models/journal";
+import { useAppDispatch } from "@hooks/redux";
+import { fetchNameByUid } from "@store/slices/authSlice";
 
 interface BookHeaderProps {
   journal: Journal;
@@ -12,11 +14,31 @@ const BookHeader: React.FC<BookHeaderProps> = ({
   loading = false,
 }) => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const [authorFullName, setAuthorFullName] = useState<string>("");
+  const [userName, setUserName] = useState<string>("");
 
   const handleBookNavigate = (e: React.MouseEvent): void => {
     e.stopPropagation();
     navigate(`/book/${encodeURIComponent(journal.bookKey)}`);
   };
+
+  useEffect(() => {
+    const loadAuthor = async () => {
+      if (journal?.userId) {
+        try {
+          const userData = await dispatch(
+            fetchNameByUid(journal.userId)
+          ).unwrap();
+          setAuthorFullName(userData.fullName);
+          setUserName(userData.userName);
+        } catch {
+          setAuthorFullName("Unknown Author");
+        }
+      }
+    };
+    loadAuthor();
+  }, [journal?.userId, dispatch]);
 
   if (loading) {
     return (
@@ -34,9 +56,8 @@ const BookHeader: React.FC<BookHeaderProps> = ({
     );
   }
 
-  // Success State
   const bookTitle = journal.bookTitle || "Untitled";
-  const bookAuthor = journal.bookAuthor || "Unknown Author";
+  const bookAuthor = journal?.bookAuthorList.join(", ") || "Unknown Author";
   const hasCover = journal.bookCoverUrl;
 
   return (
@@ -66,7 +87,13 @@ const BookHeader: React.FC<BookHeaderProps> = ({
           {bookAuthor}
         </p>
         <p className="mb-0 mt-1 italic opacity-75 text-xs">
-          Journal by <span className="font-semibold text-amber-300">User</span>
+          Journal by{" "}
+          <span
+            className="font-semibold text-amber-300 cursor-pointer hover:text-amber-400 transition-colors"
+            onClick={() => navigate(`/profile/${userName}`)}
+          >
+            {authorFullName}
+          </span>
         </p>
       </div>
     </div>

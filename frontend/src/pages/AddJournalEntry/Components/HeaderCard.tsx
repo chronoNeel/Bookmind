@@ -1,5 +1,4 @@
-import { Calendar, User } from "lucide-react";
-import { BookDetails } from "@models/Book";
+import { User } from "lucide-react";
 
 interface HeaderCardProps {
   coverUrl: string | null;
