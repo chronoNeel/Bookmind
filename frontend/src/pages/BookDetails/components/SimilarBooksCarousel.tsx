@@ -23,9 +23,6 @@ const SimilarBooksCarousel: React.FC<SimilarBooksCarouselProps> = ({
 
   return (
     <div className="mb-12">
-      <h2 className="text-3xl font-bold text-gray-900 mb-6">
-        ✨ Similar Books
-      </h2>
       <div className="relative bg-white rounded-3xl shadow-md p-8 overflow-hidden">
         <div
           className="flex gap-6 transition-transform duration-500 ease-out"

@@ -4,9 +4,17 @@ import axios from "axios";
 
 export const useSimilarBooks = (bookKey: string, subjects: string[]) => {
   const [similarBooks, setSimilarBooks] = useState<SimilarBook[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    setSimilarBooks([]);
+
+    if (!subjects || subjects.length === 0) {
+      return;
+    }
+
     const fetchSimilarBooks = async () => {
+      setLoading(true);
       const uniqueBooks = new Map<string, SimilarBook>();
       const maxSubjects = 3;
       const limitPerSubject = 5;
@@ -44,11 +52,13 @@ export const useSimilarBooks = (bookKey: string, subjects: string[]) => {
       } catch (error: unknown) {
         const err = error as Error;
         console.log("Error fetching data ", err.message);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchSimilarBooks();
-  }, [subjects, bookKey]);
+  }, [bookKey, subjects]);
 
-  return { similarBooks };
+  return { similarBooks, loading };
 };

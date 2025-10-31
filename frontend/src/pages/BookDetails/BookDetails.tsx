@@ -8,6 +8,7 @@ import { useBookStatus } from "@hooks/useBookStatus";
 import SearchBar from "@components/SearchBar";
 import BookDetailsCard from "./components/BookDetailsCard";
 import SimilarBooksCarousel from "./components/SimilarBooksCarousel";
+import SimilarBooksCarouselSkeleton from "./components/SimilarBooksCarouselSkeleton";
 import JournalEntries from "./components/JournalEntries";
 import StatusModal from "@components/StatusModal";
 import LoadingSpinner from "./components/LoadingSpinner";
@@ -24,7 +25,10 @@ const BookDetails = () => {
   const currentUser = useSelector((state: RootState) => state.auth.user);
   const { title, authors, coverUrl, description, genres, loading, error } =
     useBookData(bookKey);
-  const { similarBooks } = useSimilarBooks(bookKey, genres);
+  const { similarBooks, loading: similarBooksLoading } = useSimilarBooks(
+    bookKey,
+    genres
+  );
   const { status, isModalOpen, handleStatusChange, openModal, closeModal } =
     useBookStatus(bookKey);
   const { isFavorite, handleFavoriteToggle } = useBookFavorite(bookKey);
@@ -72,14 +76,19 @@ const BookDetails = () => {
             onAddJournal={handleAddJournal}
           />
 
-          {similarBooks.length > 0 && (
+          <h2 className="text-3xl font-bold text-gray-900 mb-6">
+            ✨ Similar Books
+          </h2>
+          {similarBooksLoading ? (
+            <SimilarBooksCarouselSkeleton />
+          ) : similarBooks.length > 0 ? (
             <SimilarBooksCarousel
               similarBooks={similarBooks}
               onBookClick={(workKey) =>
                 navigate(`/book/${encodeURIComponent(workKey)}`)
               }
             />
-          )}
+          ) : null}
 
           <JournalEntries entries={mockJournalEntries} />
         </div>
