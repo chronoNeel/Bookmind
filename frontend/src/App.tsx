@@ -8,7 +8,7 @@ import {
   fetchUserProfile,
 } from "./store/slices/authSlice";
 
-import Navbar from "@components/Navbar";
+import Navbar from "@/components/Navbar/Navbar";
 import Footer from "@components/Footer";
 
 import Home from "@pages/Home/Home";

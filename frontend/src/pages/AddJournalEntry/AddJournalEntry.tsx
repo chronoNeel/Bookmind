@@ -14,7 +14,7 @@ import { useBookData } from "@hooks/useBookData";
 import { useJournalSave } from "@hooks/useJournalSave";
 import LoadingSpinner from "./Components/LoadingSpinner";
 import ErrorDisplay from "./Components/ErrorDisplay";
-import { useJournalForm } from "@hooks/useJournalForm";
+import { useJournalForm } from "@/hooks/useJournalForm";
 
 const AddJournalEntry: React.FC = () => {
   const location = useLocation();

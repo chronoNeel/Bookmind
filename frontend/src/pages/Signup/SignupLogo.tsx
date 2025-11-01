@@ -1,5 +1,5 @@
 import React from "react";
-import assets from "../../assets/asstes";
+import assets from "../../assets/assets";
 
 const SignupLogo: React.FC = () => {
   return (

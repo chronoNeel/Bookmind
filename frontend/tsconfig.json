@@ -30,7 +30,8 @@
       "@store/*": ["store/*"],
       "@store": ["store"],
       "@hooks/*": ["hooks/*"],
-      "@api/*": ["api/*"]
+      "@api/*": ["api/*"],
+      "@assets/*": ["assets/*"]
     },
 
     // Linting & Strictness

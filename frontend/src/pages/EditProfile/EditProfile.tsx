@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAppSelector, useAppDispatch } from "../../hooks/redux";
-import api from "../../utils/api";
+import { useAppSelector, useAppDispatch } from "@hooks/redux";
+import api from "@utils/api";
 import {
   checkUsernameAvailability,
   resetUsernameCheck,
-} from "../../store/slices/authSlice";
+} from "@store/slices/authSlice";
 
 import ProfilePictureInput from "./ProfilePictureInput";
 import TextInput from "./TextInput";
@@ -67,7 +67,6 @@ const EditProfile: React.FC = () => {
     }
   }, [currentUser]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       dispatch(resetUsernameCheck());
@@ -77,23 +76,18 @@ const EditProfile: React.FC = () => {
     };
   }, [dispatch]);
 
-  // Debounced username check
   const checkUsername = useCallback(
     (username: string) => {
-      // Clear any existing timer
       if (debounceTimer.current) {
         clearTimeout(debounceTimer.current);
       }
 
-      // Reset username check state
       dispatch(resetUsernameCheck());
 
-      // If username is empty or same as original, don't check
       if (!username || username === originalUsername) {
         return;
       }
 
-      // Basic validation
       if (username.length < 3 || username.length > 30) {
         setErrors((prev) => ({
           ...prev,
@@ -111,13 +105,11 @@ const EditProfile: React.FC = () => {
         return;
       }
 
-      // Clear error
       setErrors((prev) => ({
         ...prev,
         userName: undefined,
       }));
 
-      // Set new timer
       debounceTimer.current = setTimeout(() => {
         dispatch(checkUsernameAvailability(username));
       }, 500);
@@ -189,7 +181,6 @@ const EditProfile: React.FC = () => {
   };
 
   const handleSave = async () => {
-    // Validate username availability before saving
     if (
       formData.userName !== originalUsername &&
       usernameCheck.available === false
@@ -201,7 +192,6 @@ const EditProfile: React.FC = () => {
       return;
     }
 
-    // Check if still checking username
     if (usernameCheck.checking) {
       setErrors((prev) => ({
         ...prev,
@@ -242,7 +232,6 @@ const EditProfile: React.FC = () => {
     }
   };
 
-  // Determine if username should show availability status
   const shouldShowUsernameStatus =
     formData.userName !== originalUsername && formData.userName.length >= 3;
 

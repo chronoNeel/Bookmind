@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import bookmind from "../assets/Bookmind.svg";
 
-const Footer = () => {
+const Footer: React.FC = () => {
   const navigate = useNavigate();
   return (
     <footer
@@ -98,7 +98,10 @@ const Footer = () => {
                 filter: "invert(1) brightness(1.1)",
                 transition: "all 0.3s ease",
               }}
-              onClick={() => navigate("/")}
+              onClick={() => {
+                navigate("/");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "scale(1.02)";
                 e.currentTarget.style.filter = "invert(1) brightness(1.3)";

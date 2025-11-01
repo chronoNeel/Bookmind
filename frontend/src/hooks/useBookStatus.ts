@@ -17,7 +17,6 @@ export const useBookStatus = (bookKey: string) => {
   const [status, setStatus] = useState<StatusValue>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Sync status with user shelves
   useEffect(() => {
     if (currentUser?.shelves) {
       setStatus(getBookShelf({ shelves: currentUser.shelves, bookKey }));
