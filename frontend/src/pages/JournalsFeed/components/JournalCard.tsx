@@ -80,6 +80,9 @@ const JournalCard = memo(({ entry }: { entry: Journal }) => {
                 alt={`${entry.bookTitle} cover`}
                 className="h-full w-full object-cover md:h-[320px]"
                 loading="lazy"
+                onClick={() =>
+                  navigate(`/book/${encodeURIComponent(entry.bookKey)}`)
+                }
                 onError={(e) => {
                   e.currentTarget.style.display = "none";
                   e.currentTarget.nextElementSibling?.classList.remove(
