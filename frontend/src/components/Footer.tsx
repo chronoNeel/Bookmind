@@ -15,7 +15,6 @@ const Footer: React.FC = () => {
       }}
       className="py-16 px-4 mt-auto"
     >
-      {/* Paper/Wood Texture Overlay */}
       <div
         style={{
           position: "absolute",
@@ -34,7 +33,6 @@ const Footer: React.FC = () => {
         }}
       />
 
-      {/* Subtle Noise Texture */}
       <div
         style={{
           position: "absolute",
@@ -49,7 +47,6 @@ const Footer: React.FC = () => {
         }}
       />
 
-      {/* Wood Grain Effect */}
       <div
         style={{
           position: "absolute",

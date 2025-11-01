@@ -38,6 +38,8 @@ const initialState: JournalState = {
   },
 };
 
+// ---------------------- ASYNC THUNKS ----------------------
+
 // Create journal entry
 export const createJournalEntry = createAsyncThunk<
   Journal,
@@ -45,12 +47,10 @@ export const createJournalEntry = createAsyncThunk<
   { rejectValue: string }
 >("journal/createJournalEntry", async (journalData, { rejectWithValue }) => {
   try {
-    const res = await api.post<{
-      status: string;
-      journalId: string;
-      journal: Journal;
-    }>("/api/journals/", journalData);
-
+    const res = await api.post<{ status: string; journal: Journal }>(
+      "/api/journals/",
+      journalData
+    );
     return res.data.journal;
   } catch (err: unknown) {
     const message =
@@ -77,7 +77,7 @@ export const fetchPublicJournals = createAsyncThunk<
   }
 });
 
-// Fetch journal by ID
+// Fetch single journal by ID
 export const fetchJournalById = createAsyncThunk<
   Journal,
   string,
@@ -95,7 +95,7 @@ export const fetchJournalById = createAsyncThunk<
   }
 });
 
-// Upvote journal
+// Upvote journal - simplified to just call the API
 export const upvoteJournal = createAsyncThunk<
   { journalId: string; message: string },
   string,
@@ -113,7 +113,7 @@ export const upvoteJournal = createAsyncThunk<
   }
 });
 
-// Downvote journal
+// Downvote journal - simplified to just call the API
 export const downvoteJournal = createAsyncThunk<
   { journalId: string; message: string },
   string,
@@ -168,6 +168,8 @@ export const deleteJournalById = createAsyncThunk<
   }
 });
 
+// ---------------------- SLICE ----------------------
+
 export const journalSlice = createSlice({
   name: "journal",
   initialState,
@@ -176,29 +178,12 @@ export const journalSlice = createSlice({
       state.error = null;
     },
     clearCurrentJournal: (state) => {
-      state.currentJournal = {
-        id: "",
-        userId: "",
-        bookKey: "",
-        bookTitle: "",
-        bookAuthorList: [],
-        bookCoverUrl: "",
-        rating: 0,
-        readingProgress: 0,
-        isPrivate: false,
-        mood: "",
-        promptResponses: {},
-        entry: "",
-        upvotedBy: [],
-        downvotedBy: [],
-        createdAt: "",
-        updatedAt: "",
-      };
+      state.currentJournal = initialState.currentJournal;
     },
   },
   extraReducers: (builder) => {
     builder
-      // Create journal
+      // Create
       .addCase(createJournalEntry.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -214,12 +199,10 @@ export const journalSlice = createSlice({
       .addCase(createJournalEntry.rejected, (state, action) => {
         state.loading = false;
         state.error =
-          action.payload ??
-          action.error.message ??
-          "Failed to create journal entry";
+          action.payload ?? action.error.message ?? "Failed to create journal";
       })
 
-      // Fetch public journals
+      // Fetch public
       .addCase(fetchPublicJournals.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -234,12 +217,10 @@ export const journalSlice = createSlice({
       .addCase(fetchPublicJournals.rejected, (state, action) => {
         state.loading = false;
         state.error =
-          action.payload ??
-          action.error.message ??
-          "Failed to fetch public journals";
+          action.payload ?? action.error.message ?? "Failed to fetch journals";
       })
 
-      // Fetch single journal
+      // Fetch single
       .addCase(fetchJournalById.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -257,79 +238,13 @@ export const journalSlice = createSlice({
           action.payload ?? action.error.message ?? "Failed to fetch journal";
       })
 
-      // Upvote journal
-      .addCase(upvoteJournal.fulfilled, (state, action) => {
-        const { journalId } = action.payload;
-        const updateVote = (journal: Journal) => {
-          const userId = localStorage.getItem("uid");
-          if (!userId) return;
-
-          const hasUpvoted = journal.upvotedBy.includes(userId);
-          const hasDownvoted = journal.downvotedBy.includes(userId);
-
-          if (hasUpvoted) {
-            journal.upvotedBy = journal.upvotedBy.filter((id) => id !== userId);
-          } else {
-            journal.upvotedBy.push(userId);
-            if (hasDownvoted) {
-              journal.downvotedBy = journal.downvotedBy.filter(
-                (id) => id !== userId
-              );
-            }
-          }
-        };
-
-        [state.publicJournals, state.userJournals, state.entries].forEach(
-          (list) => {
-            const j = list.find((x) => x.id === journalId);
-            if (j) updateVote(j);
-          }
-        );
-
-        if (state.currentJournal?.id === journalId) {
-          updateVote(state.currentJournal);
-        }
-      })
+      // Upvote - no state updates, handled by optimistic UI
       .addCase(upvoteJournal.rejected, (state, action) => {
         state.error =
           action.payload ?? action.error.message ?? "Failed to upvote journal";
       })
 
-      // Downvote journal
-      .addCase(downvoteJournal.fulfilled, (state, action) => {
-        const { journalId } = action.payload;
-        const updateVote = (journal: Journal) => {
-          const userId = localStorage.getItem("uid");
-          if (!userId) return;
-
-          const hasDownvoted = journal.downvotedBy.includes(userId);
-          const hasUpvoted = journal.upvotedBy.includes(userId);
-
-          if (hasDownvoted) {
-            journal.downvotedBy = journal.downvotedBy.filter(
-              (id) => id !== userId
-            );
-          } else {
-            journal.downvotedBy.push(userId);
-            if (hasUpvoted) {
-              journal.upvotedBy = journal.upvotedBy.filter(
-                (id) => id !== userId
-              );
-            }
-          }
-        };
-
-        [state.publicJournals, state.userJournals, state.entries].forEach(
-          (list) => {
-            const j = list.find((x) => x.id === journalId);
-            if (j) updateVote(j);
-          }
-        );
-
-        if (state.currentJournal?.id === journalId) {
-          updateVote(state.currentJournal);
-        }
-      })
+      // Downvote - no state updates, handled by optimistic UI
       .addCase(downvoteJournal.rejected, (state, action) => {
         state.error =
           action.payload ??
@@ -337,7 +252,7 @@ export const journalSlice = createSlice({
           "Failed to downvote journal";
       })
 
-      // Update journal
+      // Update
       .addCase(updateJournalEntry.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -351,9 +266,7 @@ export const journalSlice = createSlice({
           [state.entries, state.userJournals, state.publicJournals].forEach(
             (list) => {
               const index = list.findIndex((j) => j.id === updatedJournal.id);
-              if (index !== -1) {
-                list[index] = updatedJournal;
-              }
+              if (index !== -1) list[index] = updatedJournal;
             }
           );
 
@@ -370,7 +283,7 @@ export const journalSlice = createSlice({
           "Failed to update journal entry";
       })
 
-      // Delete journal
+      // Delete
       .addCase(deleteJournalById.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -399,4 +312,5 @@ export const journalSlice = createSlice({
 });
 
 export const { clearJournalError, clearCurrentJournal } = journalSlice.actions;
+
 export default journalSlice.reducer;

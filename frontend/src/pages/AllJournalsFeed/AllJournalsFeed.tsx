@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from "@hooks/redux";
 import { RootState } from "@store";
 import { fetchPublicJournals } from "@store/slices/journalSlice";
 
-const ITEMS_PER_PAGE = 9;
+const ITEMS_PER_PAGE = 3;
 
 const AllJournalsFeed = () => {
   const dispatch = useAppDispatch();
@@ -52,12 +52,8 @@ const AllJournalsFeed = () => {
           backgroundRepeat: "repeat",
         }}
       />
-      <div className="relative z-10 max-w-6xl mx-auto">
-        <SortControls
-          sortBy={sortBy}
-          setSortBy={setSortBy}
-          totalEntries={sortedJournals.length}
-        />
+      <div className="relative z-10 max-w-5xl mx-auto">
+        <SortControls sortBy={sortBy} setSortBy={setSortBy} />
 
         {loading && (
           <div className="flex justify-center py-16">
@@ -85,12 +81,11 @@ const AllJournalsFeed = () => {
 
         {!loading && sortedJournals.length > 0 && (
           <>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6">
+            <div className="space-y-6 mt-6">
               {currentJournals.map((entry) => (
                 <JournalCard key={entry.id} entry={entry} />
               ))}
             </div>
-
             {totalPages > 1 && (
               <Pagination
                 totalPages={totalPages}
@@ -100,6 +95,8 @@ const AllJournalsFeed = () => {
             )}
           </>
         )}
+
+        <div className="h-24" aria-hidden />
       </div>
     </div>
   );
