@@ -10,9 +10,8 @@ interface RequestWithUser extends Request {
 export default interface JournalEntry {
   bookKey: string;
   bookTitle: string;
-  bookAuthor: string;
+  bookAuthorList: string[];
   bookCoverUrl: string;
-  bookPublishYear: string;
 
   rating: number;
   readingProgress: number;
@@ -49,9 +48,8 @@ export const createJournal = asyncHandler(
     const {
       bookKey,
       bookTitle,
-      bookAuthor,
+      bookAuthorList,
       bookCoverUrl,
-      bookPublishYear,
       rating,
       readingProgress,
       isPrivate,
@@ -65,9 +63,8 @@ export const createJournal = asyncHandler(
     const journalData = {
       bookKey,
       bookTitle,
-      bookAuthor,
+      bookAuthorList,
       bookCoverUrl,
-      bookPublishYear,
       rating,
       readingProgress,
       isPrivate,
@@ -122,12 +119,14 @@ export const getJournalsByUser = asyncHandler(
       err.status = 400;
       throw err;
     }
+    console.log("Uid ", uid);
 
     const allJournals = await db
       .collection("journals")
       .where("userId", "==", uid)
-      .orderBy("createdAt", "desc")
       .get();
+
+    console.log("Journal by user ", allJournals.docs);
 
     const journals = allJournals.docs.map((doc) => ({
       id: doc.id,
@@ -272,9 +271,8 @@ export const updateJournal = asyncHandler(
     const {
       bookKey,
       bookTitle,
-      bookAuthor,
+      bookAuthorList,
       bookCoverUrl,
-      bookPublishYear,
       rating,
       readingProgress,
       isPrivate,
@@ -289,9 +287,8 @@ export const updateJournal = asyncHandler(
 
     if (bookKey !== undefined) updates.bookKey = bookKey;
     if (bookTitle !== undefined) updates.bookTitle = bookTitle;
-    if (bookAuthor !== undefined) updates.bookAuthor = bookAuthor;
+    if (bookAuthorList !== undefined) updates.bookAuthorList = bookAuthorList;
     if (bookCoverUrl !== undefined) updates.bookCoverUrl = bookCoverUrl;
-    if (bookPublishYear != undefined) updates.bookPublishYear = bookPublishYear;
     if (rating !== undefined) updates.rating = rating;
     if (readingProgress !== undefined)
       updates.readingProgress = readingProgress;
@@ -312,6 +309,45 @@ export const updateJournal = asyncHandler(
     res.status(200).json({
       status: "ok",
       journal: updatedJournal,
+    });
+  }
+);
+
+export const deleteJournal = asyncHandler(
+  async (req: RequestWithUser, res: Response) => {
+    const userId = requireUser(req);
+    const { journalId } = req.params;
+
+    if (!journalId) {
+      const err: any = new Error("Journal ID is required");
+      err.status = 400;
+      throw err;
+    }
+
+    const journalRef = db.collection("journals").doc(journalId);
+    const journalDoc = await journalRef.get();
+
+    if (!journalDoc.exists) {
+      const err: any = new Error("Journal not found");
+      err.status = 404;
+      throw err;
+    }
+
+    const journalData = journalDoc.data();
+
+    // Ensure only owner can delete
+    if (journalData?.userId !== userId) {
+      const err: any = new Error("Unauthorized - cannot delete this journal");
+      err.status = 403;
+      throw err;
+    }
+
+    await journalRef.delete();
+
+    res.status(200).json({
+      status: "ok",
+      message: "Journal deleted successfully",
+      journalId,
     });
   }
 );

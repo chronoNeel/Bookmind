@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { db } from "../config/firebaseAdmin";
 import { asyncHandler } from "../middleware/errorHandler";
 import { DecodedIdToken } from "firebase-admin/auth";
-import { ShelfBook } from "../models/User";
+import { ShelfBook } from "@models/User";
 
 type ShelfStatus = "wantToRead" | "ongoing" | "completed" | "remove" | null;
 const SHELVES = ["completed", "ongoing", "wantToRead"] as const;

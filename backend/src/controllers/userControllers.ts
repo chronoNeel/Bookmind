@@ -62,7 +62,7 @@ export const updateUserProfile = asyncHandler(
     // Basic shape validation
     const safeUpdates: Record<string, any> = {};
 
-    if (updates.fullName !== undefined) {
+    if (updates?.fullName !== undefined) {
       safeUpdates.fullName = updates.fullName?.trim();
     }
     if (updates.bio !== undefined) {
@@ -385,6 +385,7 @@ export const getUserByUid = asyncHandler(
     }
 
     const userData = userDoc.data();
+    console.log(userData);
 
     res.status(200).json({
       status: "ok",

@@ -15,7 +15,8 @@ import { searchUsers } from "../controllers/searchUsers";
 
 const router = express.Router();
 
-router.get("/user/id/:uid", getUserByUid);
+router.get("/userId/:uid", getUserByUid);
+// router.get("/userId/:uid")
 // router.get("/user/username/:username", getUsernameFromUid);
 router.get("/check-username/:username", checkUsernameAvailability);
 router.get("/search", searchUsers);

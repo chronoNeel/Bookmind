@@ -11,7 +11,7 @@ export interface Journal {
 
   bookId: string;
   bookTitle: string;
-  bookAuthor: string;
+  bookAuthorList: string[];
   bookCover: string;
 
   rating: number;
