@@ -8,9 +8,6 @@ import { auth } from "../../utils/firebase";
 import api from "../../utils/api";
 import { AuthState, UserData } from "@models/user";
 
-// ---------------------------
-// Types
-// ---------------------------
 interface RegisterPayload {
   email: string;
   password: string;
@@ -33,8 +30,6 @@ interface ApiErrorShape {
 function isApiErrorShape(err: unknown): err is ApiErrorShape {
   return typeof err === "object" && err !== null;
 }
-
-// thunks
 
 // check username availability
 
@@ -143,7 +138,7 @@ export const logoutUser = createAsyncThunk<void>("auth/logout", async () => {
   await signOut(auth);
 });
 
-// fetchh name by id
+// fetch name by id
 export const fetchNameByUid = createAsyncThunk<
   UserData,
   string,
@@ -194,10 +189,6 @@ export const emptyUser: UserData = {
   createdAt: "",
 };
 
-// ---------------------------
-// Initial state
-// ---------------------------
-
 const initialState: AuthState = {
   user: emptyUser,
   loading: true,
@@ -209,10 +200,6 @@ const initialState: AuthState = {
     error: null,
   },
 };
-
-// ---------------------------
-// Slice
-// ---------------------------
 
 const authSlice = createSlice({
   name: "auth",

@@ -17,35 +17,51 @@ const JournalCard = memo(({ entry }: { entry: Journal }) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const [journalAuthorFullName, setJournalAuthorFullName] = useState("");
-  const [journalAuthorUserName, setJournalAuthorUserName] = useState("");
-  const [journalAuthorProfilePic, setJournalAuthorProfilePic] = useState("");
+  const [author, setAuthor] = useState<{
+    fullName: string;
+    userName: string;
+    profilePic?: string;
+  }>({
+    fullName: "Loading...",
+    userName: "",
+    profilePic: "",
+  });
 
   useEffect(() => {
+    let isMounted = true;
     const loadAuthor = async () => {
-      if (entry?.userId) {
-        try {
-          const userData = await dispatch(
-            fetchNameByUid(entry.userId)
-          ).unwrap();
-          setJournalAuthorFullName(userData.fullName);
-          setJournalAuthorUserName(userData.userName);
-          setJournalAuthorProfilePic(userData.profilePic);
-        } catch {
-          setJournalAuthorFullName("Unknown Author");
+      if (!entry?.userId) return;
+
+      try {
+        const userData = await dispatch(fetchNameByUid(entry.userId)).unwrap();
+        if (isMounted) {
+          setAuthor({
+            fullName: userData.fullName || "Unknown Author",
+            userName: userData.userName || "",
+            profilePic: userData.profilePic || "",
+          });
+        }
+      } catch {
+        if (isMounted) {
+          setAuthor({
+            fullName: "Unknown Author",
+            userName: "",
+            profilePic: "",
+          });
         }
       }
     };
     loadAuthor();
+    return () => {
+      isMounted = false;
+    };
   }, [entry?.userId, dispatch]);
 
   const readingStatus = entry.readingProgress === 100 ? "Completed" : "Ongoing";
-
   const readingBadgeColor =
     readingStatus === "Completed"
       ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
       : "bg-blue-50 text-blue-700 ring-blue-200";
-
   const feelingClass = feelingBadgeStyles[entry.mood || "Neutral"];
 
   return (
@@ -57,12 +73,34 @@ const JournalCard = memo(({ entry }: { entry: Journal }) => {
     >
       <div className="grid grid-cols-1 md:grid-cols-[180px_1fr]">
         <div className="relative">
-          <img
-            src={entry.bookCoverUrl || "https://via.placeholder.com/180x270"}
-            alt={`${entry.bookTitle} cover`}
-            className="h-full w-full object-cover md:h-[320px]"
-            loading="lazy"
-          />
+          <div className="relative bg-slate-100">
+            {entry.bookCoverUrl ? (
+              <img
+                src={entry.bookCoverUrl}
+                alt={`${entry.bookTitle} cover`}
+                className="h-full w-full object-cover md:h-[320px]"
+                loading="lazy"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                  e.currentTarget.nextElementSibling?.classList.remove(
+                    "hidden"
+                  );
+                }}
+              />
+            ) : null}
+            <div
+              className={`${
+                entry.bookCoverUrl ? "hidden" : ""
+              } h-full w-full md:h-[320px] flex items-center justify-center bg-gradient-to-br from-amber-100 to-orange-100`}
+            >
+              <div className="text-center p-4">
+                <div className="text-4xl mb-2">📚</div>
+                <div className="text-xs text-slate-600 font-medium">
+                  No Cover
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="flex flex-col gap-3 p-4 md:p-6">
@@ -88,9 +126,9 @@ const JournalCard = memo(({ entry }: { entry: Journal }) => {
           </button>
 
           <JournalMeta
-            authorFullName={journalAuthorFullName}
-            authorUserName={journalAuthorUserName}
-            authorProfilePic={journalAuthorProfilePic}
+            authorFullName={author.fullName}
+            authorUserName={author.userName}
+            authorProfilePic={author.profilePic}
             createdAt={entry.createdAt}
             isPrivate={entry.isPrivate}
           />
@@ -107,5 +145,4 @@ const JournalCard = memo(({ entry }: { entry: Journal }) => {
 });
 
 JournalCard.displayName = "JournalCard";
-
 export default JournalCard;

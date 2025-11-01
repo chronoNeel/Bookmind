@@ -4,24 +4,37 @@ import JournalCard from "./components/JournalCard";
 import Pagination from "@components/Pagination";
 import { useAppDispatch, useAppSelector } from "@hooks/redux";
 import { RootState } from "@store";
-import { fetchPublicJournals } from "@store/slices/journalSlice";
+import {
+  fetchJournalByUserId,
+  fetchPublicJournals,
+} from "@store/slices/journalSlice";
+import { useParams } from "react-router-dom";
+import NoJournals from "@/pages/JournalsFeed/components/NoJournals";
 
-const ITEMS_PER_PAGE = 3;
+const ITEMS_PER_PAGE = 6;
 
 const AllJournalsFeed = () => {
   const dispatch = useAppDispatch();
-  const { publicJournals, loading, error } = useAppSelector(
+  const { userId } = useParams();
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const { publicJournals, userJournals, loading, error } = useAppSelector(
     (state: RootState) => state.journal
   );
-
   const [sortBy, setSortBy] = useState<"recent" | "rating" | "votes">("recent");
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    dispatch(fetchPublicJournals());
-  }, [dispatch]);
+    if (userId) dispatch(fetchJournalByUserId(userId));
+    else dispatch(fetchPublicJournals());
+  }, [dispatch, userId]);
 
-  const sortedJournals = [...publicJournals].sort((a, b) => {
+  const allJournals = userId
+    ? currentUser?.uid == userId
+      ? userJournals
+      : userJournals.filter((journal) => !journal.isPrivate)
+    : publicJournals;
+
+  const sortedJournals = [...allJournals].sort((a, b) => {
     if (sortBy === "recent")
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     if (sortBy === "rating") return (b.rating || 0) - (a.rating || 0);
@@ -53,7 +66,7 @@ const AllJournalsFeed = () => {
         }}
       />
       <div className="relative z-10 max-w-5xl mx-auto">
-        <SortControls sortBy={sortBy} setSortBy={setSortBy} />
+        <SortControls sortBy={sortBy} setSortBy={setSortBy} userId={userId} />
 
         {loading && (
           <div className="flex justify-center py-16">
@@ -67,17 +80,7 @@ const AllJournalsFeed = () => {
           </div>
         )}
 
-        {!loading && sortedJournals.length === 0 && !error && (
-          <div className="bg-white rounded-xl shadow-sm p-12 text-center border-2 border-amber-200">
-            <div className="text-6xl mb-4">📚</div>
-            <h3 className="text-xl font-bold text-amber-900 mb-2">
-              No Public Journals Yet
-            </h3>
-            <p className="text-amber-700">
-              Be the first to share your reading journey with the community!
-            </p>
-          </div>
-        )}
+        {!loading && sortedJournals.length === 0 && !error && <NoJournals />}
 
         {!loading && sortedJournals.length > 0 && (
           <>

@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../utils/api";
 import JournalEntry from "@models/JournalEntry";
 import { Journal } from "@models/journal";
@@ -12,33 +12,35 @@ type JournalState = {
   currentJournal: Journal;
 };
 
+const emptyJournal: Journal = {
+  id: "",
+  userId: "",
+  bookKey: "",
+  bookTitle: "",
+  bookAuthorList: [],
+  bookCoverUrl: "",
+  rating: 0,
+  readingProgress: 0,
+  isPrivate: false,
+  mood: "",
+  promptResponses: {},
+  entry: "",
+  upvotedBy: [],
+  downvotedBy: [],
+  createdAt: "",
+  updatedAt: "",
+};
+
 const initialState: JournalState = {
   loading: false,
   error: null,
   entries: [],
   publicJournals: [],
   userJournals: [],
-  currentJournal: {
-    id: "",
-    userId: "",
-    bookKey: "",
-    bookTitle: "",
-    bookAuthorList: [],
-    bookCoverUrl: "",
-    rating: 0,
-    readingProgress: 0,
-    isPrivate: false,
-    mood: "",
-    promptResponses: {},
-    entry: "",
-    upvotedBy: [],
-    downvotedBy: [],
-    createdAt: "",
-    updatedAt: "",
-  },
+  currentJournal: emptyJournal,
 };
 
-// ---------------------- ASYNC THUNKS ----------------------
+/* ---------------------- Async Thunks ---------------------- */
 
 // Create journal entry
 export const createJournalEntry = createAsyncThunk<
@@ -52,7 +54,7 @@ export const createJournalEntry = createAsyncThunk<
       journalData
     );
     return res.data.journal;
-  } catch (err: unknown) {
+  } catch (err) {
     const message =
       err instanceof Error ? err.message : "Failed to create journal entry";
     return rejectWithValue(message);
@@ -70,7 +72,7 @@ export const fetchPublicJournals = createAsyncThunk<
       "/api/journals/public"
     );
     return res.data.journals;
-  } catch (err: unknown) {
+  } catch (err) {
     const message =
       err instanceof Error ? err.message : "Failed to fetch public journals";
     return rejectWithValue(message);
@@ -88,14 +90,33 @@ export const fetchJournalById = createAsyncThunk<
       `/api/journals/${journalId}`
     );
     return res.data.journal;
-  } catch (err: unknown) {
+  } catch (err) {
     const message =
       err instanceof Error ? err.message : "Failed to fetch journal";
     return rejectWithValue(message);
   }
 });
 
-// Upvote journal - simplified to just call the API
+// Fetch journals by userId
+export const fetchJournalByUserId = createAsyncThunk<
+  Journal[],
+  string,
+  { rejectValue: string }
+>("journal/fetchJournalByUserId", async (uid, { rejectWithValue }) => {
+  try {
+    const res = await api.get<{ status: string; journals: Journal[] }>(
+      `/api/journals/user/${uid}`
+    );
+
+    return res.data.journals;
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Failed to fetch user's journals";
+    return rejectWithValue(message);
+  }
+});
+
+// Upvote journal
 export const upvoteJournal = createAsyncThunk<
   { journalId: string; message: string },
   string,
@@ -106,14 +127,14 @@ export const upvoteJournal = createAsyncThunk<
       `/api/journals/upvote/${journalId}`
     );
     return { journalId, message: res.data.message };
-  } catch (err: unknown) {
+  } catch (err) {
     const message =
       err instanceof Error ? err.message : "Failed to upvote journal";
     return rejectWithValue(message);
   }
 });
 
-// Downvote journal - simplified to just call the API
+// Downvote journal
 export const downvoteJournal = createAsyncThunk<
   { journalId: string; message: string },
   string,
@@ -124,14 +145,14 @@ export const downvoteJournal = createAsyncThunk<
       `/api/journals/downvote/${journalId}`
     );
     return { journalId, message: res.data.message };
-  } catch (err: unknown) {
+  } catch (err) {
     const message =
       err instanceof Error ? err.message : "Failed to downvote journal";
     return rejectWithValue(message);
   }
 });
 
-// Update journal
+// Update journal entry
 export const updateJournalEntry = createAsyncThunk<
   Journal,
   { id: string; data: Partial<JournalEntry> },
@@ -143,14 +164,14 @@ export const updateJournalEntry = createAsyncThunk<
       data
     );
     return res.data.journal;
-  } catch (err: unknown) {
+  } catch (err) {
     const message =
       err instanceof Error ? err.message : "Failed to update journal entry";
     return rejectWithValue(message);
   }
 });
 
-// Delete journal by ID
+// Delete journal
 export const deleteJournalById = createAsyncThunk<
   string,
   string,
@@ -161,14 +182,14 @@ export const deleteJournalById = createAsyncThunk<
       `/api/journals/${journalId}`
     );
     return journalId;
-  } catch (err: unknown) {
+  } catch (err) {
     const message =
       err instanceof Error ? err.message : "Failed to delete journal";
     return rejectWithValue(message);
   }
 });
 
-// ---------------------- SLICE ----------------------
+/* ---------------------- Slice ---------------------- */
 
 export const journalSlice = createSlice({
   name: "journal",
@@ -178,73 +199,77 @@ export const journalSlice = createSlice({
       state.error = null;
     },
     clearCurrentJournal: (state) => {
-      state.currentJournal = initialState.currentJournal;
+      state.currentJournal = emptyJournal;
     },
   },
   extraReducers: (builder) => {
     builder
-      // Create
+      /* ---- Create ---- */
       .addCase(createJournalEntry.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(
-        createJournalEntry.fulfilled,
-        (state, action: PayloadAction<Journal>) => {
-          state.loading = false;
-          state.entries.unshift(action.payload);
-          state.userJournals.unshift(action.payload);
-        }
-      )
+      .addCase(createJournalEntry.fulfilled, (state, action) => {
+        state.loading = false;
+        state.entries.unshift(action.payload);
+        state.userJournals.unshift(action.payload);
+      })
       .addCase(createJournalEntry.rejected, (state, action) => {
         state.loading = false;
         state.error =
           action.payload ?? action.error.message ?? "Failed to create journal";
       })
 
-      // Fetch public
+      /* ---- Fetch Public ---- */
       .addCase(fetchPublicJournals.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(
-        fetchPublicJournals.fulfilled,
-        (state, action: PayloadAction<Journal[]>) => {
-          state.loading = false;
-          state.publicJournals = action.payload;
-        }
-      )
+      .addCase(fetchPublicJournals.fulfilled, (state, action) => {
+        state.loading = false;
+        state.publicJournals = action.payload;
+      })
       .addCase(fetchPublicJournals.rejected, (state, action) => {
         state.loading = false;
         state.error =
           action.payload ?? action.error.message ?? "Failed to fetch journals";
       })
 
-      // Fetch single
+      /* ---- Fetch by User ---- */
+      .addCase(fetchJournalByUserId.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchJournalByUserId.fulfilled, (state, action) => {
+        state.loading = false;
+        state.userJournals = action.payload;
+      })
+      .addCase(fetchJournalByUserId.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.payload ?? action.error.message ?? "Failed to fetch journals";
+      })
+
+      /* ---- Fetch Single ---- */
       .addCase(fetchJournalById.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(
-        fetchJournalById.fulfilled,
-        (state, action: PayloadAction<Journal>) => {
-          state.loading = false;
-          state.currentJournal = action.payload;
-        }
-      )
+      .addCase(fetchJournalById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.currentJournal = action.payload;
+      })
       .addCase(fetchJournalById.rejected, (state, action) => {
         state.loading = false;
         state.error =
           action.payload ?? action.error.message ?? "Failed to fetch journal";
       })
 
-      // Upvote - no state updates, handled by optimistic UI
+      /* ---- Upvote / Downvote ---- */
       .addCase(upvoteJournal.rejected, (state, action) => {
         state.error =
           action.payload ?? action.error.message ?? "Failed to upvote journal";
       })
-
-      // Downvote - no state updates, handled by optimistic UI
       .addCase(downvoteJournal.rejected, (state, action) => {
         state.error =
           action.payload ??
@@ -252,29 +277,26 @@ export const journalSlice = createSlice({
           "Failed to downvote journal";
       })
 
-      // Update
+      /* ---- Update ---- */
       .addCase(updateJournalEntry.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(
-        updateJournalEntry.fulfilled,
-        (state, action: PayloadAction<Journal>) => {
-          state.loading = false;
-          const updatedJournal = action.payload;
+      .addCase(updateJournalEntry.fulfilled, (state, action) => {
+        state.loading = false;
+        const updatedJournal = action.payload;
 
-          [state.entries, state.userJournals, state.publicJournals].forEach(
-            (list) => {
-              const index = list.findIndex((j) => j.id === updatedJournal.id);
-              if (index !== -1) list[index] = updatedJournal;
-            }
-          );
-
-          if (state.currentJournal?.id === updatedJournal.id) {
-            state.currentJournal = updatedJournal;
+        [state.entries, state.userJournals, state.publicJournals].forEach(
+          (list) => {
+            const index = list.findIndex((j) => j.id === updatedJournal.id);
+            if (index !== -1) list[index] = updatedJournal;
           }
+        );
+
+        if (state.currentJournal.id === updatedJournal.id) {
+          state.currentJournal = updatedJournal;
         }
-      )
+      })
       .addCase(updateJournalEntry.rejected, (state, action) => {
         state.loading = false;
         state.error =
@@ -283,7 +305,7 @@ export const journalSlice = createSlice({
           "Failed to update journal entry";
       })
 
-      // Delete
+      /* ---- Delete ---- */
       .addCase(deleteJournalById.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -291,16 +313,14 @@ export const journalSlice = createSlice({
       .addCase(deleteJournalById.fulfilled, (state, action) => {
         state.loading = false;
         const deletedId = action.payload;
-
         [state.entries, state.userJournals, state.publicJournals].forEach(
           (list) => {
             const index = list.findIndex((j) => j.id === deletedId);
             if (index !== -1) list.splice(index, 1);
           }
         );
-
-        if (state.currentJournal?.id === deletedId) {
-          state.currentJournal = initialState.currentJournal;
+        if (state.currentJournal.id === deletedId) {
+          state.currentJournal = emptyJournal;
         }
       })
       .addCase(deleteJournalById.rejected, (state, action) => {

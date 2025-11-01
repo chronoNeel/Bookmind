@@ -104,7 +104,6 @@ const Profile: React.FC = () => {
 
   const isOwnProfile = currentUser?.uid === profileData?.uid;
 
-  // --- Handlers
   const handleFollowToggle = async () => {
     if (!currentUser || !profileData) return;
 
@@ -156,7 +155,7 @@ const Profile: React.FC = () => {
 
   const handleJournalEntriesClick = () => {
     if (!profileData?.uid) return;
-    navigate("/view-entries", { state: { userId: profileData.uid } });
+    navigate(`/journals/${profileData.uid}`);
   };
 
   // --- Loading state

@@ -18,7 +18,7 @@ import Signup from "@pages/Signup/Signup";
 import Login from "@pages/Login/Login";
 import Profile from "@pages/Profile/Profile";
 import BookDetails from "@pages/BookDetails/BookDetails";
-import AllJournalsFeed from "@pages/AllJournalsFeed/AllJournalsFeed";
+import JournalsFeed from "@/pages/JournalsFeed/JournalsFeed";
 import AddJournalEntry from "@pages/AddJournalEntry/AddJournalEntry";
 import JournalDetail from "@pages/JournalDetail/JournalDetail";
 import UserSearchResult from "@pages/UserSearchResult/UserSearchResult";
@@ -111,7 +111,16 @@ function App() {
             path="/journals"
             element={
               <ProtectedRoute>
-                <AllJournalsFeed />
+                <JournalsFeed />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/journals/:userId"
+            element={
+              <ProtectedRoute>
+                <JournalsFeed />
               </ProtectedRoute>
             }
           />

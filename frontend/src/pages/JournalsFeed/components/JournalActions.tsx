@@ -30,7 +30,7 @@ const JournalActions = ({
 
   const handleVote = async (type: "up" | "down") => {
     if (!currentUser) {
-      toast.warn("Please log in to vote!", { position: "top-center" });
+      toast.warn("Please log in to vote!", { position: "top-right" });
       return;
     }
 
@@ -71,13 +71,13 @@ const JournalActions = ({
           : hasDownvoted
           ? "Downvote removed!"
           : "Journal downvoted!",
-        { position: "top-center" }
+        { position: "top-right" }
       );
     } catch (err) {
       console.error(err);
       setLocalUpvotedBy(initialUpvotedBy);
       setLocalDownvotedBy(initialDownvotedBy);
-      toast.error("Failed to vote. Try again.", { position: "top-center" });
+      toast.error("Failed to vote. Try again.", { position: "top-right" });
     } finally {
       setIsVoting(false);
     }
