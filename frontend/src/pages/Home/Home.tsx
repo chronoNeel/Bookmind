@@ -11,13 +11,14 @@ import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@hooks/redux";
 import { searchUsers } from "@store/slices/searchSlice";
 import { RootState } from "@store";
-import ReadersActivity from "@/pages/Home/components/ReadersActivity";
+import ReadersActivity from "./components/ReadersActivity/ReadersActivity";
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
-  const currentUser = useAppSelector((state) => state.auth.user);
+  const currentUser = useAppSelector((state) => state.user.profile);
+  // console.log(currentUser);
 
   const { userSearchResults, isLoadingUsers } = useAppSelector(
     (state: RootState) => state.search

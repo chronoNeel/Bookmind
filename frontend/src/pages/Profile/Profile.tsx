@@ -225,7 +225,6 @@ const Profile: React.FC = () => {
           stats={userStats}
           yearlyGoal={profileData.stats.yearlyGoal}
           booksReadThisYear={booksReadThisYear}
-          avgRating={profileData.stats.avgRating}
           onJournalEntriesClick={handleJournalEntriesClick}
         />
       </div>

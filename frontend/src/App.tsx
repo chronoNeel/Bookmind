@@ -28,6 +28,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import FollowList from "@pages/FollowList/FollowList";
 import { fetchUserProfile } from "@/store/slices/userSlice";
+import Genrepage from "@/pages/GenrePage/Genrepage";
 
 function App() {
   const location = useLocation();
@@ -180,6 +181,7 @@ function App() {
             path="/journal-preview/:journalId"
             element={<JournalDetail />}
           />
+          <Route path="/genres" element={<Genrepage />} />
           <Route path="/users/:query" element={<UserSearchResult />} />
           <Route path="/genre/:genreName" element={<GenreBooks />} />
         </Routes>

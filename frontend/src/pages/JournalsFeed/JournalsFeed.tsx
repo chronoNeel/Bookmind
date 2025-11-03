@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import SortControls from "./components/SortControls";
+import { useState, useEffect, useMemo } from "react";
+import SearchBar from "./components/SearchBar";
 import JournalCard from "./components/JournalCard";
 import Pagination from "@components/Pagination";
 import { useAppDispatch, useAppSelector } from "@hooks/redux";
@@ -8,8 +8,10 @@ import {
   fetchJournalByUserId,
   fetchPublicJournals,
 } from "@store/slices/journalSlice";
+import { fetchUserProfile } from "@store/slices/userSlice";
 import { useParams } from "react-router-dom";
-import NoJournals from "@/pages/JournalsFeed/components/NoJournals";
+import NoJournals from "./components/NoJournals";
+import SortControl from "./components/SortControls";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -21,29 +23,56 @@ const AllJournalsFeed = () => {
     (state: RootState) => state.journal
   );
   const [sortBy, setSortBy] = useState<"recent" | "rating" | "votes">("recent");
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [userFullName, setUserFullName] = useState("");
 
   useEffect(() => {
     if (userId) dispatch(fetchJournalByUserId(userId));
     else dispatch(fetchPublicJournals());
   }, [dispatch, userId]);
 
-  const allJournals = userId
-    ? currentUser?.uid == userId
-      ? userJournals
-      : userJournals.filter((journal) => !journal.isPrivate)
-    : publicJournals;
+  useEffect(() => {
+    const loadUser = async () => {
+      if (!userId) return;
+      try {
+        const userData = await dispatch(fetchUserProfile(userId)).unwrap();
+        setUserFullName(userData.fullName);
+      } catch {
+        setUserFullName("");
+      }
+    };
+    loadUser();
+  }, [dispatch, userId]);
 
-  const sortedJournals = [...allJournals].sort((a, b) => {
-    if (sortBy === "recent")
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    if (sortBy === "rating") return (b.rating || 0) - (a.rating || 0);
-    return (
-      b.upvotedBy.length -
-      b.downvotedBy.length -
-      (a.upvotedBy.length - a.downvotedBy.length)
+  const allJournals = useMemo(() => {
+    if (userId) {
+      if (currentUser?.uid === userId) return userJournals;
+      return userJournals.filter((j) => !j.isPrivate);
+    }
+    return publicJournals;
+  }, [userId, userJournals, publicJournals, currentUser]);
+
+  const filteredJournals = useMemo(() => {
+    return allJournals.filter((j) =>
+      j.bookTitle?.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  });
+  }, [allJournals, searchTerm]);
+
+  const sortedJournals = useMemo(() => {
+    return [...filteredJournals].sort((a, b) => {
+      if (sortBy === "recent")
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      if (sortBy === "rating") return (b.rating || 0) - (a.rating || 0);
+      return (
+        b.upvotedBy.length -
+        b.downvotedBy.length -
+        (a.upvotedBy.length - a.downvotedBy.length)
+      );
+    });
+  }, [filteredJournals, sortBy]);
 
   const totalPages = Math.ceil(sortedJournals.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -54,28 +83,36 @@ const AllJournalsFeed = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [sortBy]);
+  }, [sortBy, searchTerm]);
+
+  const displayTitle = userId
+    ? `${userFullName ? `${userFullName}'s` : "User's"} Journals`
+    : "Journal Feed";
 
   return (
     <div
       className="min-vh-100 position-relative overflow-hidden text-dark p-3 p-md-4"
-      style={{
-        background: "linear-gradient(135deg, #fffaea 50%)",
-      }}
+      style={{ background: "linear-gradient(135deg, #fffaea 50%)" }}
     >
       <div
         className="position-absolute top-0 start-0 w-100 h-100"
         style={{
           pointerEvents: "none",
           opacity: 0.3,
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23a0826d' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' ... %3E")`,
           backgroundRepeat: "repeat",
           backgroundSize: "60px 60px",
           zIndex: 0,
         }}
       />
       <div className="relative z-10 max-w-5xl mx-auto">
-        <SortControls sortBy={sortBy} setSortBy={setSortBy} userId={userId} />
+        <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <h1 className="text-2xl font-serif text-slate-900">{displayTitle}</h1>
+          <div className="flex items-center gap-3">
+            <SearchBar value={searchTerm} onChange={setSearchTerm} />
+            <SortControl sortBy={sortBy} setSortBy={setSortBy} />
+          </div>
+        </div>
 
         {loading && (
           <div className="flex justify-center py-16">

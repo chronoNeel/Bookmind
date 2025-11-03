@@ -110,6 +110,14 @@ const ReadingChallenge: React.FC = () => {
     safeGoal > 0 ? Math.min((booksThisYear / safeGoal) * 100, 100) : 0;
   const year = new Date().getFullYear();
 
+  // console.log(currentUser);
+
+  // console.table({
+  //   booksThisYear,
+  //   readingGoal,
+  //   progressPercentage,
+  // });
+
   return (
     <>
       <style>{`

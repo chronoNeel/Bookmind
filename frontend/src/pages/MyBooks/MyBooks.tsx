@@ -5,8 +5,9 @@ import { ExpandedShelfState } from "./components/types";
 import { useAppSelector } from "../../hooks/redux";
 
 const MyBooks: React.FC = () => {
-  const currentUser = useAppSelector((state) => state.auth.user);
-  const shelves = useAppSelector((state) => state.auth.user?.shelves);
+  const currentUser = useAppSelector((state) => state.user.profile);
+  console.log("Shelves ", currentUser);
+  const shelves = useAppSelector((state) => state.user.profile?.shelves);
   const { completed = [], ongoing = [], wantToRead = [] } = shelves || {};
 
   const [expandedShelf, setExpandedShelf] = useState<ExpandedShelfState>({

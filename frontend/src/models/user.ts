@@ -21,13 +21,8 @@ export interface UserData {
     wantToRead: ShelfBook[];
   };
   stats: {
-    completedCount: number;
-    ongoingCount: number;
-    wantToReadCount: number;
     yearlyGoal: number;
     booksReadThisYear: string[];
-    avgRating: number;
-    totalJournals: number;
   };
   journals: Journal[];
   createdAt: string;

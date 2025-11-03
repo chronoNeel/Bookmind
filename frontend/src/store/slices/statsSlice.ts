@@ -46,6 +46,7 @@ export const updateYearlyGoal = createAsyncThunk<
   { rejectValue: { message: string; code?: string } }
 >("stats/updateYearlyGoal", async ({ yearlyGoal }, { rejectWithValue }) => {
   try {
+    console.log(yearlyGoal);
     await api.put("/api/users/yearly-goal", { yearlyGoal });
     return { yearlyGoal };
   } catch (err: unknown) {

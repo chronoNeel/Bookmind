@@ -11,7 +11,6 @@ interface ReadingAnalyticsProps {
   };
   yearlyGoal: number;
   booksReadThisYear: number;
-  avgRating: number;
   onJournalEntriesClick: () => void;
 }
 
@@ -19,7 +18,6 @@ const ReadingAnalytics: React.FC<ReadingAnalyticsProps> = ({
   stats,
   yearlyGoal,
   booksReadThisYear,
-  avgRating,
   onJournalEntriesClick,
 }) => {
   const total =
@@ -145,7 +143,6 @@ const ReadingAnalytics: React.FC<ReadingAnalyticsProps> = ({
               </div>
             </div>
 
-            {/* Progress bar */}
             <div className="mb-2">
               <div className="h-2 bg-amber-200 rounded-full overflow-hidden">
                 <div
@@ -168,8 +165,7 @@ const ReadingAnalytics: React.FC<ReadingAnalyticsProps> = ({
             </p>
           </div>
 
-          {/* Average Rating Card */}
-          {avgRating > 0 && (
+          {/* {avgRating > 0 && (
             <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200/50">
               <div className="flex justify-between items-center">
                 <div>
@@ -182,12 +178,11 @@ const ReadingAnalytics: React.FC<ReadingAnalyticsProps> = ({
                 </div>
               </div>
             </div>
-          )}
+          )} */}
 
-          {/* Journal Entries Card */}
           <button
             onClick={onJournalEntriesClick}
-            className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-200/50 hover:shadow-lg transition-all group text-left"
+            className="bg-gradient-to-br from-purple-50 to-pink-50 !rounded-2xl p-6 border border-purple-200/50 hover:shadow-md transition-all group text-left"
           >
             <div className="flex justify-between items-center mb-2">
               <span className="font-medium text-gray-600">Journal Entries</span>

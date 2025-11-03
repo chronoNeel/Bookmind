@@ -10,7 +10,7 @@ import Badge from "./Badge";
 import JournalMeta from "./JournalMeta";
 import JournalActions from "./JournalActions";
 import { feelingBadgeStyles } from "./feelingBadgeStyles";
-import { fetchNameByUid } from "@/store/slices/userSlice";
+import { fetchUserProfile } from "@/store/slices/userSlice";
 
 const JournalCard = memo(({ entry }: { entry: Journal }) => {
   const dispatch = useAppDispatch();
@@ -32,7 +32,9 @@ const JournalCard = memo(({ entry }: { entry: Journal }) => {
       if (!entry?.userId) return;
 
       try {
-        const userData = await dispatch(fetchNameByUid(entry.userId)).unwrap();
+        const userData = await dispatch(
+          fetchUserProfile(entry.userId)
+        ).unwrap();
         if (isMounted) {
           setAuthor({
             fullName: userData.fullName || "Unknown Author",

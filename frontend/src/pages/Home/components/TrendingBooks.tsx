@@ -8,7 +8,6 @@ const TrendingBooks: React.FC = () => {
   const navigate = useNavigate();
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
-  console.log(books);
 
   useEffect(() => {
     const cached = localStorage.getItem("trendingBooks");

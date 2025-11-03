@@ -1,7 +1,11 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import api from "../../utils/api";
 import { UserData } from "@models/user";
+import { loginUser, logoutUser } from "../slices/authSlice"; // 👈 import thunks
 
+// -----------------------------
+// Helpers
+// -----------------------------
 interface ApiErrorShape {
   response?: {
     data?: { error?: string };
@@ -14,6 +18,9 @@ function isApiErrorShape(err: unknown): err is ApiErrorShape {
   return typeof err === "object" && err !== null;
 }
 
+// -----------------------------
+// Thunks
+// -----------------------------
 export const fetchUserProfile = createAsyncThunk<
   UserData,
   string,
@@ -21,7 +28,8 @@ export const fetchUserProfile = createAsyncThunk<
 >("user/fetchProfile", async (userName, { rejectWithValue }) => {
   try {
     const response = await api.get(`/api/users/${userName}`);
-    return response.data as UserData;
+    // if API returns { user: {...} }
+    return response.data.user ?? (response.data as UserData);
   } catch (error: unknown) {
     if (isApiErrorShape(error)) {
       return rejectWithValue(
@@ -74,6 +82,9 @@ export const fetchNameByUid = createAsyncThunk<
   }
 });
 
+// -----------------------------
+// State + Slice
+// -----------------------------
 interface UserState {
   profile: UserData | null;
   loading: boolean;
@@ -112,9 +123,17 @@ const userSlice = createSlice({
         error: null,
       };
     },
+    clearUserProfile: (state) => {
+      state.profile = null;
+      state.error = null;
+      state.loading = false;
+    },
   },
   extraReducers: (builder) => {
     builder
+      // -----------------------------
+      // Handle our own thunks
+      // -----------------------------
       .addCase(fetchUserProfile.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -144,9 +163,30 @@ const userSlice = createSlice({
 
       .addCase(fetchNameByUid.fulfilled, (state, action) => {
         state.profile = action.payload;
+      })
+
+      // -----------------------------
+      // React to authSlice actions 👇
+      // -----------------------------
+      .addCase(loginUser.fulfilled, (state, action) => {
+        // Only set profile if it’s currently null or incomplete
+        if (!state.profile || !state.profile.uid) {
+          state.profile = action.payload;
+        } else {
+          // merge updated fields without removing shelves/stats
+          state.profile = { ...state.profile, ...action.payload };
+        }
+        state.error = null;
+      })
+      .addCase(logoutUser.fulfilled, (state) => {
+        // When user logs out, clear profile
+        state.profile = null;
+        state.error = null;
       });
   },
 });
 
-export const { updateUserProfile, resetUsernameCheck } = userSlice.actions;
+export const { updateUserProfile, resetUsernameCheck, clearUserProfile } =
+  userSlice.actions;
+
 export default userSlice.reducer;
