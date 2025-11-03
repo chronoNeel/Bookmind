@@ -7,7 +7,6 @@ import {
   upvoteJournal,
   downvoteJournal,
 } from "@store/slices/journalSlice";
-import { fetchNameByUid } from "@store/slices/authSlice";
 import { toast } from "react-toastify";
 
 import { JournalContent } from "./component/JournalContent";
@@ -17,6 +16,7 @@ import { JournalPrompts } from "./component/JournalPrompts";
 import { JournalEntry } from "./component/JournalEntry";
 import { JournalActions } from "./component/JournalActions";
 import { JournalLoader } from "./component/JournalLoader";
+import { fetchNameByUid } from "@/store/slices/userSlice";
 
 const JournalDetail: React.FC = () => {
   const { journalId } = useParams<{ journalId: string }>();

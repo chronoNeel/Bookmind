@@ -3,7 +3,6 @@ import ReadingChallenge from "./components/ReadingChallenge";
 import UserStats from "./components/UserStats";
 import MotivationalQuote from "./components/MotivationalQuote";
 import TrendingBooks from "./components/TrendingBooks";
-import FriendsActivity from "./components/FriendsActivity";
 import PopularGenres from "./components/PopularGenres";
 import DailyTip from "./components/DailyTip";
 import SearchBar from "@components/SearchBar";
@@ -12,12 +11,14 @@ import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@hooks/redux";
 import { searchUsers } from "@store/slices/searchSlice";
 import { RootState } from "@store";
+import ReadersActivity from "@/pages/Home/components/ReadersActivity";
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
   const currentUser = useAppSelector((state) => state.auth.user);
+
   const { userSearchResults, isLoadingUsers } = useAppSelector(
     (state: RootState) => state.search
   );
@@ -32,27 +33,6 @@ const Home: React.FC = () => {
   const wantToReadCount = wantToRead.length;
   const ongoingCount = ongoing.length;
   const userStats = { wantToReadCount, ongoingCount, completedCount };
-
-  // Memoize static data
-  const friendsActivity = useMemo(
-    () => [
-      { name: "Shohan", action: "rated", book: "Atomic Habits", rating: 4 },
-      {
-        name: "Lincoln",
-        action: "added",
-        book: "The Alchemist",
-        shelf: "Want to Read",
-      },
-      { name: "Nabil", action: "finished", book: "Dune", rating: 5 },
-      {
-        name: "Fatima",
-        action: "started",
-        book: "1984",
-        shelf: "Currently Reading",
-      },
-    ],
-    []
-  );
 
   const trendingGenres = useMemo(
     () => [
@@ -150,7 +130,7 @@ const Home: React.FC = () => {
 
                 <div className="col-12 col-lg-3 order-lg-3">
                   <div className="d-flex flex-column gap-3 gap-lg-4">
-                    <FriendsActivity activities={friendsActivity} />
+                    <ReadersActivity />
                     <PopularGenres genres={trendingGenres} />
                     <DailyTip tip={dailyTip} />
                   </div>

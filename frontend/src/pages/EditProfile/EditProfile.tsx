@@ -3,15 +3,15 @@ import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "@hooks/redux";
 import api from "@utils/api";
-import {
-  checkUsernameAvailability,
-  resetUsernameCheck,
-} from "@store/slices/authSlice";
 
 import ProfilePictureInput from "./ProfilePictureInput";
 import TextInput from "./TextInput";
 import TextAreaInput from "./TextAreaInput";
 import Buttons from "./Buttons";
+import {
+  checkUsernameAvailability,
+  resetUsernameCheck,
+} from "@/store/slices/userSlice";
 
 interface ProfileData {
   fullName: string;

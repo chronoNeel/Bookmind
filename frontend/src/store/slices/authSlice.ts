@@ -31,30 +31,6 @@ function isApiErrorShape(err: unknown): err is ApiErrorShape {
   return typeof err === "object" && err !== null;
 }
 
-// check username availability
-
-export const checkUsernameAvailability = createAsyncThunk<
-  { available: boolean; username: string },
-  string,
-  { rejectValue: string }
->("auth/checkUsername", async (username, { rejectWithValue }) => {
-  try {
-    const response = await api.get(`/api/users/check-username/${username}`);
-    return response.data;
-  } catch (error: unknown) {
-    if (isApiErrorShape(error)) {
-      return rejectWithValue(
-        error.response?.data?.error ||
-          error.message ||
-          "Failed to check username"
-      );
-    }
-    return rejectWithValue("Failed to check username");
-  }
-});
-
-// register user
-
 export const registerUser = createAsyncThunk<
   UserData,
   RegisterPayload,
@@ -85,8 +61,6 @@ export const registerUser = createAsyncThunk<
   }
 );
 
-// login user
-
 export const loginUser = createAsyncThunk<
   UserData,
   LoginPayload,
@@ -110,56 +84,10 @@ export const loginUser = createAsyncThunk<
   }
 });
 
-// fetch user profile using username
-
-export const fetchUserProfile = createAsyncThunk<
-  UserData,
-  string,
-  { rejectValue: string }
->("auth/fetchProfile", async (userName, { rejectWithValue }) => {
-  try {
-    const response = await api.get(`/api/users/${userName}`);
-    return response.data as UserData;
-  } catch (error: unknown) {
-    if (isApiErrorShape(error)) {
-      return rejectWithValue(
-        error.response?.data?.error ||
-          error.message ||
-          "Failed to fetch user profile"
-      );
-    }
-    return rejectWithValue("Failed to fetch user profile");
-  }
-});
-
-// log out user
-
-export const logoutUser = createAsyncThunk<void>("auth/logout", async () => {
-  await signOut(auth);
-});
-
-// fetch name by id
-export const fetchNameByUid = createAsyncThunk<
-  UserData,
-  string,
-  { rejectValue: string }
->("user/fetchUsernameByUid", async (uid, { rejectWithValue }) => {
-  try {
-    const response = await api.get(`/api/users/userId/${uid}`);
-    const user = response.data.user as UserData;
-
-    return user;
-  } catch (error: unknown) {
-    if (isApiErrorShape(error)) {
-      return rejectWithValue(
-        error.response?.data?.error ||
-          error.message ||
-          "Failed to fetch username"
-      );
-    }
-    return rejectWithValue("Failed to fetch username");
-  }
-});
+export const logoutUser = createAsyncThunk<void>(
+  "auth/logout",
+  async () => await signOut(auth)
+);
 
 export const emptyUser: UserData = {
   uid: "",
@@ -191,7 +119,7 @@ export const emptyUser: UserData = {
 
 const initialState: AuthState = {
   user: emptyUser,
-  loading: true,
+  loading: false,
   error: null,
   isAuthenticated: false,
   usernameCheck: {
@@ -216,20 +144,9 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
-    updateUserProfile: (state, action: PayloadAction<Partial<UserData>>) => {
-      state.user = { ...state.user, ...action.payload };
-    },
-    resetUsernameCheck: (state) => {
-      state.usernameCheck = {
-        checking: false,
-        available: null,
-        error: null,
-      };
-    },
   },
   extraReducers: (builder) => {
     builder
-      // --- Register ---
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -241,10 +158,9 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload ?? "Something went wrong";
+        state.error = action.payload ?? "Registration failed";
       })
 
-      // --- Login ---
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -256,58 +172,16 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload ?? "Something went wrong";
+        state.error = action.payload ?? "Login failed";
       })
 
-      // --- Fetch profile ---
-      .addCase(fetchUserProfile.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchUserProfile.fulfilled, (state, action) => {
-        state.loading = false;
-        state.user = action.payload;
-        state.isAuthenticated = true;
-      })
-      .addCase(fetchUserProfile.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload ?? "Failed to fetch user profile";
-      })
-
-      // --- Logout ---
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = emptyUser;
         state.isAuthenticated = false;
         state.loading = false;
-      })
-
-      // --- Username check ---
-      .addCase(checkUsernameAvailability.pending, (state) => {
-        state.usernameCheck.checking = true;
-        state.usernameCheck.error = null;
-      })
-      .addCase(checkUsernameAvailability.fulfilled, (state, action) => {
-        state.usernameCheck.checking = false;
-        state.usernameCheck.available = action.payload.available;
-      })
-      .addCase(checkUsernameAvailability.rejected, (state, action) => {
-        state.usernameCheck.checking = false;
-        state.usernameCheck.error =
-          action.payload ?? "Failed to check username";
       });
   },
 });
 
-// ---------------------------
-// Exports
-// ---------------------------
-
-export const {
-  setUser,
-  setLoading,
-  clearError,
-  updateUserProfile,
-  resetUsernameCheck,
-} = authSlice.actions;
-
+export const { setUser, setLoading, clearError } = authSlice.actions;
 export default authSlice.reducer;

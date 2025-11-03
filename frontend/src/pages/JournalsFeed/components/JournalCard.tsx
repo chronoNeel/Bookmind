@@ -1,8 +1,6 @@
-// components/JournalCard/JournalCard.tsx
 import { motion } from "framer-motion";
 import { useAppDispatch } from "@/hooks/redux";
 import { Journal } from "@/models/journal";
-import { fetchNameByUid } from "@/store/slices/authSlice";
 import { useEffect, useState, memo } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -12,6 +10,7 @@ import Badge from "./Badge";
 import JournalMeta from "./JournalMeta";
 import JournalActions from "./JournalActions";
 import { feelingBadgeStyles } from "./feelingBadgeStyles";
+import { fetchNameByUid } from "@/store/slices/userSlice";
 
 const JournalCard = memo(({ entry }: { entry: Journal }) => {
   const dispatch = useAppDispatch();

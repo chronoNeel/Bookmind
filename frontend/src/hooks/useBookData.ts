@@ -76,7 +76,7 @@ export const useBookData = (bookKey: string) => {
 
   const coverUrl = useMemo(() => {
     const id = covers?.[0];
-    return id ? `https://covers.openlibrary.org/b/id/${id}-M.jpg` : null;
+    return id ? `https://covers.openlibrary.org/b/id/${id}-L.jpg` : null;
   }, [covers]);
 
   return {

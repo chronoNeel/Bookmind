@@ -40,8 +40,8 @@ function isApiErrorShape(err: unknown): err is ApiErrorShape {
 
 export const setBookStatus = createAsyncThunk<
   void,
-  { bookKey: string; status: ShelfStatus }, // args to dispatch
-  { rejectValue: { message: string; code?: string } } // rejected payload type
+  { bookKey: string; status: ShelfStatus },
+  { rejectValue: { message: string; code?: string } }
 >("shelf/setBookStatus", async ({ bookKey, status }, { rejectWithValue }) => {
   try {
     await api.post("/api/shelves/set-status", {

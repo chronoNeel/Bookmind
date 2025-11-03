@@ -2,7 +2,8 @@ import { Request, Response } from "express";
 import { db } from "../config/firebaseAdmin";
 import { asyncHandler } from "../middleware/errorHandler";
 import { DecodedIdToken } from "firebase-admin/auth";
-import { ShelfBook } from "@models/User";
+import { ShelfBook } from "../models/User";
+import { activity } from "../models/activity";
 
 type ShelfStatus = "wantToRead" | "ongoing" | "completed" | "remove" | null;
 const SHELVES = ["completed", "ongoing", "wantToRead"] as const;
@@ -32,6 +33,7 @@ export const setBookStatus = asyncHandler(
     }
 
     const normalizedStatus = (status ?? "remove") as Exclude<ShelfStatus, null>;
+
     if (
       normalizedStatus !== "remove" &&
       !SHELVES.includes(normalizedStatus as ShelfKey)
@@ -41,6 +43,7 @@ export const setBookStatus = asyncHandler(
 
     const userRef = db.collection("users").doc(uid);
     const userSnap = await userRef.get();
+
     if (!userSnap.exists) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -48,8 +51,9 @@ export const setBookStatus = asyncHandler(
     const userData = userSnap.data() || {};
     const shelves = userData.shelves || {};
     const now = new Date().toISOString();
-
     const updateData: Record<string, any> = { updatedAt: now };
+
+    // Remove book from all shelves
     for (const shelf of SHELVES) {
       const list: ShelfBook[] = shelves[shelf] || [];
       updateData[`shelves.${shelf}`] = list.filter(
@@ -57,6 +61,7 @@ export const setBookStatus = asyncHandler(
       );
     }
 
+    // Add book to the specified shelf if not removing
     if (normalizedStatus !== "remove") {
       const list: ShelfBook[] = shelves[normalizedStatus] || [];
       const filtered = list.filter((b) => b.bookKey !== bookKey);
@@ -67,6 +72,31 @@ export const setBookStatus = asyncHandler(
     }
 
     await userRef.update(updateData);
+
+    // Handle activity feed updates
+    // First, delete any existing "add_to_shelf" activities for this book
+    const activitySnapshot = await db
+      .collection("activity_feed")
+      .where("bookKey", "==", bookKey)
+      .where("uid", "==", uid)
+      .where("action", "==", "add_to_shelf")
+      .get();
+
+    // Delete all existing shelf activities for this book
+    const deletePromises = activitySnapshot.docs.map((doc) => doc.ref.delete());
+    await Promise.all(deletePromises);
+
+    // If not removing, create a new activity entry
+    if (normalizedStatus !== "remove") {
+      const activityData: activity = {
+        uid: uid,
+        action: "add_to_shelf",
+        shelfStatus: status,
+        bookKey: bookKey,
+        addedAt: new Date().toISOString(),
+      };
+      await db.collection("activity_feed").add(activityData);
+    }
 
     return res.json({
       status: "ok",

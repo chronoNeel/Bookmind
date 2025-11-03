@@ -8,44 +8,43 @@ interface UpdateUserProfileWithUsername extends UpdateUserProfileDto {
   userName?: string;
 }
 
-// Helper function to normalize username (case-insensitive)
 const normalizeUserName = (userName: string): string => {
   return userName.toLowerCase().trim();
 };
 
-// Helper function to validate username format
 const isValidUserName = (userName: string): boolean => {
-  // Username must be 3-30 characters, alphanumeric with underscores/hyphens
   const regex = /^[a-zA-Z0-9_-]{3,30}$/;
   return regex.test(userName);
 };
 
-// Get user by handle (uid or username)
-export const getUserByHandle = asyncHandler(
+// Get user (by username or uid)
+
+export const fetchUserProfileByIdentifier = asyncHandler(
   async (req: Request, res: Response) => {
-    const { handle } = req.params;
-    const trimmed = (handle || "").trim();
+    const { identifier } = req.params;
+    const userIdentifier = (identifier || "").trim();
 
-    if (!trimmed) {
-      return res.status(400).json({ error: "Missing handle" });
+    if (!userIdentifier) {
+      return res.status(400).json({ error: "Identifier is required" });
     }
 
-    // 1) Try direct doc by UID
-    const doc = await db.collection("users").doc(trimmed).get();
-    if (doc.exists) {
-      return res.json(doc.data());
+    const userRef = db.collection("users").doc(userIdentifier);
+    const userSnap = await userRef.get();
+
+    if (userSnap.exists) {
+      return res.json(userSnap.data());
     }
 
-    // 2) Fallback: lookup by userName (case-insensitive)
-    const normalized = normalizeUserName(trimmed);
-    const usernameDoc = await db.collection("usernames").doc(normalized).get();
+    const normalizedIdentifier = normalizeUserName(userIdentifier);
+    const usernameRef = db.collection("usernames").doc(normalizedIdentifier);
+    const usernameSnap = await usernameRef.get();
 
-    if (usernameDoc.exists) {
-      const uid = usernameDoc.get("uid");
-      const userDoc = await db.collection("users").doc(uid).get();
+    if (usernameSnap.exists) {
+      const uid = usernameSnap.get("uid");
+      const uidUserSnap = await db.collection("users").doc(uid).get();
 
-      if (userDoc.exists) {
-        return res.json(userDoc.data());
+      if (uidUserSnap.exists) {
+        return res.json(uidUserSnap.data());
       }
     }
 
@@ -89,11 +88,9 @@ export const updateUserProfile = asyncHandler(
         ? normalizeUserName(prevUserName)
         : undefined;
 
-      // Handle username update if provided
       if (typeof updates.userName === "string") {
         const incoming = updates.userName.trim();
 
-        // Validate username format
         if (!isValidUserName(incoming)) {
           throw Object.assign(
             new Error(
@@ -120,10 +117,9 @@ export const updateUserProfile = asyncHandler(
             }
           }
 
-          // Reserve the new username
           tx.set(nextHandleRef, {
             uid: authUser.uid,
-            userName: incoming, // Store with original casing for display
+            userName: incoming,
             normalized: nextNorm,
             createdAt: nextHandleSnap.exists
               ? nextHandleSnap.get("createdAt")
@@ -131,18 +127,15 @@ export const updateUserProfile = asyncHandler(
             updatedAt: new Date().toISOString(),
           });
 
-          // Delete old username reservation if it exists
           if (prevNorm && prevNorm !== nextNorm) {
             const prevHandleRef = usernamesRef.doc(prevNorm);
             tx.delete(prevHandleRef);
           }
         }
 
-        // Update username in user document (preserves casing)
         safeUpdates.userName = incoming;
       }
 
-      // Update user document
       tx.update(userRef, {
         ...safeUpdates,
         updatedAt: new Date().toISOString(),
@@ -156,7 +149,6 @@ export const updateUserProfile = asyncHandler(
   }
 );
 
-// Optional: Add endpoint to check username availability
 export const checkUsernameAvailability = asyncHandler(
   async (req: Request, res: Response) => {
     const { username } = req.params;
@@ -363,34 +355,6 @@ export const getUsernameFromUid = asyncHandler(
       status: "ok",
       uid: uid,
       userName: userData.userName,
-    });
-  }
-);
-
-export const getUserByUid = asyncHandler(
-  async (req: Request, res: Response): Promise<void> => {
-    const { uid } = req.params;
-
-    if (!uid) {
-      res.status(400).json({ error: "User ID (uid) is required" });
-      return;
-    }
-
-    const userRef = db.collection("users").doc(uid);
-    const userDoc = await userRef.get();
-
-    if (!userDoc.exists) {
-      res.status(404).json({ error: "User not found" });
-      return;
-    }
-
-    const userData = userDoc.data();
-    console.log(userData);
-
-    res.status(200).json({
-      status: "ok",
-      uid,
-      user: userData,
     });
   }
 );

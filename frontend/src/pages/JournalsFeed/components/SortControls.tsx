@@ -1,5 +1,5 @@
 import { useAppDispatch } from "@/hooks/redux";
-import { fetchNameByUid } from "@/store/slices/authSlice";
+import { fetchNameByUid } from "@/store/slices/userSlice";
 import { useEffect, useState } from "react";
 
 interface SortControlsProps {

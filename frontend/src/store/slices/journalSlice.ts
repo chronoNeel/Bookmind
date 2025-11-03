@@ -40,8 +40,6 @@ const initialState: JournalState = {
   currentJournal: emptyJournal,
 };
 
-/* ---------------------- Async Thunks ---------------------- */
-
 // Create journal entry
 export const createJournalEntry = createAsyncThunk<
   Journal,
@@ -188,8 +186,6 @@ export const deleteJournalById = createAsyncThunk<
     return rejectWithValue(message);
   }
 });
-
-/* ---------------------- Slice ---------------------- */
 
 export const journalSlice = createSlice({
   name: "journal",

@@ -3,7 +3,7 @@ import { TrendingUp, Edit2, Check, X } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../../hooks/redux";
 import { toast } from "react-toastify";
 import { updateYearlyGoal } from "@store/slices/statsSlice";
-import { updateUserProfile } from "@store/slices/authSlice";
+import { updateUserProfile } from "@/store/slices/userSlice";
 
 const ReadingChallenge: React.FC = () => {
   const dispatch = useAppDispatch();

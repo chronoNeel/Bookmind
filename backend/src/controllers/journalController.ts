@@ -2,33 +2,11 @@ import { Request, Response } from "express";
 import { db } from "../config/firebaseAdmin";
 import { asyncHandler } from "../middleware/errorHandler";
 import { DecodedIdToken } from "firebase-admin/auth";
+import JournalEntry from "../models/Journal";
+import { activity } from "../models/activity";
 
 interface RequestWithUser extends Request {
   user?: DecodedIdToken;
-}
-
-export default interface JournalEntry {
-  bookKey: string;
-  bookTitle: string;
-  bookAuthorList: string[];
-  bookCoverUrl: string;
-
-  rating: number;
-  readingProgress: number;
-  isPrivate: boolean;
-  mood: string;
-  promptResponses: {
-    [key: string]: string;
-  };
-  entry: string;
-
-  userId?: string;
-
-  upvotedBy: string[];
-  downvotedBy: string[];
-
-  createdAt: string;
-  updatedAt: string;
 }
 
 function requireUser(req: RequestWithUser) {
@@ -80,6 +58,34 @@ export const createJournal = asyncHandler(
 
     const journalRef = await db.collection("journals").add(journalData);
 
+    const userDocRef = db.collection("users").doc(userId);
+    const userDoc = await userDocRef.get();
+
+    if (!userDoc.exists) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    const user = userDoc.data();
+    const updatedJournals = [...(user?.journals || []), journalRef.id];
+
+    await userDocRef.update({
+      journals: updatedJournals,
+    });
+
+    const activityData: activity = {
+      uid: userId,
+      action: "add_to_journal",
+      journalId: journalRef.id,
+      rating: rating,
+      bookKey: bookKey,
+      addedAt: new Date().toISOString(),
+    };
+
+    if (!isPrivate) {
+      await db.collection("activity_feed").add(activityData);
+    }
+
     res.status(201).json({
       status: "ok",
       journalId: journalRef.id,
@@ -114,24 +120,39 @@ export const getJournalsByUser = asyncHandler(
   async (req: Request, res: Response) => {
     const { uid } = req.params;
 
-    if (!uid) {
-      const err: any = new Error("User ID is required");
-      err.status = 400;
+    const userRef = db.collection("users").doc(uid);
+    const userSnap = await userRef.get();
+
+    if (!userSnap.exists) {
+      const err: any = new Error("User not found");
+      err.status = 404;
       throw err;
     }
-    console.log("Uid ", uid);
 
-    const allJournals = await db
-      .collection("journals")
-      .where("userId", "==", uid)
-      .get();
+    const journalIds: string[] = userSnap.get("journals") || [];
 
-    console.log("Journal by user ", allJournals.docs);
+    if (journalIds.length === 0) {
+      res.status(200).json({ status: "ok", journals: [] });
+      return;
+    }
 
-    const journals = allJournals.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const journalPromises = journalIds.map((id) =>
+      db.collection("journals").doc(id).get()
+    );
+
+    const journalDocs = await Promise.all(journalPromises);
+
+    const journals = journalDocs
+      .filter((doc) => doc.exists)
+      .map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }))
+      .sort((a: any, b: any) => {
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      });
 
     res.status(200).json({ status: "ok", journals });
   }
@@ -334,13 +355,29 @@ export const deleteJournal = asyncHandler(
     }
 
     const journalData = journalDoc.data();
-
-    // Ensure only owner can delete
     if (journalData?.userId !== userId) {
       const err: any = new Error("Unauthorized - cannot delete this journal");
       err.status = 403;
       throw err;
     }
+
+    // Reference to the user document
+    const userRef = db.collection("users").doc(userId);
+    const userSnap = await userRef.get();
+
+    if (!userSnap.exists) {
+      const err: any = new Error("User not found");
+      err.status = 404;
+      throw err;
+    }
+
+    const journalIds: string[] = userSnap.get("journals") || [];
+
+    const updatedJournals = journalIds.filter((id) => id !== journalId);
+
+    await userRef.update({
+      journals: updatedJournals,
+    });
 
     await journalRef.delete();
 

@@ -110,7 +110,7 @@ const FavoriteBooksCarousel: React.FC<FavoriteBooksCarouselProps> = ({
 
   if (loading) {
     return (
-      <div className="bg-white/80 backdrop-blur-xl rounded-3xl border p-6 sm:p-8 shadow-2xl">
+      <div className="bg-white/80 backdrop-blur-xl rounded-3xl border p-6 sm:p-8 shadow-md">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">
           Favorite Books
         </h2>
@@ -123,7 +123,7 @@ const FavoriteBooksCarousel: React.FC<FavoriteBooksCarouselProps> = ({
 
   if (books.length === 0) {
     return (
-      <div className="bg-white/80 backdrop-blur-xl rounded-3xl border p-6 sm:p-8 shadow-2xl">
+      <div className="bg-white/80 backdrop-blur-xl rounded-3xl border p-6 sm:p-8 shadow-md">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">
           Favorite Books
         </h2>
@@ -135,7 +135,7 @@ const FavoriteBooksCarousel: React.FC<FavoriteBooksCarouselProps> = ({
   }
 
   return (
-    <div className="bg-white/80 backdrop-blur-xl rounded-3xl border p-6 sm:p-8 shadow-2xl">
+    <div className="bg-white/80 backdrop-blur-xl rounded-3xl border p-6 sm:p-8 shadow-md">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Favorite Books</h2>
         {books.length > itemsPerPage && (

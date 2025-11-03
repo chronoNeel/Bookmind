@@ -9,11 +9,9 @@ import SearchBar from "@components/SearchBar";
 import BookDetailsCard from "./components/BookDetailsCard";
 import SimilarBooksCarousel from "./components/SimilarBooksCarousel";
 import SimilarBooksCarouselSkeleton from "./components/SimilarBooksCarouselSkeleton";
-import JournalEntries from "./components/JournalEntries";
 import StatusModal from "@components/StatusModal";
 import LoadingSpinner from "./components/LoadingSpinner";
 import ErrorMessage from "./components/ErrorMessage";
-import { mockJournalEntries } from "./components/mockData";
 import { useBookFavorite } from "@/hooks/useBookFavorites";
 
 const BookDetails = () => {
@@ -90,7 +88,7 @@ const BookDetails = () => {
             />
           ) : null}
 
-          <JournalEntries entries={mockJournalEntries} />
+          {/* <JournalEntries entries={mockJournalEntries} /> */}
         </div>
       </div>
 

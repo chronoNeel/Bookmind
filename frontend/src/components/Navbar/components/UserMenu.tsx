@@ -7,7 +7,6 @@ interface Props {
   dropdownOpen: boolean;
   setDropdownOpen: React.Dispatch<React.SetStateAction<boolean>>;
   handleLogout: () => void;
-  goToProfile: () => void;
 }
 
 const UserMenu: React.FC<Props> = ({
@@ -15,7 +14,6 @@ const UserMenu: React.FC<Props> = ({
   dropdownOpen,
   setDropdownOpen,
   handleLogout,
-  goToProfile,
 }) => {
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `dropdown-item menu-item rounded-2 d-block w-100 px-3 py-2 fw-medium ${
@@ -117,16 +115,14 @@ const UserMenu: React.FC<Props> = ({
               Journals
             </NavLink>
 
-            <button
-              className="dropdown-item menu-item rounded-2 d-block w-100 px-3 py-2 fw-medium text-start bg-transparent border-0"
-              onClick={() => {
-                setDropdownOpen(false);
-                goToProfile();
-              }}
+            <NavLink
+              to={`/profile/${user.userName}`}
+              className={linkClass}
+              onClick={() => setDropdownOpen(false)}
             >
               <i className="bi bi-person-circle me-2"></i>
               Profile
-            </button>
+            </NavLink>
 
             <hr className="dropdown-divider my-1" />
 

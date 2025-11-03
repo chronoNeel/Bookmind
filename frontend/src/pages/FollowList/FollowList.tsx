@@ -85,6 +85,8 @@ const FollowList: React.FC = () => {
     fetchFollowList();
   }, [userName, type]);
 
+  console.log(followList);
+
   // Search filter
   useEffect(() => {
     const filtered = followList.filter(

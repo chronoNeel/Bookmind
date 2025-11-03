@@ -2,11 +2,7 @@ import { useEffect } from "react";
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./utils/firebase";
-import {
-  setUser,
-  setLoading,
-  fetchUserProfile,
-} from "./store/slices/authSlice";
+import { setUser, setLoading } from "./store/slices/authSlice";
 
 import Navbar from "@/components/Navbar/Navbar";
 import Footer from "@components/Footer";
@@ -31,6 +27,7 @@ import TextRevealAnimation from "@pages/Login/TextRevealAnimation";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import FollowList from "@pages/FollowList/FollowList";
+import { fetchUserProfile } from "@/store/slices/userSlice";
 
 function App() {
   const location = useLocation();

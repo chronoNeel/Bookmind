@@ -23,12 +23,6 @@ const Navbar: React.FC = () => {
     navigate("/login");
   };
 
-  const goToProfile = () => {
-    if (user?.userName) navigate(`/profile/${user.userName}`);
-    else navigate("/login");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -73,11 +67,10 @@ const Navbar: React.FC = () => {
                   dropdownOpen={dropdownOpen}
                   setDropdownOpen={setDropdownOpen}
                   handleLogout={handleLogout}
-                  goToProfile={goToProfile}
                 />
               </div>
 
-              <div className="d-md-none mobile-menu-container">
+              <div className="d-md-none mobile-menu-container position-relative">
                 <button
                   className="btn p-0"
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -88,7 +81,7 @@ const Navbar: React.FC = () => {
                 {mobileMenuOpen && (
                   <MobileMenu
                     handleLogout={handleLogout}
-                    goToProfile={goToProfile}
+                    userName={user.userName || ""}
                     closeMenu={() => setMobileMenuOpen(false)}
                   />
                 )}

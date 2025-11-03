@@ -3,32 +3,33 @@ export interface PromptResponse {
   answer: string;
 }
 
-export interface Journal {
+export type Journal = JournalEntry & {
   id: string;
   userId: string;
-  userName: string;
-  userProfilePic: string;
+};
 
-  bookId: string;
+export default interface JournalEntry {
+  bookKey: string;
   bookTitle: string;
   bookAuthorList: string[];
-  bookCover: string;
+  bookCoverUrl: string;
 
   rating: number;
+  readingProgress: number;
+  isPrivate: boolean;
   mood: string;
-  progress: number;
-  promptResponses: PromptResponse[];
+  promptResponses: {
+    [key: string]: string;
+  };
   entry: string;
 
-  upvotes: number;
-  downvotes: number;
+  userId?: string;
 
   upvotedBy: string[];
   downvotedBy: string[];
 
-  isPublic: boolean;
   createdAt: string;
-  updatedAt?: string;
+  updatedAt: string;
 }
 
 export interface CreateJournalDto {
