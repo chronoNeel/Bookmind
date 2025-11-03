@@ -48,23 +48,6 @@ const Home: React.FC = () => {
     []
   );
 
-  const readingQuotes = useMemo(
-    () => [
-      "A reader lives a thousand lives before he dies. – George R.R. Martin",
-      "The more that you read, the more things you will know. – Dr. Seuss",
-      "Books are a uniquely portable magic. – Stephen King",
-      "Reading is to the mind what exercise is to the body. – Joseph Addison",
-      "A room without books is like a body without a soul. – Cicero",
-    ],
-    []
-  );
-
-  const dailyTip = useMemo(
-    () =>
-      "Try reading for just 15 minutes before bed — it helps you unwind and improves sleep quality!",
-    []
-  );
-
   const handleSearch = useCallback(
     (query: string) => {
       if (!query) return;
@@ -114,7 +97,7 @@ const Home: React.FC = () => {
                     {/* ReadingChallenge now self-contained */}
                     <ReadingChallenge />
                     <UserStats {...userStats} />
-                    <MotivationalQuote quote={readingQuotes[0]} />
+                    <MotivationalQuote />
                     <UserSearch
                       onSearch={handleSearch}
                       onSubmit={handleSearchSumbit}
@@ -132,7 +115,7 @@ const Home: React.FC = () => {
                   <div className="d-flex flex-column gap-3 gap-lg-4">
                     <ReadersActivity />
                     <PopularGenres genres={trendingGenres} />
-                    <DailyTip tip={dailyTip} />
+                    <DailyTip />
                   </div>
                 </div>
               </div>

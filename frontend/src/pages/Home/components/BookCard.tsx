@@ -13,7 +13,10 @@ const BookCard: React.FC<BookCardProps> = memo(
 
     if (isLoading) {
       return (
-        <div className="card h-100 shadow-sm">
+        <div
+          className="card h-100 shadow-sm border-0"
+          style={{ border: "none" }}
+        >
           <div
             className="position-relative overflow-hidden bg-light"
             style={{ height: "280px" }}
@@ -39,8 +42,20 @@ const BookCard: React.FC<BookCardProps> = memo(
 
     return (
       <div
-        className="card h-100 card-hover shadow-sm"
-        style={{ cursor: "pointer" }}
+        className="card h-100 shadow-sm border-0"
+        style={{
+          cursor: "pointer",
+          border: "none",
+          transition: "transform 0.2s ease, box-shadow 0.2s ease",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = "translateY(-4px)";
+          e.currentTarget.style.boxShadow = "0 8px 16px rgba(0,0,0,0.15)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = "translateY(0)";
+          e.currentTarget.style.boxShadow = "";
+        }}
         onClick={handleClick}
       >
         <div
@@ -89,12 +104,6 @@ const BookCard: React.FC<BookCardProps> = memo(
             style={{ fontSize: "0.85rem" }}
           >
             {book.author_name?.[0] || "Unknown Author"}
-          </p>
-          <p
-            className="card-text text-muted small mb-0"
-            style={{ fontSize: "0.75rem" }}
-          >
-            {book.first_publish_year || "N/A"}
           </p>
         </div>
       </div>
