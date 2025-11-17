@@ -51,15 +51,17 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           </div>
 
           {/* Profile Info */}
-          <div className="flex-1 text-center sm:text-left">
+          <div className="flex-1 w-full sm:w-auto text-center sm:text-left">
             {/* Top Section */}
             <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start mb-4 gap-4">
-              <div>
+              <div className="w-full sm:w-auto">
                 {/* Name and Username */}
-                <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-amber-700 to-orange-600 bg-clip-text text-transparent">
+                <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-amber-700 to-orange-600 bg-clip-text text-transparent sm:text-left">
                   {fullName}
                 </h1>
-                <p className="text-gray-500 text-lg mb-3">@{userName}</p>
+                <p className="text-gray-500 text-lg mb-3 sm:text-left">
+                  @{userName}
+                </p>
 
                 {/* Followers / Following */}
                 <div className="flex justify-center sm:justify-start gap-6">
@@ -85,7 +87,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               </div>
 
               {/* Action Button */}
-              <div>
+              <div className="flex-shrink-0">
                 {isOwnProfile ? (
                   <button
                     onClick={onEditProfile}
@@ -122,7 +124,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             </div>
 
             {/* Bio */}
-            <p className="text-gray-600 max-w-2xl mx-auto sm:mx-0">
+            <p className="text-gray-600 max-w-2xl mx-auto sm:mx-0 text-center sm:text-left">
               {bio?.trim() ? bio : "No bio yet."}
             </p>
           </div>
