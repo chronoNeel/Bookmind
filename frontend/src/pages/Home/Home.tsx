@@ -1,9 +1,7 @@
 import React, { useCallback, useMemo } from "react";
 import ReadingChallenge from "./components/ReadingChallenge";
 import UserStats from "./components/UserStats";
-import MotivationalQuote from "./components/MotivationalQuote";
 import TrendingBooks from "./components/TrendingBooks";
-import FriendsActivity from "./components/FriendsActivity";
 import PopularGenres from "./components/PopularGenres";
 import DailyTip from "./components/DailyTip";
 import SearchBar from "@components/SearchBar";
@@ -12,6 +10,8 @@ import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@hooks/redux";
 import { searchUsers } from "@store/slices/searchSlice";
 import { RootState } from "@store";
+import QuoteCard from "./components/QuoteCard";
+import FriendsActivity from "./components/FriendsActivity";
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -33,7 +33,20 @@ const Home: React.FC = () => {
   const ongoingCount = ongoing.length;
   const userStats = { wantToReadCount, ongoingCount, completedCount };
 
-  // Memoize static data
+  const trendingGenres = useMemo(
+    () => [
+      "Fantasy",
+      "Self-Help",
+      "Sci-Fi",
+      "Romance",
+      "Mystery",
+      "Biography",
+      "Philosophy",
+      "History",
+    ],
+    []
+  );
+
   const friendsActivity = useMemo(
     () => [
       { name: "Shohan", action: "rated", book: "Atomic Habits", rating: 4 },
@@ -51,37 +64,6 @@ const Home: React.FC = () => {
         shelf: "Currently Reading",
       },
     ],
-    []
-  );
-
-  const trendingGenres = useMemo(
-    () => [
-      "Fantasy",
-      "Self-Help",
-      "Sci-Fi",
-      "Romance",
-      "Mystery",
-      "Biography",
-      "Philosophy",
-      "History",
-    ],
-    []
-  );
-
-  const readingQuotes = useMemo(
-    () => [
-      "A reader lives a thousand lives before he dies. – George R.R. Martin",
-      "The more that you read, the more things you will know. – Dr. Seuss",
-      "Books are a uniquely portable magic. – Stephen King",
-      "Reading is to the mind what exercise is to the body. – Joseph Addison",
-      "A room without books is like a body without a soul. – Cicero",
-    ],
-    []
-  );
-
-  const dailyTip = useMemo(
-    () =>
-      "Try reading for just 15 minutes before bed — it helps you unwind and improves sleep quality!",
     []
   );
 
@@ -134,7 +116,7 @@ const Home: React.FC = () => {
                     {/* ReadingChallenge now self-contained */}
                     <ReadingChallenge />
                     <UserStats {...userStats} />
-                    <MotivationalQuote quote={readingQuotes[0]} />
+                    <QuoteCard />
                     <UserSearch
                       onSearch={handleSearch}
                       onSubmit={handleSearchSumbit}
@@ -152,7 +134,7 @@ const Home: React.FC = () => {
                   <div className="d-flex flex-column gap-3 gap-lg-4">
                     <FriendsActivity activities={friendsActivity} />
                     <PopularGenres genres={trendingGenres} />
-                    <DailyTip tip={dailyTip} />
+                    <DailyTip />
                   </div>
                 </div>
               </div>
