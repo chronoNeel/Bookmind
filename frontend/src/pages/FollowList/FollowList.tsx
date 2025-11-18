@@ -64,7 +64,7 @@ const FollowList: React.FC = () => {
 
         const userDataResponses = await Promise.all(
           userIds.map((uid: string) =>
-            api.get(`/api/users/user/id/${uid}`).catch(() => null)
+            api.get(`/api/users/userId/${uid}`).catch(() => null)
           )
         );
 
