@@ -162,7 +162,9 @@ const FavoriteBooksCarousel: React.FC<FavoriteBooksCarouselProps> = ({
         {books.slice(index, index + itemsPerPage).map((book) => (
           <button
             key={book.bookKey}
-            onClick={() => navigate(`/book/${book.bookKey}`)}
+            onClick={() =>
+              navigate(`/book/${encodeURIComponent(book.bookKey)}`)
+            }
             className="bg-gradient-to-br from-amber-50 to-orange-50 p-4 rounded-xl border border-amber-200/50 hover:shadow-lg transition-all group text-left"
           >
             <div className="relative overflow-hidden rounded-lg mb-3">
