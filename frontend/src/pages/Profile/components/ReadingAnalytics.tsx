@@ -187,7 +187,7 @@ const ReadingAnalytics: React.FC<ReadingAnalyticsProps> = ({
           {/* Journal Entries Card */}
           <button
             onClick={onJournalEntriesClick}
-            className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-200/50 hover:shadow-lg transition-all group text-left"
+            className="bg-gradient-to-br from-purple-50 to-pink-50 !rounded-2xl p-6 border border-purple-200/50 hover:shadow-lg transition-all group text-left"
           >
             <div className="flex justify-between items-center mb-2">
               <span className="font-medium text-gray-600">Journal Entries</span>
